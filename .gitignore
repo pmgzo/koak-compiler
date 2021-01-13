@@ -1,0 +1,16 @@
+*.gcda
+*.gcno
+*.vg
+*.q
+*.o
+*.so
+*~
+*.hi
+main
+ttt*
+.stack-work
+koak
+stack.yaml.lock
+Test/
+koak.cabal
+tests/mine/
