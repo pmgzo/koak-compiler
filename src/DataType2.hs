@@ -1,12 +1,11 @@
-
 data TypeKoak = INT | DOUBLE | VOID deriving (Show, Eq)
 
-data Identifier = Wait String | Typed String TypeKoak deriving (Show, Eq) 
+data Identifier = Wait String | Typed String TypeKoak deriving (Show, Eq)
 
 data Value
     = Void
     | Int Integer
-    | Double Double deriving (Show, Eq) 
+    | Double Double deriving (Show, Eq)
 
 data Unop = Not | UMinus deriving (Show, Eq)
 
@@ -26,14 +25,14 @@ data Op = VAL Value
 
 data Expr = Val Value --Constant
             | Id Identifier -- Identifier
-            
+
             | Protof Identifier [Identifier] Expr -- (name, return type ) args block
 
             | Call Identifier [Expr] -- appel de function avec arguments
 
             | Exprs [Expr] -- (: y = y + 1: y) list d'expressions qui se suivent
-            
-            
+
+
             | Operation Op -- [(Binop, Expr)]
             | Unary Unop Expr -- -5 => UMinus (Val (Int 5))
             | For (Identifier, Expr) (Identifier, Expr) Expr Expr
@@ -44,8 +43,8 @@ data Expr = Val Value --Constant
             | IfElse Expr Expr Expr deriving (Show, Eq) -- exp exps exps
 
 -- Operation example:
--- a = 5-- Id (Wait "a") [(Binop Assign) (Val Int 5)] 
--- 5 + 2 + 3 => Val (Int 5) [(Binop Plus) (Val 2), (Binop Plus) (Val 3)] 
+-- a = 5-- Id (Operation (Assign (Wait "a") (VAL (Int 5))))
+-- 5 + 2 + 3 => (Operation (Add [(VAL (Int 5)), (VAL (Int 2)), (VAL (Int 3))]))
 
 -- IfElse
 -- if x then foo() else base()
