@@ -34,7 +34,7 @@ data TypeKoak = INT | DOUBLE | VOID deriving (Show, Eq)
 
 type Args = [Identifier]
 
-data Proto = Proto Identifier Args deriving (Show, Eq)-- ++ Unary, Binary
+data Proto = Proto Identifier Args deriving (Show, Eq) -- ++ Unary, Binary
 
 data KDef = Def Proto Expr  | Xpr Exprs deriving (Show, Eq)
 

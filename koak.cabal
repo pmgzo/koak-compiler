@@ -37,6 +37,7 @@ library
 executable koak
   main-is: Main.hs
   other-modules:
+      DataType
       Paths_koak
   hs-source-dirs:
       app
@@ -44,6 +45,7 @@ executable koak
   build-depends:
       base >=4.7 && <5
     , koak
+    , llvm-hs
   default-language: Haskell2010
 
 test-suite koak-test
@@ -57,4 +59,5 @@ test-suite koak-test
   build-depends:
       base >=4.7 && <5
     , koak
+    , llvm-hs
   default-language: Haskell2010
