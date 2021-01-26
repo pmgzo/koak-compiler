@@ -116,7 +116,7 @@ operatorInARow (ADD (fst:snd:rest)) = do
 
 genInstructionOperand :: Op -> StateT Objects IO Operand
 genInstructionOperand (VAL v)                    = return $ getConstVal v -- Constant
-genInstructionOperand (Xpr xpr)                  = genInstructions xpr
+genInstructionOperand (XPR xpr)                  = genInstructions xpr
 --Lt, Gt ...
 -- Operator Add, Sub, Mul, Div
 genInstructionOperand classicOp                  = operatorInARow classicOp
