@@ -14,23 +14,23 @@ data Unop = Not | UMinus deriving (Show, Eq)
 -- data Binop = Time | Div | Plus | Minus | Lt | Gt | Eq | NotEq | Assign deriving (Show, Eq)
 
 data Op = VAL Value
-        | Xpr Expr
+        | XPR Expr
         | ADD [Op]
-        | Sub [Op]
-        | Mul [Op]
-        | Div [Op]
-        | Lt Op Op
-        | Gt Op Op
-        | Eq Op Op
-        | NotEq Op Op
-        | Assign Identifier Op deriving (Eq, Show)
+        | SUB [Op]
+        | MUL [Op]
+        | DIV [Op]
+        | LT Op Op
+        | GT Op Op
+        | EQ Op Op
+        | NOTEQ Op Op
+        | ASSIGN Identifier Op deriving (Eq, Show)
 
 data Expr = Val Value -- Constant
             | Id Identifier -- Identifier
 
             | Protof Identifier [Identifier] Expr -- (name, return type) args block
 
-            | Call Identifier [Expr] -- appel de function avec arguments
+            | Callf Identifier [Expr] -- appel de function avec arguments
 
             | Exprs [Expr] -- (: y = y + 1: y) list d'expressions qui se suivent
 
