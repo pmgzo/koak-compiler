@@ -56,3 +56,5 @@ tests:
     - llvm-hs-pure
     - mtl
     - HUnit
+    - transformers
+

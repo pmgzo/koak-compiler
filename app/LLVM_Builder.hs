@@ -10,7 +10,7 @@ import LLVM.AST
 import LLVM.AST.Type -- i64, double
 import LLVM.AST.Constant ( Constant( Int, Float, GlobalReference) )
 import LLVM.AST.Float
-
+import LLVM.AST.Name
 
 
 type GameValue = Int
@@ -31,7 +31,7 @@ type GameState = (Bool, Int)
 data Objects = Objects { blockCount :: Integer, nameCount :: Integer, insts :: [Named Instruction] }
 
 emptyObjects :: Objects
-emptyObjects = Objects {blockCount = 4, nameCount = 1, insts = []}
+emptyObjects = Objects {blockCount = 0, nameCount = 0, insts = []}
 
 getCurrentBlockCount :: StateT Objects IO Integer
 getCurrentBlockCount = do
@@ -99,18 +99,17 @@ genInstruction (ADD []) op1 op2 = Add False False op1 op2 []
 
 operatorInARow :: Op -> StateT Objects IO Operand
 operatorInARow (ADD [fst])          = genInstructionOperand fst
-operatorInARow (ADD (fst:snd:rest)) = do
-                                    first <- genInstructionOperand fst-- get first operand
-                                    snd <- operatorInARow (ADD rest) -- get second operand
-                                    let inst = genInstruction (ADD []) first snd
+operatorInARow (ADD (fst:snd)) = do
+                                    firstop <- genInstructionOperand fst-- get first operand
+                                    secondop <- operatorInARow (ADD snd) -- get second operand
+                                    let inst = genInstruction (ADD []) firstop secondop
                                     
                                     name <- genNewName --operand name
                                     
                                     addInst (name := inst)
 
                                     -- have to get operand type
-                                    let t = getOperandType first
-
+                                    let t = getOperandType firstop
 
                                     return (LocalReference t name)
 
@@ -130,11 +129,11 @@ genInstructionOperand classicOp                  = operatorInARow classicOp
 
 genInstructions :: Expr -> StateT Objects IO Operand -- Operand
  -- Constant
-genInstructions (Operation (VAL v))      = return $getConstVal v 
+genInstructions (Operation (VAL v)) = return $getConstVal v 
 -- LocalRef //have to check if it exists
-genInstructions (Id id)                  = return $getLocalVar id 
+genInstructions (Id id)             = return $getLocalVar id 
 
--- -- genInstruction (Operation (ADD [o1, o2])) = do
+genInstructions (Operation op)      = genInstructionOperand op
 -- genInstruction (Operation (ADD v:ops)) = do
 --                 name <- genNewName --operand name
 
