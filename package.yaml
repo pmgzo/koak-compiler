@@ -36,6 +36,8 @@ executables:
     dependencies:
     - koak
     - llvm-hs
+    - llvm-hs-pure
+    - mtl
 
 tests:
   koak-test:
