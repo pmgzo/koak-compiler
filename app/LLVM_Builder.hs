@@ -1,9 +1,10 @@
 module LLVM_Builder where
 
+import DataType2
+import BuilderState
+
 import Control.Monad.State
 import Control.Monad.State.Lazy
-
-import DataType2
 
 import LLVM.AST.Instruction -- Add ...
 import LLVM.AST
@@ -12,59 +13,12 @@ import LLVM.AST.Constant ( Constant( Int, Float, GlobalReference) )
 import LLVM.AST.Float
 import LLVM.AST.Name
 
+import Data.Map
 
-type GameValue = Int
-type GameState = (Bool, Int)
-
--- https://stackoverflow.com/questions/24103108/where-is-the-data-constructor-for-state
-
--- State is deprecated, StateT is used instead
-
--- https://wiki.haskell.org/Simple_StateT_use
-
--- import Control.Monad.State
-
---
--- layer an infinite list of uniques over the IO monad
---
-
-data Objects = Objects { blockCount :: Integer, nameCount :: Integer, insts :: [Named Instruction] }
-
-emptyObjects :: Objects
-emptyObjects = Objects {blockCount = 0, nameCount = 0, insts = []}
-
-getCurrentBlockCount :: StateT Objects IO Integer
-getCurrentBlockCount = do
-                    o <- get
-                    return (blockCount o)
-
-increaseBlockCount :: StateT Objects IO ()
-increaseBlockCount = do
-                    o <- getCurrentBlockCount -- return IO Int
-
-                    modify (\s -> s {blockCount = o + 1} )
-                    
-                    return ()
-
-genNewName :: StateT Objects IO Name -- Name DataCtor
-genNewName = do
-            nameC <- gets nameCount
-            -- nameC <- gets (\s -> nameCount s )
-            
-            modify (\s -> s {nameCount = nameC + 1} )
-            -- return (nameC + 1)
-            return (UnName $fromInteger (nameC + 1))
-
--- construct name instruction; take his uname ref ; return it
-addInst :: Named Instruction -> StateT Objects IO ()
-addInst new_instruction = do
-            instructions <- gets insts
-            
-            modify $(\s -> s { insts = instructions ++ [new_instruction] })
-            return ()
+import qualified LLVM.AST.IntegerPredicate as IP
+import qualified LLVM.AST.FloatingPointPredicate as FP
 
 -- ADD, SUB, MUL etc...
-
 typeConversion :: TypeKoak -> Type
 typeConversion VOID     = VoidType-- not suposed to be a functipn parameter
 typeConversion INT      = IntegerType 64 -- not suposed to be a parameter
@@ -79,23 +33,81 @@ getConstVal :: Value -> Operand
 getConstVal (I v) = (ConstantOperand (Int 64 v) )
 getConstVal (D v) = (ConstantOperand (Float (Double v)) )
 
-getLocalVar :: Identifier -> Operand
-getLocalVar (Typed str t) = (LocalReference convT name)
-                        where
-                            convT = typeConversion t
-                            name = mkName str
+getLocalVar :: Identifier -> StateT Objects IO Operand
+getLocalVar (Typed str t) = do
+                -- handle just local var
+                let tC = typeConversion t
+                name <- genNewName
 
--- getConstVal (D v) = (ConstantOperand (Float (Double v)) )
+                let namedInst = (name := Load False (LocalReference (ptr tC) (mkName str)) Nothing 0 [])
+                addInst namedInst
 
+                return (LocalReference tC name)
 
--- genResolvedInstruction :: Expr -> Operand -> Operand -> Instruction
--- genResolvedInstruction (Operation (ADD [])) op1 op2 = Add False False op1 op2 []
+genCondIFlag :: Op -> IP.IntegerPredicate
+genCondIFlag (DataType2.EQ _ _)    = IP.EQ
+genCondIFlag (DataType2.NOTEQ _ _) = IP.NE
+genCondIFlag (DataType2.LT _ _)    = IP.SLT
+genCondIFlag (DataType2.GT _ _)    = IP.SGT
 
+genCondFFlag :: Op -> FP.FloatingPointPredicate
+genCondFFlag (DataType2.EQ _ _)     = FP.OEQ
+genCondFFlag (DataType2.NOTEQ _ _)  = FP.ONE
+genCondFFlag (DataType2.LT _ _)     = FP.OLT
+genCondFFlag (DataType2.GT _ _)     = FP.OGT
 
-{- to Handle Ops  -}
+local :: Identifier -> StateT Objects IO Operand
+local (Typed name t) = do
+                            localMap <- gets localVars
+                            let isInMap = member name localMap
+
+                            -- check type local var
+                            let tC = typeConversion t
+                            let named = (mkName name)
+
+                            if isInMap == False
+                                then
+                                addLocalVar (name, tC)
+                                else
+                                return (LocalReference (ptr tC) named)
+
+assign :: Identifier -> Op -> StateT Objects IO Operand
+assign  id@(Typed str t) op = do
+                                -- have handle global var
+                                op2 <- genInstructionOperand op
+                                op1 <- local id
+                                
+                                addInst (Do $ Store False op1 op2 Nothing 0 [])
+                                
+                                return op1
+
+genCondInstruction :: Op -> Operand -> Operand -> Instruction
+-- here if we want: if 1 then ...
+genCondInstruction cond op1 op2 | t == (FloatingPointType DoubleFP) = FCmp flagf op1 op2 []
+                                | t == (IntegerType 64)             = ICmp flagi op1 op2 []
+                                where
+                                t       = getOperandType op1
+                                flagi    = genCondIFlag cond
+                                flagf    = genCondFFlag cond
+
+genCond :: Op -> Op -> Op -> StateT Objects IO Operand
+genCond cond i1 i2          = do
+                            op1 <- genInstructionOperand i1
+                            op2 <- genInstructionOperand i2
+
+                            let inst = genCondInstruction cond op1 op2
+
+                            name <- genNewName --operand name
+
+                            addInst (name := inst)
+                            
+                            return (LocalReference i64 name) -- cond in i64 for now
 
 genInstruction :: Op -> Operand -> Operand -> Instruction
-genInstruction (ADD []) op1 op2 = Add False False op1 op2 []
+genInstruction (ADD []) op1 op2 | typeop == (IntegerType 64)             = Add False False op1 op2 []
+                                | typeop == (FloatingPointType DoubleFP) = FAdd noFastMathFlags op1 op2 []
+                                where
+                                typeop = getOperandType op1
 
 operatorInARow :: Op -> StateT Objects IO Operand
 operatorInARow (ADD [fst])          = genInstructionOperand fst
@@ -114,119 +126,84 @@ operatorInARow (ADD (fst:snd)) = do
                                     return (LocalReference t name)
 
 genInstructionOperand :: Op -> StateT Objects IO Operand
-genInstructionOperand (VAL v)                    = return $ getConstVal v -- Constant
-genInstructionOperand (XPR xpr)                  = genInstructions xpr
+genInstructionOperand (VAL v)           = return $ getConstVal v -- Constant
+genInstructionOperand (XPR xpr)         = genInstructions xpr
+-- Function call
 --Lt, Gt ...
+genInstructionOperand c@(DataType2.LT i1 i2)        = genCond c i1 i2
+genInstructionOperand c@(DataType2.GT i1 i2)        = genCond c i1 i2
+genInstructionOperand c@(DataType2.EQ i1 i2)        = genCond c i1 i2
+genInstructionOperand c@(DataType2.NOTEQ i1 i2)     = genCond c i1 i2
+genInstructionOperand (ASSIGN id op)                = assign id op
 -- Operator Add, Sub, Mul, Div
-genInstructionOperand classicOp                  = operatorInARow classicOp
-                                                    -- <- get first operand
-                                                    -- <- get second operand
-
-{- to Handle Exprs  -}
-
--- genResolvedInstruction :: Expr -> Operand -> Operand -> Instruction
--- genResolvedInstruction (Operation (ADD [_, _])) op1 op2 = Add False False op1 op2 []
+genInstructionOperand classicOp                     = operatorInARow classicOp
 
 genInstructions :: Expr -> StateT Objects IO Operand -- Operand
- -- Constant
-genInstructions (Operation (VAL v)) = return $getConstVal v 
+-- Constant
+genInstructions (Operation (VAL v)) = return $getConstVal v
 -- LocalRef //have to check if it exists
-genInstructions (Id id)             = return $getLocalVar id 
-
+genInstructions (Id id)             = getLocalVar id -- have to handle global
+-- Operand
 genInstructions (Operation op)      = genInstructionOperand op
--- genInstruction (Operation (ADD v:ops)) = do
---                 name <- genNewName --operand name
 
---                 -- if 
+-- close block for if condition
+-- closeBlock :: Maybe Name -> StateT Objects IO ()
+-- closeBlock (Just name)  = do
+--                         currentBlock    <- gets blockCount
+--                         currentInst     <- gets insts
+--                         let terminator = (Do $ Br name [])
+--                         let block = BasicBlock (UnName $fromInteger currentBlock) currentInst terminator
 
---                 -- op1 <- (genInstruction Expr2)
---                 -- op2 <- (genInstruction Expr3)
+--                         addBlock block
 
---                 genInstructionOperator ops Nothing
-                
+--                         return ()
+-- closeBlock Nothing      = do
+--                         currentBlock    <- gets blockCount
+--                         currentInst     <- gets insts
+--                         let terminator = (Do $ Ret (Just (LocalReference i64 (UnName 2)) ) [])
 
---                 -- let inst = genResolvedInstruction xpr 
---                 let inst = genResolvedInstruction xpr 
+--                         let nameBlock = BasicBlock (UnName $fromInteger currentBlock) currentInst terminator
+                        return ()
 
---                 -- genResolvedInstruction ()
---                 -- genResolvedInstruction ()
+-- block handler
+-- genCodeBlock :: Maybe Name -> [Expr] -> StateT Objects IO ()
+-- genCodeBlock name []                                = closeBlock name
+-- genCodeBlock ((IfThen (Operation op) expr):rest)    = do
+--                                                     -- and save block 
+--                                                     -- gen condition
+--                                                     condRef <- genInstructionOperand op
 
---                 addInst (UnName name := inst)
+--                                                     -- runStateT 
 
---                 return (UnName name inst)
+--                                                     -- changeBlock
 
--- buildInstruction :: Expr -> StateT Objects IO ()
--- buildInstruction _ = do
---             <- 
+--                                                     currentBlock <- gets blockCount
+--                                                     let blockIf = currentBlock + 1
+--                                                     let following = currentBlock + 2
 
+--                                                     -- here have to make a new block
+--                                                     -- (_, newState) <- (runStateT test s)
 
+--                                                     -- call function StaetT that 
+--                                                     -- buikd Instruction and close the block with the following
 
-code :: StateT [Integer] IO ()
-code = do
-    x <- pop
-    io $ print x
-    y <- pop
-    -- print y
-    io $ print y
-    -- print y
-    -- print io
-    return ()
+--                                                     -- appelle
 
---
--- pop the next unique off the stack
---
+--                                                     -- put s -- update state
 
-pop :: StateT [Integer] IO Integer
-pop = do
-    (x:xs) <- get
-    put xs
-    return x
-
-io :: IO a -> StateT [Integer] IO a
-io = liftIO
-
-
--- state
-fct1 :: String -> Maybe (Int, String)
-fct1 str = Just (4, str)
-
-fct :: StateT [String] Maybe Int
-fct = do
-    -- put ["toto"]
-    o <- get
-    put ["carote"]
-
-    -- print o
-    return (4)
+--                                                     -- (_, s) <- runState fct s -- second block
+--                                                     genCodeBlock rest
+-- genCodeBlock () xpr:rest                            = do 
+--                                                     op <- genInstructions xpr
+--                                                     setLastOperand op
+                                                    
 
 
+-- terminatorName
+-- buildBlock :: Maybe Name -> Expr -> StateT Objects IO ()
 
+-- generate proto => generate function, then genCodeBlock
+-- genProto :: Expr -> Definition
 
-
-
-
--- main :: IO ()
--- main = do
---     let s = emptyObjects
-
-    -- runStateT increaseBlockCount s -- increaseBlockCount
-
-    -- runStateT code [1..] >> return ()
-    -- runStateT code [1..]
-    -- print(s)
-    -- print(a)
-    -- print("here")
-
-    -- let a = code
-
-    -- let a = StateT { runStateT = (\s -> Just (4, s)) } -- \s -> m (a, s)
-
-    -- -- execStateT 
-    -- let val = execStateT a ["oignon"]
-
-    -- -- runStateT val
-
-    -- print val
-
-    -- print "o"
+-- genDefintions :: [Expr] -> Module
 

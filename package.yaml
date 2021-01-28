@@ -38,6 +38,7 @@ executables:
     - llvm-hs
     - llvm-hs-pure
     - mtl
+    - containers
 
 tests:
   koak-test:
