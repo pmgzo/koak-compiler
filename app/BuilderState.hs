@@ -22,6 +22,11 @@ data Objects = Objects {
                         globalVars :: Map String Type
                         }
 
+functorHelper :: (a -> b) -> StateT Objects IO (a -> b)
+functorHelper fct = do
+                return fct
+
+
 emptyObjects :: Objects
 emptyObjects = Objects {
                         blockCount = 0, 
@@ -90,8 +95,6 @@ addLocalVar  (name, t) = do
                             let inst = (named := Alloca t Nothing 0 [])
 
                             return (LocalReference (ptr t) named)
-
-
 
 setLastOperand :: Operand -> StateT Objects IO ()
 setLastOperand op = do

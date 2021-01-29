@@ -13,6 +13,10 @@ import LLVM.AST.Constant ( Constant( Int, Float, GlobalReference) )
 import LLVM.AST.Float
 import LLVM.AST.Name
 
+import LLVM.AST.AddrSpace
+import LLVM.AST.CallingConvention -- call function
+import LLVM.AST.ParameterAttribute
+
 import Data.Map
 
 import qualified LLVM.AST.IntegerPredicate as IP
@@ -138,6 +142,35 @@ genInstructionOperand (ASSIGN id op)                = assign id op
 -- Operator Add, Sub, Mul, Div
 genInstructionOperand classicOp                     = operatorInARow classicOp
 
+
+-- Callf id args
+buildCallfParameter :: [Expr] -> StateT Objects IO ([(Operand, [ParameterAttribute])], [Type])
+buildCallfParameter [xpr]       =   do 
+                                    op  <- genInstructions xpr
+                                    let top = getOperandType op
+                                    return ([(op, [])], [top])
+buildCallfParameter (expr:rest) =   do 
+                                    op  <- genInstructions expr
+                                    let top = getOperandType op
+                                    let lbd = (\(op, t) (op2, t2) -> ([op] ++ op2, [t] ++ t2) ) ((op, []), top)
+                                    functorHelper lbd <*> buildCallfParameter rest
+
+genCallFunction :: Identifier -> [Expr] -> StateT Objects IO Operand
+genCallFunction (Typed id t) exprs    =   do
+                                        (ops, paramtyped) <- buildCallfParameter exprs
+                                        instname <- genNewName
+                                        
+                                        let name = mkName id
+                                        let fctType = typeConversion t
+                                        let fctSig = (PointerType (FunctionType fctType paramtyped False) (AddrSpace 0))
+                                        let inst = Call Nothing C []
+                                                    (Right $ ConstantOperand $ GlobalReference fctSig name)
+                                                    ops
+                                                    []
+                                                    []
+                                        addInst (instname := inst)
+                                        return (LocalReference fctType instname)
+
 genInstructions :: Expr -> StateT Objects IO Operand -- Operand
 -- Constant
 genInstructions (Operation (VAL v)) = return $getConstVal v
@@ -145,6 +178,7 @@ genInstructions (Operation (VAL v)) = return $getConstVal v
 genInstructions (Id id)             = getLocalVar id -- have to handle global
 -- Operand
 genInstructions (Operation op)      = genInstructionOperand op
+genInstructions (Callf id args)     = genCallFunction id args
 
 -- close block for if condition
 -- closeBlock :: Maybe Name -> StateT Objects IO ()
@@ -163,36 +197,37 @@ genInstructions (Operation op)      = genInstructionOperand op
 --                         let terminator = (Do $ Ret (Just (LocalReference i64 (UnName 2)) ) [])
 
 --                         let nameBlock = BasicBlock (UnName $fromInteger currentBlock) currentInst terminator
-                        return ()
+-- return ()
 
 -- block handler
--- genCodeBlock :: Maybe Name -> [Expr] -> StateT Objects IO ()
--- genCodeBlock name []                                = closeBlock name
--- genCodeBlock ((IfThen (Operation op) expr):rest)    = do
---                                                     -- and save block 
---                                                     -- gen condition
---                                                     condRef <- genInstructionOperand op
+genCodeBlock :: Maybe Name -> [Expr] -> StateT Objects IO ()
+genCodeBlock name   [xpr]                           = (genInstructions xpr) >> return ()
+genCodeBlock _ ((IfThen (Operation op) expr):rest)  = do -- not done
+                                                    -- and save block 
+                                                    -- gen condition
+                                                    condRef <- genInstructionOperand op
 
---                                                     -- runStateT 
+                                                    -- runStateT 
 
---                                                     -- changeBlock
+                                                    -- changeBlock
 
---                                                     currentBlock <- gets blockCount
---                                                     let blockIf = currentBlock + 1
---                                                     let following = currentBlock + 2
+                                                    currentBlock <- gets blockCount
+                                                    let blockIf = currentBlock + 1
+                                                    let following = currentBlock + 2
 
---                                                     -- here have to make a new block
---                                                     -- (_, newState) <- (runStateT test s)
+                                                    -- here have to make a new block
+                                                    -- (_, newState) <- (runStateT test s)
 
---                                                     -- call function StaetT that 
---                                                     -- buikd Instruction and close the block with the following
+                                                    -- call function StaetT that 
+                                                    -- buikd Instruction and close the block with the following
 
---                                                     -- appelle
+                                                    -- appelle
 
---                                                     -- put s -- update state
+                                                    -- put s -- update state
 
---                                                     -- (_, s) <- runState fct s -- second block
---                                                     genCodeBlock rest
+                                                    -- (_, s) <- runState fct s -- second block
+                                                    genCodeBlock Nothing rest
+genCodeBlock _      (xpr:xprs)                      = (genInstructions xpr) >> genCodeBlock Nothing xprs
 -- genCodeBlock () xpr:rest                            = do 
 --                                                     op <- genInstructions xpr
 --                                                     setLastOperand op
