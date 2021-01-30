@@ -22,6 +22,20 @@ data Objects = Objects {
                         globalVars :: Map String Type
                         }
 
+data TopLevelObjects = TopLevelObjects
+                        {
+                            name :: String,
+                            defs :: [Definition]
+                        }
+
+
+
+emptyTopLevelObj :: String -> TopLevelObjects
+emptyTopLevelObj str = TopLevelObjects {
+                            name = str,
+                            defs = []
+                        }
+
 functorHelper :: (a -> b) -> StateT Objects IO (a -> b)
 functorHelper fct = do
                 return fct

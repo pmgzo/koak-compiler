@@ -180,6 +180,7 @@ genInstructions (Id id)             = getLocalVar id -- have to handle global
 genInstructions (Operation op)      = genInstructionOperand op
 genInstructions (Callf id args)     = genCallFunction id args
 
+
 -- close block for if condition
 -- closeBlock :: Maybe Name -> StateT Objects IO ()
 -- closeBlock (Just name)  = do
@@ -200,38 +201,97 @@ genInstructions (Callf id args)     = genCallFunction id args
 -- return ()
 
 -- block handler
-genCodeBlock :: Maybe Name -> [Expr] -> StateT Objects IO ()
-genCodeBlock name   [xpr]                           = (genInstructions xpr) >> return ()
-genCodeBlock _ ((IfThen (Operation op) expr):rest)  = do -- not done
-                                                    -- and save block 
-                                                    -- gen condition
-                                                    condRef <- genInstructionOperand op
 
-                                                    -- runStateT 
+-- genCodeBlock :: Maybe Name -> [Expr] -> StateT Objects IO ()
+-- genCodeBlock name   [xpr]                           = (genInstructions xpr) >> return ()
+-- genCodeBlock _ ((IfThen (Operation op) expr):rest)  = do -- not done
+--                                                     -- and save block 
+--                                                     -- gen condition
+--                                                     condRef <- genInstructionOperand op
 
-                                                    -- changeBlock
+--                                                     -- runStateT 
 
-                                                    currentBlock <- gets blockCount
-                                                    let blockIf = currentBlock + 1
-                                                    let following = currentBlock + 2
+--                                                     -- changeBlock
 
-                                                    -- here have to make a new block
-                                                    -- (_, newState) <- (runStateT test s)
+--                                                     currentBlock <- gets blockCount
+--                                                     let blockIf = currentBlock + 1
+--                                                     let following = currentBlock + 2
 
-                                                    -- call function StaetT that 
-                                                    -- buikd Instruction and close the block with the following
+--                                                     -- here have to make a new block
+--                                                     -- (_, newState) <- (runStateT test s)
 
-                                                    -- appelle
+--                                                     -- call function StaetT that 
+--                                                     -- buikd Instruction and close the block with the following
 
-                                                    -- put s -- update state
+--                                                     -- appelle
 
-                                                    -- (_, s) <- runState fct s -- second block
-                                                    genCodeBlock Nothing rest
-genCodeBlock _      (xpr:xprs)                      = (genInstructions xpr) >> genCodeBlock Nothing xprs
--- genCodeBlock () xpr:rest                            = do 
---                                                     op <- genInstructions xpr
---                                                     setLastOperand op
-                                                    
+--                                                     -- put s -- update state
+
+--                                                     -- (_, s) <- runState fct s -- second block
+--                                                     genCodeBlock Nothing rest
+-- genCodeBlock _      (xpr:xprs)                      = (genInstructions xpr) >> genCodeBlock Nothing xprs
+
+-- genDefHelper :: Objects -> [BasicBlock]
+-- genDefHelper obj = blocks obj
+
+
+-- genAParameter :: Identifier -> Parameter
+-- genAParameter (Typed name tp) = Parameter t (mkName name) []
+--                                 where
+--                                 t = typeConversion tp
+
+-- genProtoParameter :: [Identifier] -> [Parameter]
+-- genProtoParameter [id]      = [genAParameter id]
+-- genProtoParameter [id:ids]  = genAParameter id ++ genProtoParameter ids
+
+-- getTypeFromIdentifier :: Identifier -> Type
+-- getTypeFromIdentifier (Typed _ t) = typeConversion t
+
+-- getNameFromIdentifier :: Identifier -> String
+-- getNameFromIdentifier (Typed str _) = str
+
+-- genDefinition :: Expr -> Definition
+-- genDefinition (Protof id params (Exprs xprs)) = GlobalDefinition functionDefaults
+--                                                     {   name = (mkName name), 
+--                                                         parameters =
+--                                                         ( parameters
+--                                                         , False ),
+--                                                         returnType = retType,
+--                                                         basicBlocks = genDefHelper $runState 
+--                                                     }
+--                                                     where
+--                                                     parameters = genProtoParameter params
+--                                                     name    = getNameFromIdentifier id
+--                                                     retType = getTypeFromIdentifier id
+-- genDefinition () = -- here global variable
+
+
+
+-- fct :: [Expr] -> 
+-- fct [xpr]       = do
+--                     s <- 
+-- fct (xpr:rest)  = do
+--                 def <- genDefinition xpr
+
+--                 -- definition
+
+--                 fct rest
+
+-- genDefinitions :: [Expr] -> StateT TopLevelObjects IO [Definition]
+-- -- State at top level which concat definition an run single StateT by adding them
+-- genDefinitions [xpr]        = do --
+-- genDefinitions (xpr:xprs)   = do
+--                                 def <- (evalStateT (genCodeBlock xprs) emptyObjects)
+--                                 --  = genDefintion xpr
+--                                 -- genDefintions xprs
+--                                 -- get first defintion
+
+-- genModule :: [Expr] -> IO ()
+-- genModule expr = 
+--                     def <- evalStateT (genDefinitions expr emptyObjects)
+
+
+
 
 
 -- terminatorName
