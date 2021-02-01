@@ -1,14 +1,18 @@
 module TestLLVMBuilder where
 import Test.HUnit
+
 import LLVM_Builder
+import BuilderState
 import DataType2
 
-import Control.Monad.Trans.State.Lazy
+-- import Control.Monad.Trans.State.Lazy
+import Control.Monad.Trans.State
 import LLVM.AST.Name
 import LLVM.AST.Instruction -- Add ...
 import LLVM.AST
 import LLVM.AST.Constant ( Constant( Int, Float, GlobalReference) )
 
+import Data.Maybe
 
 -- resTest9ParserList = (Just ((Value (Quote "(coco)") EndList), ""))
 -- test9ParserList = TestCase $ assertEqual "   '(coco)" resTest9ParserList (parseList "   '(coco)")
@@ -23,14 +27,22 @@ import LLVM.AST.Constant ( Constant( Int, Float, GlobalReference) )
 --     return val
 
 
-testHelper :: String -> Expr -> [Named Instruction] -> Test
-testHelper comm input expected = TestCase (do 
-                                    s <- execStateT (genInstructions input) emptyObjects
+-- testHelper :: String -> Expr -> [Named Instruction] -> Test
+-- testHelper comm input expected = TestCase (do 
+--                                     s <- execStateT (genInstructions input) emptyObjects
 
-                                    let res = insts s
+--                                     let res = insts s
 
-                                    assertEqual comm expected res
-                                )
+--                                     assertEqual comm expected res
+--                                 )
+
+testHelperInstruction :: String -> Expr -> [Named Instruction] -> Test
+testHelperInstruction comm input expected = TestCase (assertEqual comm expected res)
+                                            where
+                                            s = execStateT (genInstructions input) emptyObjects
+                                            res = insts $fromJust s
+
+
 constIntOp :: Integer -> Operand
 constIntOp v = (ConstantOperand (Int 64 v))
 
@@ -39,14 +51,24 @@ localIntOp idx = (LocalReference (IntegerType 64) (UnName $fromInteger idx))
 
 input1 = (Operation (ADD [(VAL (I 5)), (VAL (I 6))]))-- expectedResult
 expectedRes1 = [UnName 1 := Add False False (constIntOp 5) (constIntOp 6) [] ]
-test1 = testHelper "test1" input1 expectedRes1
+test1 = testHelperInstruction "test1" input1 expectedRes1
 
 input2 = (Operation (ADD [(VAL (I 5)), (VAL (I 6)), (ADD [(VAL (I 8)), (VAL (I 0))])]))
 expectedRes2 = [UnName 1 := Add False False (constIntOp 8) (constIntOp 0) [], 
                 UnName 2 := Add False False (constIntOp 6) (localIntOp 1) [], 
                 UnName 3 := Add False False (constIntOp 5) (localIntOp 2) []]
 
-test2 = testHelper "test2" input2 expectedRes2
+test2 = testHelperInstruction "test2" input2 expectedRes2
 
+-- test assignment
+-- def (a:int, b:int): a = 5: a
+input3 = (Protof (Typed "fct1" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ASSIGN (Typed "a" INT) (VAL (I 5)) ) ), (Id (Typed "a" INT) )] ))
+
+-- input4 = (Protof (Typed "fct2" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ASSIGN (Typed "a" INT) (VAL (I 5)) ) ), (Id (Typed "a" INT) )] ))
+
+
+-- test call function
+
+-- the elaborate a test suite to test the .o
 
 llvmBuilderTests = TestList [test1, test2]
