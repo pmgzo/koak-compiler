@@ -46,10 +46,22 @@ callFTest2 = (Protof (Typed "testf" DOUBLE)
             (Exprs [(Operation (ADD [(XPR (Id (Typed "a" DOUBLE))), (VAL (D 4.0))]) )] )
             )
 
+callCondition :: Expr
+callCondition = (Protof (Typed "cond1" INT) [] (Exprs [(Operation (DataType2.EQ (VAL (I 0)) (VAL (I 0)) ))] ) )
+
+callCondition2 :: Expr
+callCondition2 = (Protof (Typed "cond2" DOUBLE) [] (Exprs [(Operation (DataType2.EQ (VAL (D 9.0)) (VAL (D 0.0)) ))] ) )
+
+unaryNot :: Expr
+unaryNot = (Protof (Typed "not1" INT) [] (Exprs [(Unary Not (Val (I 0)) )] ) )
+
+unaryMinus :: Expr 
+unaryMinus = (Protof (Typed "minus1" DOUBLE) [] (Exprs [(Unary UMinus (Operation (ADD [(VAL (D 5.0)), (VAL (D 12.0))])) )] ) )
+
 main = do
     -- genObjFromExpr "mod1" [mod3]
     -- genObjFromExpr "mod1" [mod4]
     -- genObjFromExpr "mod1" [mod5]
-    genObjFromExpr "mod1" [add, callFTest, callFTest2]
+    genObjFromExpr "mod1" [add, callFTest, callFTest2, callCondition, callCondition2, unaryNot, unaryMinus]
     -- genObjFromExpr "mod2" [mod2]
     -- genObjFromExpr "mod3" [mod3]
