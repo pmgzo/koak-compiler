@@ -215,6 +215,7 @@ genAParameter (Typed name tp) = Parameter t (mkName name) []
                                 t = typeConversion tp
 
 genProtoParameter :: [Identifier] -> [Parameter]
+genProtoParameter []        = []
 genProtoParameter [id]      = [genAParameter id]
 genProtoParameter (id:ids)  = [genAParameter id] ++ genProtoParameter ids
 

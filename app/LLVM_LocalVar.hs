@@ -89,6 +89,7 @@ renameVar (str, tk) = do
 
 -- add Parameter
 addFunctionParameter :: [Identifier] -> StateT Objects Maybe ()
+addFunctionParameter []                     = return ()
 addFunctionParameter [(Typed str tk)]       = do
                                                 op <- renameVar (str, tk)
                                                 let t = typeConversion tk
