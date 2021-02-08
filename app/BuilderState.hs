@@ -1,6 +1,6 @@
 module BuilderState where
 
-import Control.Monad.State.Lazy
+-- import Control.Monad.State.Lazy
 import Control.Monad.State
 
 import Data.Map
@@ -12,20 +12,19 @@ import LLVM.AST.Type
 
 data Objects = Objects { 
                         blockCount :: Integer,
-                        nameCount :: Integer,
+                        nameCount :: Integer, -- for named instructions
                         insts :: [Named Instruction],
                         blocks :: [BasicBlock],
                         
                         lastOperand :: Maybe Operand, -- for block construction
                         
-                        localVars :: Map String Type,
-                        globalVars :: Map String Type
+                        localVars :: Map String (Name, Type)
+                        -- globalVars :: Map String (Type)
                         }
 
-functorHelper :: (a -> b) -> StateT Objects IO (a -> b)
+functorHelper :: (a -> b) -> StateT Objects Maybe (a -> b)
 functorHelper fct = do
                 return fct
-
 
 emptyObjects :: Objects
 emptyObjects = Objects {
@@ -34,16 +33,16 @@ emptyObjects = Objects {
                         insts = [], 
                         blocks = [],
                         lastOperand = Nothing,
-                        localVars = empty,
-                        globalVars = empty
+                        localVars = empty
+                        -- globalVars = empty
                         }
 
-getCurrentBlockCount :: StateT Objects IO Integer
+getCurrentBlockCount :: StateT Objects Maybe Integer
 getCurrentBlockCount = do
                     o <- get
                     return (blockCount o)
 
-increaseBlockCount :: StateT Objects IO ()
+increaseBlockCount :: StateT Objects Maybe ()
 increaseBlockCount = do
                     o <- getCurrentBlockCount -- return IO Int
 
@@ -51,7 +50,7 @@ increaseBlockCount = do
                     
                     return ()
 
-genNewName :: StateT Objects IO Name -- Name DataCtor
+genNewName :: StateT Objects Maybe Name -- Name DataCtor
 genNewName = do
             nameC <- gets nameCount
             -- nameC <- gets (\s -> nameCount s )
@@ -61,42 +60,44 @@ genNewName = do
             return (UnName $fromInteger (nameC + 1))
 
 -- construct name instruction; take his uname ref ; return it
-addInst :: Named Instruction -> StateT Objects IO ()
+addInst :: Named Instruction -> StateT Objects Maybe ()
 addInst new_instruction = do
             instructions <- gets insts
             
             modify $(\s -> s { insts = instructions ++ [new_instruction] })
             return ()
 
-resetInsts :: StateT Objects IO ()
+getInsts :: StateT Objects Maybe [Named Instruction]
+getInsts = do
+        instructions <- gets insts
+        return instructions
+
+resetInsts :: StateT Objects Maybe ()
 resetInsts = do
             s <- get
             
             modify (\s -> s {insts = []} )
             return ()
 
-addBlock :: BasicBlock ->  StateT Objects IO ()
-addBlock basicB = do
-                increaseBlockCount
-                -- s <- get
+addBlock :: Named Terminator -> StateT Objects Maybe ()
+addBlock term = do
+                currBlock <- getCurrentBlockCount
+                
+                let name = (UnName $fromInteger currBlock)
+
+                insts <- getInsts
+
+                let b = BasicBlock name insts term
+
                 bs <- gets blocks
-                modify (\s -> s {blocks = bs ++ [basicB]} )
+                
+                modify (\s -> s {blocks = bs ++ [b]} )
+
                 resetInsts
+                increaseBlockCount
                 return ()
 
-addLocalVar :: (String, Type) -> StateT Objects IO Operand
-addLocalVar  (name, t) = do
-                            localMap <- gets localVars
-
-                            modify (\s -> s { localVars = (insert name t localMap) } )
-
-                            let named = (mkName name)
-
-                            let inst = (named := Alloca t Nothing 0 [])
-
-                            return (LocalReference (ptr t) named)
-
-setLastOperand :: Operand -> StateT Objects IO ()
-setLastOperand op = do
-                -- s <- get
-                modify (\s -> s {lastOperand = Just op } )
+-- setLastOperand :: Operand -> StateT Objects Maybe ()
+-- setLastOperand op = do
+--                 -- s <- get
+--                 modify (\s -> s {lastOperand = Just op } )

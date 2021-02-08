@@ -1,89 +1,46 @@
 module LLVM_Builder where
 
-import DataType2
-import BuilderState
+
 
 import Control.Monad.State
-import Control.Monad.State.Lazy
+-- import Control.Monad.State.Lazy
 
 import LLVM.AST.Instruction -- Add ...
 import LLVM.AST
 import LLVM.AST.Type -- i64, double
-import LLVM.AST.Constant ( Constant( Int, Float, GlobalReference) )
+
+import LLVM.AST.Constant ( Constant(GlobalReference) )
+
 import LLVM.AST.Float
 import LLVM.AST.Name
+import LLVM.AST.Global
 
 import LLVM.AST.AddrSpace
 import LLVM.AST.CallingConvention -- call function
 import LLVM.AST.ParameterAttribute
 
+import LLVM_Utils
+import LLVM_LocalVar
+import DataType2
+import BuilderState
+
+-- import qualified LLVM.AST.IntegerPredicate as IP
+-- import qualified LLVM.AST.FloatingPointPredicate as FP
+
 import Data.Map
+-- import Data.String
+import Data.Maybe
 
-import qualified LLVM.AST.IntegerPredicate as IP
-import qualified LLVM.AST.FloatingPointPredicate as FP
-
--- ADD, SUB, MUL etc...
-typeConversion :: TypeKoak -> Type
-typeConversion VOID     = VoidType-- not suposed to be a functipn parameter
-typeConversion INT      = IntegerType 64 -- not suposed to be a parameter
-typeConversion DOUBLE   = FloatingPointType DoubleFP  -- not suposed to be a parameter
-
-getOperandType :: Operand -> Type
-getOperandType (LocalReference t n)         = t
-getOperandType (ConstantOperand (Int _ _))  = IntegerType 64
-getOperandType (ConstantOperand (Float _))  = FloatingPointType DoubleFP
-
-getConstVal :: Value -> Operand
-getConstVal (I v) = (ConstantOperand (Int 64 v) )
-getConstVal (D v) = (ConstantOperand (Float (Double v)) )
-
-getLocalVar :: Identifier -> StateT Objects IO Operand
-getLocalVar (Typed str t) = do
-                -- handle just local var
-                let tC = typeConversion t
-                name <- genNewName
-
-                let namedInst = (name := Load False (LocalReference (ptr tC) (mkName str)) Nothing 0 [])
-                addInst namedInst
-
-                return (LocalReference tC name)
-
-genCondIFlag :: Op -> IP.IntegerPredicate
-genCondIFlag (DataType2.EQ _ _)    = IP.EQ
-genCondIFlag (DataType2.NOTEQ _ _) = IP.NE
-genCondIFlag (DataType2.LT _ _)    = IP.SLT
-genCondIFlag (DataType2.GT _ _)    = IP.SGT
-
-genCondFFlag :: Op -> FP.FloatingPointPredicate
-genCondFFlag (DataType2.EQ _ _)     = FP.OEQ
-genCondFFlag (DataType2.NOTEQ _ _)  = FP.ONE
-genCondFFlag (DataType2.LT _ _)     = FP.OLT
-genCondFFlag (DataType2.GT _ _)     = FP.OGT
-
-local :: Identifier -> StateT Objects IO Operand
-local (Typed name t) = do
-                            localMap <- gets localVars
-                            let isInMap = member name localMap
-
-                            -- check type local var
-                            let tC = typeConversion t
-                            let named = (mkName name)
-
-                            if isInMap == False
-                                then
-                                addLocalVar (name, tC)
-                                else
-                                return (LocalReference (ptr tC) named)
-
-assign :: Identifier -> Op -> StateT Objects IO Operand
+assign :: Identifier -> Op -> StateT Objects Maybe Operand
 assign  id@(Typed str t) op = do
                                 -- have handle global var
                                 op2 <- genInstructionOperand op
-                                op1 <- local id
+                                op1 <- getLocalPtr id
                                 
                                 addInst (Do $ Store False op1 op2 Nothing 0 [])
                                 
-                                return op1
+                                (n, tp) <- getLocalVar str --in case the return is a = 1
+                                return (LocalReference tp n)
 
 genCondInstruction :: Op -> Operand -> Operand -> Instruction
 -- here if we want: if 1 then ...
@@ -94,7 +51,7 @@ genCondInstruction cond op1 op2 | t == (FloatingPointType DoubleFP) = FCmp flagf
                                 flagi    = genCondIFlag cond
                                 flagf    = genCondFFlag cond
 
-genCond :: Op -> Op -> Op -> StateT Objects IO Operand
+genCond :: Op -> Op -> Op -> StateT Objects Maybe Operand
 genCond cond i1 i2          = do
                             op1 <- genInstructionOperand i1
                             op2 <- genInstructionOperand i2
@@ -113,9 +70,9 @@ genInstruction (ADD []) op1 op2 | typeop == (IntegerType 64)             = Add F
                                 where
                                 typeop = getOperandType op1
 
-operatorInARow :: Op -> StateT Objects IO Operand
+operatorInARow :: Op -> StateT Objects Maybe Operand
 operatorInARow (ADD [fst])          = genInstructionOperand fst
-operatorInARow (ADD (fst:snd)) = do
+operatorInARow (ADD (fst:snd))      = do
                                     firstop <- genInstructionOperand fst-- get first operand
                                     secondop <- operatorInARow (ADD snd) -- get second operand
                                     let inst = genInstruction (ADD []) firstop secondop
@@ -129,7 +86,7 @@ operatorInARow (ADD (fst:snd)) = do
 
                                     return (LocalReference t name)
 
-genInstructionOperand :: Op -> StateT Objects IO Operand
+genInstructionOperand :: Op -> StateT Objects Maybe Operand
 genInstructionOperand (VAL v)           = return $ getConstVal v -- Constant
 genInstructionOperand (XPR xpr)         = genInstructions xpr
 -- Function call
@@ -144,7 +101,7 @@ genInstructionOperand classicOp                     = operatorInARow classicOp
 
 
 -- Callf id args
-buildCallfParameter :: [Expr] -> StateT Objects IO ([(Operand, [ParameterAttribute])], [Type])
+buildCallfParameter :: [Expr] -> StateT Objects Maybe ([(Operand, [ParameterAttribute])], [Type])
 buildCallfParameter [xpr]       =   do 
                                     op  <- genInstructions xpr
                                     let top = getOperandType op
@@ -155,7 +112,7 @@ buildCallfParameter (expr:rest) =   do
                                     let lbd = (\(op, t) (op2, t2) -> ([op] ++ op2, [t] ++ t2) ) ((op, []), top)
                                     functorHelper lbd <*> buildCallfParameter rest
 
-genCallFunction :: Identifier -> [Expr] -> StateT Objects IO Operand
+genCallFunction :: Identifier -> [Expr] -> StateT Objects Maybe Operand
 genCallFunction (Typed id t) exprs    =   do
                                         (ops, paramtyped) <- buildCallfParameter exprs
                                         instname <- genNewName
@@ -171,17 +128,19 @@ genCallFunction (Typed id t) exprs    =   do
                                         addInst (instname := inst)
                                         return (LocalReference fctType instname)
 
-genInstructions :: Expr -> StateT Objects IO Operand -- Operand
+genInstructions :: Expr -> StateT Objects Maybe Operand -- Operand
 -- Constant
-genInstructions (Operation (VAL v)) = return $getConstVal v
+genInstructions (Val v)             = return $ getConstVal v
 -- LocalRef //have to check if it exists
-genInstructions (Id id)             = getLocalVar id -- have to handle global
+-- genInstructions (Id id)             = return (LocalReference i64 $mkName "a") -- have to handle global
+genInstructions (Id id)             = localVar id -- have to handle global
 -- Operand
 genInstructions (Operation op)      = genInstructionOperand op
 genInstructions (Callf id args)     = genCallFunction id args
 
+
 -- close block for if condition
--- closeBlock :: Maybe Name -> StateT Objects IO ()
+-- closeBlock :: Maybe Name -> StateT Objects Maybe ()
 -- closeBlock (Just name)  = do
 --                         currentBlock    <- gets blockCount
 --                         currentInst     <- gets insts
@@ -197,12 +156,30 @@ genInstructions (Callf id args)     = genCallFunction id args
 --                         let terminator = (Do $ Ret (Just (LocalReference i64 (UnName 2)) ) [])
 
 --                         let nameBlock = BasicBlock (UnName $fromInteger currentBlock) currentInst terminator
--- return ()
+--                         return ()
 
 -- block handler
-genCodeBlock :: Maybe Name -> [Expr] -> StateT Objects IO ()
-genCodeBlock name   [xpr]                           = (genInstructions xpr) >> return ()
+
+
+ret :: Maybe Operand -> Named Terminator
+ret op = (Do $ Ret op [])
+
+br :: Name -> Named Terminator
+br name = (Do $ Br name [])
+
+genCodeBlock :: Maybe Name -> [Expr] -> StateT Objects Maybe ()
+genCodeBlock Nothing [xpr]                          = do
+                                                    operand <- (genInstructions xpr)
+                                                    let term = ret (Just operand)
+                                                    addBlock term
+                                                    return ()
+genCodeBlock (Just name) [xpr]                      = do
+                                                    op <- (genInstructions xpr)
+                                                    let term = br name
+                                                    addBlock term
+                                                    return ()
 genCodeBlock _ ((IfThen (Operation op) expr):rest)  = do -- not done
+
                                                     -- and save block 
                                                     -- gen condition
                                                     condRef <- genInstructionOperand op
@@ -228,17 +205,40 @@ genCodeBlock _ ((IfThen (Operation op) expr):rest)  = do -- not done
                                                     -- (_, s) <- runState fct s -- second block
                                                     genCodeBlock Nothing rest
 genCodeBlock _      (xpr:xprs)                      = (genInstructions xpr) >> genCodeBlock Nothing xprs
--- genCodeBlock () xpr:rest                            = do 
---                                                     op <- genInstructions xpr
---                                                     setLastOperand op
-                                                    
 
+genDefHelper :: Objects -> [BasicBlock]
+genDefHelper obj = blocks obj
 
--- terminatorName
--- buildBlock :: Maybe Name -> Expr -> StateT Objects IO ()
+genAParameter :: Identifier -> Parameter
+genAParameter (Typed name tp) = Parameter t (mkName name) []
+                                where
+                                t = typeConversion tp
 
--- generate proto => generate function, then genCodeBlock
--- genProto :: Expr -> Definition
+genProtoParameter :: [Identifier] -> [Parameter]
+genProtoParameter []        = []
+genProtoParameter [id]      = [genAParameter id]
+genProtoParameter (id:ids)  = [genAParameter id] ++ genProtoParameter ids
 
--- genDefintions :: [Expr] -> Module
+getTypeFromIdentifier :: Identifier -> Type
+getTypeFromIdentifier (Typed _ t) = typeConversion t
 
+getNameFromIdentifier :: Identifier -> String
+getNameFromIdentifier (Typed str _) = str
+
+genDefinition :: Expr -> Definition
+genDefinition (Protof id params (Exprs xprs)) = GlobalDefinition 
+                                                functionDefaults
+                                                    {   name = (mkName name), 
+                                                        parameters = ( parameters, False ),
+                                                        returnType = retType,
+                                                        basicBlocks = genDefHelper $fromJust $execStateT (genCodeBlock Nothing xprs) s
+                                                    }
+                                                    where
+                                                    parameters = genProtoParameter params
+                                                    name    = getNameFromIdentifier id
+                                                    retType = getTypeFromIdentifier id
+                                                    s = fromJust $execStateT (addFunctionParameter params) emptyObjects
+
+genDefinitions :: [Expr] -> [Definition]
+genDefinitions [xpr]      = [genDefinition xpr]
+genDefinitions (xpr:rest) = [genDefinition xpr] ++ genDefinitions rest
