@@ -25,6 +25,12 @@ tests_run: clean
 	stack test
 #		stack test --coverage
 
+tests_integrations: clean
+	stack exec integration_test
+	mv *.o test_bash/
+	./test.sh
+	rm test_bash/*.o
+
 tests_bash: clean
 	./tests/test.sh
 
