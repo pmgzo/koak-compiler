@@ -102,3 +102,13 @@ addFunctionParameter ((Typed str tk):rest)  = do
                                                 let name = mkName str
                                                 addInst (Do $ Store False op (LocalReference t name) Nothing 0 [])
                                                 addFunctionParameter rest
+
+fillRetType :: Type -> StateT Objects Maybe ()
+fillRetType t = do
+                (modify (\s -> s {retType = t}) )
+
+initState :: [StateT Objects Maybe ()] -> StateT Objects Maybe ()
+initState [fctState]        = fctState
+initState (fctState:rest)   = do
+                            fctState
+                            initState rest
