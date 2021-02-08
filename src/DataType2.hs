@@ -35,7 +35,7 @@ data Expr = Val Value -- Constant
             | Exprs [Expr] -- (: y = y + 1: y) list d'expressions qui se suivent
 
             | Operation Op -- [(Binop, Expr)]
-            | Unary Unop Expr -- -5 => UMinus (Val (Int 5))
+            | Unary Unop Expr -- -5 -> UMinus (Val (Int 5))
             | For (Identifier, Expr) (Identifier, Expr) Expr Expr
             -- for i = 0, i < 1, 1 in print(i);
             -- for i = 0, i < 10, 1 in i = i - 2 * 1 : i = 5 / 5 + i;
@@ -43,6 +43,8 @@ data Expr = Val Value -- Constant
             | While Expr Expr --- exp, exps
             | IfThen Expr Expr -- exp, exps
             | IfElse Expr Expr Expr deriving (Show, Eq) -- exp exps exps
+            | Nil
+            | Err String
 
 
 
