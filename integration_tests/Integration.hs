@@ -1,7 +1,15 @@
 module Integration where
 
 import LLVM_Module
+import LLVM_Builder
 import DataType2
+import BuilderState
+import LLVM_Block
+
+import Data.Maybe
+import Control.Monad.State
+
+import LLVM.AST.Name
 
 mod1:: Expr -- ok
 mod1 = (Protof (Typed "fct1" INT) 
@@ -58,10 +66,43 @@ unaryNot = (Protof (Typed "not1" INT) [] (Exprs [(Unary Not (Val (I 0)) )] ) )
 unaryMinus :: Expr 
 unaryMinus = (Protof (Typed "minus1" DOUBLE) [] (Exprs [(Unary UMinus (Operation (ADD [(VAL (D 5.0)), (VAL (D 12.0))])) )] ) )
 
+ifFunction :: Expr 
+ifFunction = (Protof (Typed "condIf" INT) [(Typed "a" INT)] (Exprs [(IfThen (Operation (DataType2.GT (XPR (Id (Typed "a" INT))) (VAL (I 5)) )) (Id (Typed "a" INT)) )] ) )
+
+ifElseFunction :: Expr 
+ifElseFunction = (Protof (Typed "condIfElse" INT) [(Typed "a" INT)] (Exprs [(IfElse (Operation (DataType2.LT (XPR (Id (Typed "a" INT))) (VAL (I 5)) )) (Id (Typed "a" INT)) (Val (I (-11)))  )] ) )
+
+assignA :: Integer -> Expr
+assignA i = (Operation (ASSIGN (Typed "a" INT) (VAL (I i)) ) )
+
+ifElseCallBack :: Expr
+ifElseCallBack = (Protof (Typed "condIECB" INT) [(Typed "a" INT)] (Exprs [(IfElse (Operation (DataType2.LT (XPR (Id (Typed "a" INT))) (VAL (I 5)) )) (assignA 6) (assignA 5)  ), (Id (Typed "a" INT)) ] ) )
+
+
+-- while if
+-- (Protof (Typed "condIECB" INT) [(Typed "a" INT)] (Exprs [(While ())] ) )
+
+-- while (a != 5) (a = a + 1), a
+-- (Exprs [(While (Operation (EQ (XPR ()) (VAL (I 5)))) ) (Operation ()) ])
+
 main = do
     -- genObjFromExpr "mod1" [mod3]
     -- genObjFromExpr "mod1" [mod4]
     -- genObjFromExpr "mod1" [mod5]
-    genObjFromExpr "mod1" [add, callFTest, callFTest2, callCondition, callCondition2, unaryNot, unaryMinus]
+    -- let a = (Exprs [(IfThen (Operation (DataType2.LT (XPR (Id (Typed "a" INT))) (VAL (I 5)))) (Id (Typed "a" INT)) )] )
+    -- let a = (IfThen (Operation (DataType2.LT (XPR (Id (Typed "a" INT))) (VAL (I 5)))) (Id (Typed "a" INT)) )
+
+    -- let a2 = fromJust $execStateT (genCodeBlock [a]) emptyObjects
+
+    -- print(a2)
+    -- let a = fromJust $execStateT (genSpecialBlock ((UnName 1), True) (Operation (DataType2.LT (VAL (I 8)) (VAL (I 5)))) ) emptyObjects
+    
+    -- let a = fromJust $execStateT (genSpecialBlock ((UnName 1), True) (IfThen (Operation (DataType2.LT (VAL (I 8)) (VAL (I 5)))) (Val (I 9)) ) ) emptyObjects
+
+    -- print("a")
+    genObjFromExpr "mod1" [add, callFTest, callFTest2, callCondition, callCondition2, unaryNot, unaryMinus, ifFunction, ifElseFunction, ifElseCallBack]
+    -- genObjFromExpr "mod1" [add, callFTest, callFTest2, callCondition, callCondition2, unaryNot, unaryMinus, ifFunction]
+    
+    -- genObjFromExpr "mod1" [add, callFTest, callFTest2, callCondition, callCondition2, unaryNot, unaryMinus]
     -- genObjFromExpr "mod2" [mod2]
     -- genObjFromExpr "mod3" [mod3]

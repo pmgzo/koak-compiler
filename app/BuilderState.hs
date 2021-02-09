@@ -12,17 +12,18 @@ import LLVM.AST.Type
 import DataType2
 
 data Objects = Objects { 
-                        blockCount :: Integer,
-                        nameCount :: Integer, -- for named instructions
-                        insts :: [Named Instruction],
-                        blocks :: [BasicBlock],
-                        
-                        lastOperand :: Maybe Operand, -- for block construction
-                        
-                        localVars :: Map String (Name, Type),
-                        retType :: Type
-                        -- globalVars :: Map String (Type)
-                        }
+                blockCount :: Integer,
+                nameCount :: Integer, -- for named instructions
+                insts :: [Named Instruction],
+                blocks :: [BasicBlock],
+                
+                lastOperand :: Maybe Operand, -- for block construction
+                
+                localVars :: Map String (Name, Type),
+                retType :: Type
+                -- escapeName :: Maybe Name -- -> if escapeName = Nothing return the last instruction
+                -- globalVars :: Map String (Type)
+                } deriving (Show)
 
 functorHelper :: (a -> b) -> StateT Objects Maybe (a -> b)
 functorHelper fct = do
@@ -57,7 +58,7 @@ getNextBlock :: Expr -> StateT Objects Maybe Name
 getNextBlock (IfThen _ _)       = do
                                 newBlock <- gets blockCount
                                 return (UnName $fromInteger (newBlock + 2))
-getNextBlock (IfElse _ _ _)       = do
+getNextBlock (IfElse _ _ _)     = do
                                 newBlock <- gets blockCount
                                 return (UnName $fromInteger (newBlock + 3))
 getNextBlock (While _ _)        = do
@@ -65,7 +66,7 @@ getNextBlock (While _ _)        = do
                                 return (UnName $fromInteger (newBlock + 3))
 getNextBlock (For _ _ _ _)      = do
                                 newBlock <- gets blockCount
-                                return (UnName $fromInteger (newBlock + 3))
+                                return (UnName $fromInteger (newBlock + 4))
 
 genNewBlockName :: Integer -> StateT Objects Maybe Name
 genNewBlockName inc = do
