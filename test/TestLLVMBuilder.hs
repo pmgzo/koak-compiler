@@ -11,6 +11,10 @@ import LLVM.AST.Name
 import LLVM.AST.Instruction -- Add ...
 import LLVM.AST
 import LLVM.AST.Constant ( Constant( Int, Float, GlobalReference) )
+import LLVM.AST.Float
+
+import qualified LLVM.AST.FloatingPointPredicate as FP
+
 
 import Data.Maybe
 
@@ -66,9 +70,17 @@ input3 = (Protof (Typed "fct1" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(
 
 -- input4 = (Protof (Typed "fct2" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ASSIGN (Typed "a" INT) (VAL (I 5)) ) ), (Id (Typed "a" INT) )] ))
 
+-- input4 = (Protof (Typed "cond1" INT) [] (Exprs [(Operation (LT (VAL (I 5)) (VAL (I 5)) ))] ) )
+
+input5 = (Operation (DataType2.EQ (VAL (D 0.0)) (VAL (D 0.0)) ))
+
+expectedRes5 = [UnName 1 := FCmp FP.OEQ (ConstantOperand (Float (Double 0.0 ) )) (ConstantOperand (Float (Double 0.0 ) )) [] ]
+
+test5 = testHelperInstruction "test5" input5 expectedRes5
+
+
 
 -- test call function
-
 -- the elaborate a test suite to test the .o
 
-llvmBuilderTests = TestList [test1, test2]
+llvmBuilderTests = TestList [test1, test2, test5]

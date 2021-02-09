@@ -9,6 +9,7 @@ import LLVM.AST.Name
 import LLVM.AST.Instruction -- Add ...
 import LLVM.AST
 import LLVM.AST.Type
+import DataType2
 
 data Objects = Objects { 
                         blockCount :: Integer,
@@ -18,7 +19,8 @@ data Objects = Objects {
                         
                         lastOperand :: Maybe Operand, -- for block construction
                         
-                        localVars :: Map String (Name, Type)
+                        localVars :: Map String (Name, Type),
+                        retType :: Type
                         -- globalVars :: Map String (Type)
                         }
 
@@ -33,8 +35,9 @@ emptyObjects = Objects {
                         insts = [], 
                         blocks = [],
                         lastOperand = Nothing,
-                        localVars = empty
-                        -- globalVars = empty
+                        localVars = empty,
+                        -- globalVar
+                        retType = (IntegerType 64)
                         }
 
 getCurrentBlockCount :: StateT Objects Maybe Integer
@@ -49,6 +52,25 @@ increaseBlockCount = do
                     modify (\s -> s {blockCount = o + 1} )
                     
                     return ()
+
+getNextBlock :: Expr -> StateT Objects Maybe Name
+getNextBlock (IfThen _ _)       = do
+                                newBlock <- gets blockCount
+                                return (UnName $fromInteger (newBlock + 2))
+getNextBlock (IfElse _ _ _)       = do
+                                newBlock <- gets blockCount
+                                return (UnName $fromInteger (newBlock + 3))
+getNextBlock (While _ _)        = do
+                                newBlock <- gets blockCount
+                                return (UnName $fromInteger (newBlock + 3))
+getNextBlock (For _ _ _ _)      = do
+                                newBlock <- gets blockCount
+                                return (UnName $fromInteger (newBlock + 3))
+
+genNewBlockName :: Integer -> StateT Objects Maybe Name
+genNewBlockName inc = do
+                        curr <- getCurrentBlockCount
+                        return (UnName $fromInteger (curr + inc))
 
 genNewName :: StateT Objects Maybe Name -- Name DataCtor
 genNewName = do
