@@ -69,6 +69,10 @@ checkIdentifier [] _ = []
 checkIdentifier ((Id id):xs) c = (Id (gIFC c id)):(checkIdentifier xs c)
 checkIdentifier ((Operation op):xs) c = (Operation ((handleOp [op] c)!!0)):(inferType xs c)
 checkIdentifier ((Exprs e):xs) c = (Exprs (inferType e c)):(inferType xs c)
+-- checkIdentifier ((For (i, iVal) (i2 cond) inc args):xs) c = (handleFor ):(checkIdentifier xs c)
+checkIdentifier ((While cond (Exprs args)):xs) c = (While ((inferType [cond] c)!!0) (Exprs (inferType args c))):(checkIdentifier xs c)
+checkIdentifier ((IfThen cond (Exprs args)):xs) c = (IfThen ((inferType [cond] c)!!0) (Exprs (inferType args c))):(checkIdentifier xs c)
+checkIdentifier ((IfElse cond (Exprs args) (Exprs args2)):xs) c = (IfElse ((inferType [cond] c)!!0) (Exprs (inferType args c)) (Exprs (inferType args2 c))):(checkIdentifier xs c)
 checkIdentifier _ _ = []
 
 handleOp :: [Op] -> [Expr] -> [Op]
@@ -95,6 +99,34 @@ handleIdentifier c id@(Wait name) (XPR (Id id2@(Wait n))) ast = typedExpr:toBeTy
                    toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name typ))]))
                    typ           = gTFC c id2
 handleIdentifier _ _ _ _ = []
+
+
+
+
+
+            -- | For (Identifier, Expr) (Identifier, Expr) Expr Expr -- exps
+            -- -- for i = 0, i < 1, 1 in print(i);
+            -- -- for i = 0, i < 10, 1 in i = i - 2 * 1 : i = 5 / 5 + i;
+            -- | While Expr Expr --- exp, exps
+            -- | IfThen Expr Expr -- exp, exps
+            -- | IfElse Expr Expr Expr -- exp exps exps
+
+
+-- handle for, while, if
+-------------------------------------------------------------------------------------------
+-- checkIdentifier ((For (i, iVal) (i2 cond) inc args :xs) c = (handleFor ):(checkIdentifier xs c)
+-- inferType = [(op (i ival), inc, args)
+
+
+handleFor :: [Expr] -> Identifier -> Op -> [Expr] -> [Expr]
+handleFor c id@(Wait name) op@(VAL val) ast = typedExpr:toBeTypedExpr
+             where typedExpr     = (Operation (ASSIGN (Typed name (gTFV val)) op))
+                   toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name (gTFV val)))]))
+handleFor c id@(Wait name) (XPR (Id id2@(Wait n))) ast = typedExpr:toBeTypedExpr
+             where typedExpr     = (Operation (ASSIGN (Typed name typ) (XPR (Id (gIFC c id2)))))
+                   toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name typ))]))
+                   typ           = gTFC c id2
+handleFor _ _ _ _ = []
 
 
 
