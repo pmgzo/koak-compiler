@@ -21,9 +21,10 @@ clean:
 	rm -rf *vg*
 	stack clean
 
-tests_run: clean
+tests_run:
+#	clean
 	stack test
-#		stack test --coverage
+#	stack test --coverage
 
 tests_integrations: clean
 	stack exec integration_test
