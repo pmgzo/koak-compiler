@@ -29,6 +29,12 @@ identifierToExpr :: [Identifier] -> [Expr]
 identifierToExpr [] = []
 identifierToExpr (x:xs) = (Id x):(identifierToExpr xs)
 
+isBool :: Op -> Bool
+isBool (DataType2.LT _ _) = True
+isBool (DataType2.GT _ _) = True
+isBool (DataType2.EQ _ _) = True
+isBool (DataType2.NOTEQ _ _) = True
+isBool _ = False
 
 
 
@@ -41,6 +47,26 @@ getTypeFromValue Void   = VOID
 gTFV :: Value -> TypeKoak
 gTFV val = getTypeFromValue val
 
+getTypeFromOp :: [Op] -> [Expr] -> TypeKoak
+getTypeFromOp ((VAL val):xs) _             = gTFV val
+getTypeFromOp ((XPR e):xs) c               = gTFE [e]
+getTypeFromOp ((ADD op):xs) c              = getTypeFromOp op c
+getTypeFromOp ((SUB op):xs) c              = getTypeFromOp op c
+getTypeFromOp ((MUL op):xs) c              = getTypeFromOp op c
+getTypeFromOp ((DIV op):xs) c              = getTypeFromOp op c
+getTypeFromOp ((DataType2.LT _ _):xs) c    = INT
+getTypeFromOp ((DataType2.GT _ _):xs) c    = INT
+getTypeFromOp ((DataType2.EQ _ _):xs) c    = INT
+getTypeFromOp ((DataType2.NOTEQ _ _):xs) c = INT
+getTypeFromOp _ _ = VOID
+
+gTFO :: Op -> [Expr] -> TypeKoak
+gTFO (ADD op) c = getTypeFromOp op c
+gTFO (SUB op) c = getTypeFromOp op c
+gTFO (MUL op) c = getTypeFromOp op c
+gTFO (DIV op) c = getTypeFromOp op c
+gTFO op c = getTypeFromOp [op] c
+
 getTypeFromCache :: [Expr] -> Identifier -> TypeKoak
 getTypeFromCache [] _ = VOID -- error
 getTypeFromCache ((Id id1@(Typed name1 t)):xs) id2@(Wait name2)
@@ -50,11 +76,21 @@ getTypeFromCache ((Id id1@(Typed name1 t)):xs) id2@(Wait name2)
 gTFC :: [Expr] -> Identifier -> TypeKoak
 gTFC e i = getTypeFromCache e i
 
+getTypeFromExpr :: [Expr] -> TypeKoak
+getTypeFromExpr [] = VOID -- error
+getTypeFromExpr ((Id (Typed _ t)):xs) = t
+getTypeFromExpr ((Callf (Typed _ t) _):xs) = t
+
+gTFE :: [Expr] -> TypeKoak
+gTFE e = getTypeFromExpr e
+
 getIdFromCache :: [Expr] -> Identifier -> Identifier
-getIdFromCache [] _ = (Typed "getIdFromCache error" VOID) -- error
+getIdFromCache [] id = (Typed ("getIdFromCache error"++(show id)) VOID)
 getIdFromCache ((Id id1@(Typed name1 t)):xs) id2@(Wait name2)
                   | name1 == name2 = id1
                   | otherwise      = getIdFromCache xs id2
+getIdFromCache _ id@(Typed name t) = id
+-- getIdFromCache e id = (Typed ("getIdFromCache error"++(show e)++"; "++(show id)) VOID)
 
 gIFC :: [Expr] -> Identifier -> Identifier
 gIFC e i = getIdFromCache e i
@@ -88,7 +124,7 @@ handleOp ((DataType2.NOTEQ op1 op2):xs) c = (DataType2.NOTEQ ((handleOp [op1] c)
 handleOp (v@(VAL _):xs) c = v:(handleOp xs c)
 -- handleOp (v@(XPR (Id id)):xs) c = (XPR (Id (gIFC c id))):(handleOp xs c)
 handleOp (v@(XPR e):xs) c = (XPR ((checkIdentifier [e] c)!!0)):(handleOp xs c)
-handleOp _ _ = []
+handleOp op c = [(XPR (Err ("error in handleOp "++(show op)++"; "++(show c)++"; ")))]
 
 handleIdentifier :: [Expr] -> Identifier -> Op -> [Expr] -> [Expr]
 handleIdentifier c id@(Wait name) op@(VAL val) ast = typedExpr:toBeTypedExpr
@@ -98,7 +134,7 @@ handleIdentifier c id@(Wait name) (XPR (Id id2@(Wait n))) ast = typedExpr:toBeTy
              where typedExpr     = (Operation (ASSIGN (Typed name typ) (XPR (Id (gIFC c id2)))))
                    toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name typ))]))
                    typ           = gTFC c id2
-handleIdentifier _ _ _ _ = []
+handleIdentifier c id op ast = [(Err ("error in handleIdentifier "++(show c)++"; "++(show id)++"; "++(show op)++"; "++(show ast)))]
 
 
 
@@ -126,7 +162,7 @@ handleFor c id@(Wait name) (XPR (Id id2@(Wait n))) ast = typedExpr:toBeTypedExpr
              where typedExpr     = (Operation (ASSIGN (Typed name typ) (XPR (Id (gIFC c id2)))))
                    toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name typ))]))
                    typ           = gTFC c id2
-handleFor _ _ _ _ = []
+handleFor _ _ _ _ = [(Err "error in handleFor")]
 
 
 
@@ -147,7 +183,11 @@ handleAssign c id@(Wait name) (XPR (Id id2@(Wait n))) ast = typedExpr:toBeTypedE
              where typedExpr     = (Operation (ASSIGN (Typed name typ) (XPR (Id (gIFC c id2)))))
                    toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name typ))]))
                    typ           = gTFC c id2
-handleAssign _ _ _ _ = []
+handleAssign c id@(Wait name) op ast = typedExpr:toBeTypedExpr
+             where typedExpr     = (Operation (ASSIGN (Typed name (gTFO newOp c)) newOp))
+                   toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name (gTFO newOp c)))]))
+                   newOp         = (handleOp [op] c)!!0
+handleAssign c id op ast = [(Err ("error in handleAssign "++(show c)++"; "++(show id)++"; "++(show op)++"; "++(show ast)))]
 
 
 
@@ -164,7 +204,7 @@ handleFunc c id args block ast = typedExpr:(inferType ast newCache)
              where typedExpr  = (Protof id args (Exprs (inferType block blockCache)))
                    newCache   = c ++ [(Id id)]
                    blockCache = newCache ++ (identifierToExpr args)
-handleFunc _ _ _ _ _ = []
+handleFunc c id ag b ast = [(Err ("error in handleFunc"++(show c)++"; "++(show id)++"; "++(show ag)++"; "++(show b)++"; "++(show ast)))]
 
 handleFuncArgs :: [Expr] -> [Expr] -> [Expr] -> [Expr]
 handleFuncArgs [] _ _ = [] -- error
