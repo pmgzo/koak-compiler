@@ -58,7 +58,6 @@ getIdFromCache ((Id id1@(Typed name1 t)):xs) id2@(Wait name2)
 
 gIFC :: [Expr] -> Identifier -> Identifier
 gIFC e i = getIdFromCache e i
--------------------------------------------------------------------------------------------
 
 
 
@@ -67,7 +66,9 @@ gIFC e i = getIdFromCache e i
 -------------------------------------------------------------------------------------------
 checkIdentifier :: [Expr] -> [Expr] -> [Expr]
 checkIdentifier [] _ = []
-checkIdentifier ((Operation op):xs) c = (Operation ((handleOp [op] c)!!0)):(checkIdentifier xs c)
+checkIdentifier ((Id id):xs) c = (Id (gIFC c id)):(checkIdentifier xs c)
+checkIdentifier ((Operation op):xs) c = (Operation ((handleOp [op] c)!!0)):(inferType xs c)
+checkIdentifier ((Exprs e):xs) c = (Exprs (inferType e c)):(inferType xs c)
 checkIdentifier _ _ = []
 
 handleOp :: [Op] -> [Expr] -> [Op]
@@ -165,25 +166,32 @@ inferType exprs c
                     identifier = checkIdentifier exprs c
 inferType _ _  = []
 
-inferringType :: [Expr] -> [Expr] -> [Expr]
-inferringType [] _ = []
-inferringType exprs c = inferType exprs c
 
 
-------------------------------------------------------------------
-changeType :: Identifier -> TypeKoak -> Identifier
-changeType (Wait name) typeId = (Typed name typeId)
-changeType id _               = id
-------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+-- Func to call to hanle type inference
+inferringType :: [Expr] -> [Expr]
+inferringType [] = []
+inferringType exprs = inferType exprs []
+
+
+
+
+
+
+
 
 
 -- checkAssign [(Operation (ASSIGN (Wait "y") (VAL (I 5))))] []
 -- inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "x") (XPR (Id (Wait "y")))))] []
-
-
-
-            -- | Protof Identifier [Identifier] Expr -- (name, return type) args block
-            -- | Callf Identifier [Expr] -- appel de function avec arguments
 
 -- inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "x") (XPR (Id (Wait "y"))))), (Protof (Typed "add" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ADD [(XPR (Id (Wait "a"))), (XPR (Id (Wait "a")))]))]))] []
 -- inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "x") (XPR (Id (Wait "y"))))), (Protof (Typed "add" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ADD [(XPR (Id (Wait "a"))), (XPR (Id (Wait "a")))]))])),

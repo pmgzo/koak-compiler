@@ -4,10 +4,9 @@ data TypeKoak = INT | DOUBLE | VOID deriving (Show, Eq)
 
 data Identifier = Wait String | Typed String TypeKoak deriving (Show, Eq)
 
-data Value
-    = Void
-    | I Integer
-    | D Double deriving (Show, Eq)
+data Value = Void
+           | I Integer
+           | D Double deriving (Show, Eq)
 
 data Unop = Not | UMinus deriving (Show, Eq)
 
@@ -39,7 +38,7 @@ data Expr = Val Value -- Constant
             | For (Identifier, Expr) (Identifier, Expr) Expr Expr -- exps
             -- for i = 0, i < 1, 1 in print(i);
             -- for i = 0, i < 10, 1 in i = i - 2 * 1 : i = 5 / 5 + i;
-            
+
             | While Expr Expr --- exp, exps
             | IfThen Expr Expr -- exp, exps
             | IfElse Expr Expr Expr -- exp exps exps
