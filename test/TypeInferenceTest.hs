@@ -43,8 +43,13 @@ expectedRes9 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (IfElse (Opera
 
 test9 = TestCase $ assertEqual "y = 2; if y < 10 then y = y * 2 else y = y * 2" expectedRes9 input9
 
+input10 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (For ((Wait "i"), (Val (I 5))) ((Wait "i"), (Val (I 10))) (Val (I 1)) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
+expectedRes10 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (For ((Typed "i" INT), (Val (I 5))) ((Typed "i" INT), (Val (I 10))) (Val (I 1)) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
+
+test10 = TestCase $ assertEqual "y = 2; for i = 5: i < 10: 1 do y = y * 2" expectedRes10 input10
 
 
 
 
-typeInferenceTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9]
+
+typeInferenceTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10]
