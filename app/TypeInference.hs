@@ -69,8 +69,9 @@ gTFC :: [Expr] -> Identifier -> TypeKoak
 gTFC e i = getTypeFromCache e i
 
 getTypeFromExpr :: [Expr] -> TypeKoak
-getTypeFromExpr [] = VOID -- error
-getTypeFromExpr ((Id (Typed _ t)):xs) = t
+getTypeFromExpr []                         = VOID -- error
+getTypeFromExpr ((Id (Typed _ t)):xs)      = t
+getTypeFromExpr ((Val val):xs)             = gTFV val
 getTypeFromExpr ((Callf (Typed _ t) _):xs) = t
 
 gTFE :: [Expr] -> TypeKoak
@@ -81,7 +82,7 @@ getIdFromCache [] id = (Typed ("getIdFromCache error"++(show id)) VOID)
 getIdFromCache ((Id id1@(Typed name1 t)):xs) id2@(Wait name2)
                   | name1 == name2 = id1
                   | otherwise      = getIdFromCache xs id2
-getIdFromCache _ id@(Typed name t) = id
+getIdFromCache _ id@(Typed _ _) = id
 -- getIdFromCache e id = (Typed ("getIdFromCache error"++(show e)++"; "++(show id)) VOID)
 
 gIFC :: [Expr] -> Identifier -> Identifier
@@ -132,23 +133,21 @@ handleIdentifier c id op ast = [(Err ("error in handleIdentifier "++(show c)++";
 
 
 
-
-            -- | For (Identifier, Expr) (Identifier, Expr) Expr Expr -- exps
-
 -- handle for, while, if
 -------------------------------------------------------------------------------------------
-
-
 handleFor :: [Expr] -> Identifier -> Expr -> Identifier -> Expr -> Expr -> Expr -> Expr
 handleFor c i val i2 cond inc (Exprs args)
-          = (exprToFor init condT ((inferType [inc] newC)!!0) (Exprs (inferType args newC)))
+          = (exprToFor init condT ((checkIdentifier [inc] newC)!!0) (Exprs (inferType args newC)))
              where init          = (checkAssign [(Operation (ASSIGN i (XPR val)))] c)!!0
-                   newC          = [init]
+                   newC          = (assignToCache init):c
                    condT         = ((inferType [(Operation (DataType2.LT (XPR (Id i2)) (XPR cond)))] newC)!!0)
 handleFor _ _ _ _ _ _ _ = (Err "error in handleFor")
 
 exprToFor :: Expr -> Expr -> Expr -> Expr -> Expr
 exprToFor (Operation (ASSIGN i (XPR val))) (Operation (DataType2.LT (XPR (Id i2)) (XPR cond))) inc args = (For (i, val) (i2, cond) inc args)
+
+assignToCache :: Expr -> Expr
+assignToCache (Operation (ASSIGN i val)) = (Id i)
 
 
 
@@ -203,11 +202,8 @@ handleFuncArgs c tmpCache (x@(Val _):xs) = x:(handleFuncArgs c c xs) -- add chec
 
 
 
-
----- handle in / out of block for assignement
----- check if every situation is handled, assignement in if, for, while, a=b=c, ...
----- change to maybe ([Expr]) to handle error
 ---- 2 cache : cFunc, cVar
+
 
 
 
@@ -239,18 +235,3 @@ inferType _ _  = []
 inferringType :: [Expr] -> [Expr]
 inferringType [] = []
 inferringType exprs = inferType exprs []
-
-
-
-
-
-
-
-
-
--- checkAssign [(Operation (ASSIGN (Wait "y") (VAL (I 5))))] []
--- inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "x") (XPR (Id (Wait "y")))))] []
-
--- inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "x") (XPR (Id (Wait "y"))))), (Protof (Typed "add" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ADD [(XPR (Id (Wait "a"))), (XPR (Id (Wait "a")))]))]))] []
--- inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "x") (XPR (Id (Wait "y"))))), (Protof (Typed "add" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ADD [(XPR (Id (Wait "a"))), (XPR (Id (Wait "a")))]))])),
--- inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "x") (XPR (Id (Wait "y"))))), (Protof (Typed "add" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ADD [(XPR (Id (Wait "a"))), (XPR (Id (Wait "a")))]))])), (Callf (Wait "add") [(Val (I 2)), (Id (Wait "x"))])] []
