@@ -26,15 +26,25 @@ test5 = TestCase $ assertEqual "y = 5: x = y" expectedRes5 input5
 input6 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]
 expectedRes6 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]
 
-test6 = TestCase $ assertEqual "y = y * 2" expectedRes6 input6
+test6 = TestCase $ assertEqual "y = 5: y = y * 2" expectedRes6 input6
 
 input7 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (While (Operation (DataType2.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
 expectedRes7 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (While (Operation (DataType2.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
 
 test7 = TestCase $ assertEqual "y = 2; while y < 10 do y = y * 2" expectedRes7 input7
 
+input8 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (IfThen (Operation (DataType2.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
+expectedRes8 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (IfThen (Operation (DataType2.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
+
+test8 = TestCase $ assertEqual "y = 2; if y < 10 then y = y * 2" expectedRes8 input8
+
+input9 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (IfElse (Operation (DataType2.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
+expectedRes9 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (IfElse (Operation (DataType2.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
+
+test9 = TestCase $ assertEqual "y = 2; if y < 10 then y = y * 2 else y = y * 2" expectedRes9 input9
 
 
 
 
-typeInferenceTests = TestList [test1, test2, test3, test4, test5, test6, test6]
+
+typeInferenceTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9]

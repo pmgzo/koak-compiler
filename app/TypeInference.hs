@@ -29,14 +29,6 @@ identifierToExpr :: [Identifier] -> [Expr]
 identifierToExpr [] = []
 identifierToExpr (x:xs) = (Id x):(identifierToExpr xs)
 
-isBool :: Op -> Bool
-isBool (DataType2.LT _ _) = True
-isBool (DataType2.GT _ _) = True
-isBool (DataType2.EQ _ _) = True
-isBool (DataType2.NOTEQ _ _) = True
-isBool _ = False
-
-
 
 getTypeFromValue :: Value -> TypeKoak
 getTypeFromValue (I nb) = INT
@@ -141,12 +133,6 @@ handleIdentifier c id op ast = [(Err ("error in handleIdentifier "++(show c)++";
 
 
             -- | For (Identifier, Expr) (Identifier, Expr) Expr Expr -- exps
-            -- -- for i = 0, i < 1, 1 in print(i);
-            -- -- for i = 0, i < 10, 1 in i = i - 2 * 1 : i = 5 / 5 + i;
-            -- | While Expr Expr --- exp, exps
-            -- | IfThen Expr Expr -- exp, exps
-            -- | IfElse Expr Expr Expr -- exp exps exps
-
 
 -- handle for, while, if
 -------------------------------------------------------------------------------------------
