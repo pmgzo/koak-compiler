@@ -4,9 +4,10 @@
 -- import LLVM.AST
 
 import LLVM_Module
+import TypeInference
 
 main :: IO ()
 main = do
-  -- genObjFromExpr $functionAurele $functionPaul
+  -- genObjFromExpr $ inferringType $ functionPaul
   
   print("here")
