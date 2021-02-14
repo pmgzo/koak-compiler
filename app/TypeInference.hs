@@ -71,6 +71,7 @@ gTFC e i = getTypeFromCache e i
 getTypeFromExpr :: [Expr] -> TypeKoak
 getTypeFromExpr []                         = VOID -- error
 getTypeFromExpr ((Id (Typed _ t)):xs)      = t
+getTypeFromExpr ((Unary u e):xs)           = getTypeFromExpr [e]
 getTypeFromExpr ((Val val):xs)             = gTFV val
 getTypeFromExpr ((Callf (Typed _ t) _):xs) = t
 
@@ -97,6 +98,7 @@ checkIdentifier :: [Expr] -> [Expr] -> [Expr]
 checkIdentifier [] _ = []
 checkIdentifier ((Val val):xs) c = (Val val):(inferType xs c)
 checkIdentifier ((Id id):xs) c = (Id (gIFC c id)):(inferType xs c)
+checkIdentifier ((Unary u e):xs) c = (Unary u ((checkIdentifier [e] c)!!0)):(inferType xs c)
 checkIdentifier ((Operation op):xs) c = (Operation ((handleOp [op] c)!!0)):(inferType xs c)
 checkIdentifier ((Exprs e):xs) c = (Exprs (inferType e c)):(inferType xs c)
 checkIdentifier ((For (i, val) (i2, cond) inc args):xs) c = (handleFor c i val i2 cond inc args):(inferType xs c)
