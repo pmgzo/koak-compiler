@@ -6,16 +6,14 @@ import LLVM.AST.Operand
 import LLVM.AST.Instruction -- Add ...
 import LLVM.AST.Name
 
+import LLVM.AST.Type
+import LLVM.AST.Constant ( Constant(GlobalReference, Int, Float) )
+import LLVM.AST.Float
+
+
 import DataType2
 import BuilderState
 import LLVM_Instruction
--- make copy objects
-
--- run new state
-
--- run block
-
--- execStateT
 
 ret :: Maybe Operand -> Named Terminator
 ret op = (Do $ Ret op [])
@@ -26,75 +24,130 @@ br name = (Do $ Br name [])
 condbr :: Operand -> Name -> Name -> Named Terminator
 condbr cond n1 n2 = (Do $ CondBr cond n1 n2 [])
 
-transmitBlockUpdate :: Objects -> StateT Objects Maybe ()
-transmitBlockUpdate blockState = do
-                            -- update:
-                            -- get insts yes
-                            -- nameCount (instruction) yes
-                            -- localVars no
-                            let instruction = insts blockState
-                            modify (\s -> s { insts = instruction })
-                            let nC = nameCount blockState
-                            modify (\s -> s { nameCount = nC })
-                            let bC = blockCount blockState
-                            modify (\s -> s { blockCount = bC })
-                            let generatedBlock = blocks blockState
-                            currBlocks <- gets blocks
-                            modify (\s -> s { blocks = currBlocks ++ generatedBlock })
-                            return ()
+getCallbackBlock :: [Expr] -> Integer
+getCallbackBlock [e] = scoreBlock e
+getCallbackBlock (e:rest) = scoreBlock e + getCallbackBlock rest
 
-genSpeBlockTerm :: Operand -> (Name, Bool) -> StateT Objects Maybe ()
-genSpeBlockTerm op (_, True)      = do
-                                -- to change if we use block imbrication
-                                addBlock (Do $ Ret (Just op) [])
-                                return ()
-genSpeBlockTerm op (name, False)  = do
-                                addBlock (Do $ Br name [])
-                                return ()
+scoreBlock :: Expr -> Integer
+scoreBlock b@(For _ _ _(Exprs exprs))   = threshold + (getCallbackBlock exprs)
+                                        where threshold     = refScore b
+scoreBlock b@(While _ (Exprs exprs))    = threshold + getCallbackBlock exprs
+                                        where threshold     = refScore b
+scoreBlock b@(IfThen _ (Exprs exprs))   = threshold + getCallbackBlock exprs
+                                        where threshold = refScore b
+scoreBlock b@(IfElse _ (Exprs exprs) 
+                        (Exprs exprs2)) = threshold + getCallbackBlock exprs + getCallbackBlock exprs2
+                                    where threshold = refScore b
+scoreBlock _                            = 0
 
-genCondBlock :: Expr -> (Name, Bool) -> StateT Objects Maybe ()
-genCondBlock b1 cb = do
-    s <- get
+refScore :: Expr -> Integer
+refScore (IfThen _ _)       = 2
+refScore (IfElse _ _ _)     = 3
+refScore (While _ _)        = 3
+refScore (For _ _ _ _)      = 4
+refScore _                  = 0
 
-    let (lastOp, newState) = fromJust $runStateT (genInstructions b1) s
+getNextBlock :: Expr -> StateT Objects Maybe Name
+getNextBlock xpr = do
+                currentBlock <- gets blockCount
+                let counter = scoreBlock xpr
+                return (UnName $fromInteger (currentBlock + counter))
 
-    transmitBlockUpdate newState
+getNextBlockInc :: Integer -> Expr -> StateT Objects Maybe Name
+getNextBlockInc inc xpr = do
+                currentBlock <- gets blockCount
+                let counter = scoreBlock xpr
+                return (UnName $fromInteger (currentBlock + counter + inc))
 
-    genSpeBlockTerm lastOp cb
+getNextBlockIfElseHelper :: Integer -> StateT Objects Maybe Name
+getNextBlockIfElseHelper 0 = do
+                currentBlock <- gets blockCount
+                return (UnName $fromInteger (currentBlock + 1 + 1))
+getNextBlockIfElseHelper a = do
+                currentBlock <- gets blockCount
+                -- return (UnName $fromInteger (currentBlock + 1 + a))
+                return (UnName $fromInteger (currentBlock + 1 + a + 1))
 
-genLoopBlock :: Expr -> Name -> StateT Objects Maybe ()
-genLoopBlock xpr cb = do
-    s <- get
-    let (lastOp, newState) = fromJust $runStateT (genInstructions xpr) s
+pop :: [a] -> [a]
+pop []      = []
+pop stack   = init stack
 
-    transmitBlockUpdate newState
+popReturn :: StateT Objects Maybe Name
+popReturn = do
+            stack <- gets retStack
 
-    addBlock (br cb) -- cb is the cond
+            let infoRet = last stack
 
-handleIf :: (Name, Bool) -> Expr -> StateT Objects Maybe ()
-handleIf cb@(name, ifend) (IfThen (Operation op) expr) = 
+            let newStack = init stack
+
+            modify (\s -> s { retStack = newStack })
+
+            return (getCB infoRet)
+
+maybePop :: StateT Objects Maybe ()
+maybePop = do
+            stack <- gets retStack
+            let newStack = pop stack
+            modify (\s -> s { retStack = newStack })
+
+pushReturn :: InfoRet -> StateT Objects Maybe ()
+pushReturn a = do
+                stack <- gets retStack
+                modify (\s -> s { retStack = stack ++ [a] } )
+
+dupRetStack :: StateT Objects Maybe () -- for if else
+dupRetStack = do
+                stack <- gets retStack
+                let infoRet = last stack
+                modify (\s -> s {retStack = stack ++ [infoRet]} )
+
+setLoopTerminator :: Name -> StateT Objects Maybe ()
+setLoopTerminator name = do
+                        stack <- gets retStack
+                        let lastElem = last stack
+                        let modifiedElem = (InfoRet (getCB lastElem) (getLastBlock lastElem) (LOOP name) )
+                                                    
+                        modify (\s -> s {retStack = (init stack) ++ [modifiedElem]} )
+
+getLastExitBlock :: StateT Objects Maybe Name
+getLastExitBlock = do
+                stack <- gets retStack
+                let lastElem = last stack
+                return (getCB lastElem)
+
+handleIf :: Bool -> Expr -> StateT Objects Maybe ()
+handleIf bool (IfThen (Operation op) (Exprs xprs)) = 
     do
     nameCond <- genNewBlockName 1
     cond <- genInstructionOperand op
-    let term = condbr cond nameCond (name)
+    exitB <- getLastExitBlock
+    let term = condbr cond nameCond exitB
+    
     addBlock term
-    genCondBlock expr cb
+    genCodeBlock xprs
 
-handleIfElse :: (Name, Bool) -> Expr -> StateT Objects Maybe ()
-handleIfElse cb@(name, next) (IfElse (Operation op) b1 b2)   = 
+handleIfElse :: Bool -> Expr -> StateT Objects Maybe ()
+handleIfElse bool (IfElse (Operation op) (Exprs b1) (Exprs b2))  = 
     do
     cond <- genInstructionOperand op
     ifBlock <- genNewBlockName 1
-    elseBlock <- genNewBlockName 2
+    elseBlock <- getNextBlockIfElseHelper (getCallbackBlock b1)
+
     let term = condbr cond ifBlock elseBlock
     addBlock term
-    genCondBlock b1 cb
-    genCondBlock b2 cb
+    dupRetStack -- dup branch
+    genCodeBlock b1
+    genCodeBlock b2
 
-handleWhile :: (Name, Bool) -> Expr -> StateT Objects Maybe ()
-handleWhile (exitB, _) (While (Operation op) (expr)) =  -- here exprs
+genLoopBlock :: Expr -> Name -> StateT Objects Maybe ()
+genLoopBlock (Exprs exprs) cb = do
+    setLoopTerminator cb
+    genCodeBlock exprs
+
+handleWhile :: Bool -> Expr -> StateT Objects Maybe ()
+handleWhile bool (While (Operation op) (expr)) =  -- here exprs
     do
-    --close block
+
     nameCond <- genNewBlockName 1
     loop <- genNewBlockName 2
 
@@ -103,21 +156,22 @@ handleWhile (exitB, _) (While (Operation op) (expr)) =  -- here exprs
     -- cond block
     cond <- genInstructionOperand op
 
+    exitB <- getLastExitBlock
+
     let term = condbr cond loop exitB
 
     addBlock term
 
     genLoopBlock expr nameCond
 
-handleFor :: (Name, Bool) -> Expr -> StateT Objects Maybe ()
-handleFor (exitB, _) (For assign@(idass, initVal) cond@(idcond, value) inc block) = 
+handleFor :: Bool -> Expr -> StateT Objects Maybe ()
+handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs)) = 
     do
-    -- carefull because if want to do block 
-    -- imbrication the br block wont be call here but in the genCodeBlock
+
     assignBlock <- genNewBlockName 1
     condBlock <- genNewBlockName 2
     loop <- genNewBlockName 3
-    previousScope <- genNewBlockName 4
+    previousScope <- getLastExitBlock
 
     addBlock (br assignBlock)
 
@@ -125,28 +179,86 @@ handleFor (exitB, _) (For assign@(idass, initVal) cond@(idcond, value) inc block
 
     addBlock (br condBlock)
 
-    genInstructions (Operation (DataType2.LT (XPR (Id idcond)) (XPR value)) )
+    condinst <- genInstructions (Operation (DataType2.LT (XPR (Id idcond)) (XPR value)) )
 
-    addBlock (br loop)
+    addBlock (condbr condinst loop previousScope)
 
-    -- genCodeBlock [block]
-    genInstructions block -- here supose to be exprs
+    genLoopBlock (Exprs (xprs ++ [inc])) condBlock
 
-    genInstructions inc
-    -- gen inc here
-    -- genCodeBlock [inc] -- instruction
-
-    addBlock (br condBlock)
-
-genSpecialBlock :: (Name, Bool) -> Expr ->StateT Objects Maybe ()
+genSpecialBlock :: Bool -> Expr ->StateT Objects Maybe ()
 genSpecialBlock cb stt@(IfThen _ _)     = handleIf cb stt
 genSpecialBlock cb stt@(IfElse _ _ _)   = handleIfElse cb stt
 -- loop here
 genSpecialBlock cb stt@(While _ _)      = handleWhile cb stt
-genSpecialBlock cb stt@(For _ _ _ _)    = 
-    do
-    s <- get
-    -- handleFor cb stt
-    let (_, newState) = fromJust $runStateT (handleFor cb stt) s
+genSpecialBlock cb stt@(For _ _ _ _)    = handleFor cb stt
 
-    transmitBlockUpdate newState
+------------------
+
+genTerminator :: Type -> Named Terminator
+genTerminator (IntegerType _)       = ret (Just (ConstantOperand (Int 64 0)) )
+genTerminator (FloatingPointType _) = ret (Just (ConstantOperand (Float (Double 0.0)) ) )
+-- void ?
+
+handleTerm :: Bool -> Maybe Operand -> BlockId -> StateT Objects Maybe ()
+handleTerm _ _ (LOOP name)      = do
+                                _ <- popReturn
+                                addBlock (br name)
+handleTerm False _  _           = do
+                                name <- popReturn
+                                addBlock (br name)
+handleTerm True op@(Just val) _ = do
+                                addBlock (ret op)
+                                maybePop
+handleTerm True Nothing _       = do
+                                t <- gets retType
+                                let lastStt = genTerminator t
+                                addBlock lastStt
+                                maybePop
+
+handleBlock :: Bool -> Expr -> StateT Objects Maybe ()
+handleBlock bool xpr =  do
+                    nextBlock <- getNextBlock xpr
+                    currentVars <- gets localVars -- save localvar then erase
+
+                    modify (\s -> s { lastOperand = Nothing } )
+
+                    pushReturn (InfoRet nextBlock bool NONE)
+
+                    genSpecialBlock bool xpr
+
+                    modify (\s -> s { localVars = currentVars } )
+
+addEscapeBranch :: [InfoRet] -> StateT Objects Maybe ()
+addEscapeBranch []   = do
+                        t <- gets retType
+                        let lastStt = genTerminator t
+                        addBlock lastStt
+addEscapeBranch (a:_) = do
+                        stack <- gets retStack
+                        let blockId = getBlockId stack
+                        let resp = canReturn stack
+                        handleTerm resp Nothing blockId
+
+handleSpecialBlock :: [Expr] -> StateT Objects Maybe ()
+handleSpecialBlock [block]      = do
+                                handleBlock True block
+                                -- create block that terminate
+                                stack <- gets retStack
+                                addEscapeBranch stack
+handleSpecialBlock (block:rest) = do
+                                handleBlock False block
+                                genCodeBlock rest
+
+genCodeBlock :: [Expr] -> StateT Objects Maybe ()
+genCodeBlock arr@((While _ _):_)    = handleSpecialBlock arr
+genCodeBlock arr@((IfThen _ _):_)   = handleSpecialBlock arr
+genCodeBlock arr@((IfElse _ _ _):_) = handleSpecialBlock arr
+genCodeBlock arr@((For _ _ _ _):_)  = handleSpecialBlock arr
+genCodeBlock [e]                    = do
+                                    op <- (genInstructions e)
+                                    stack <- gets retStack
+                                    let blockId = getBlockId stack
+                                    let resp = canReturn stack
+                                    handleTerm resp (Just op) blockId
+genCodeBlock (e:rest)               = genInstructions e >> genCodeBlock rest
+-- [True br 2, True br 2]

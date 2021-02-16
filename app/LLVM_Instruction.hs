@@ -25,8 +25,9 @@ assign  id@(Typed str t) op = do
                                 op2 <- genInstructionOperand op
                                 op1 <- getLocalPtr id
                                 addInst (Do $ Store False op1 op2 Nothing 0 [])                                
-                                (n, tp) <- getLocalVar str --in case the return is a = 1
-                                return (LocalReference tp n)
+                                localVar id
+                                -- (n, tp) <- getLocalVar str --in case the return is a = 1
+                                -- return (LocalReference tp n)
 
 genCondInstruction :: Op -> Operand -> Operand -> Instruction
 -- here if we want: if 1 then ...
@@ -59,10 +60,21 @@ genInstruction (MUL []) op1 op2 | typeop == (IntegerType 64)             = Mul F
                                 | typeop == (FloatingPointType DoubleFP) = FMul noFastMathFlags op1 op2 []
                                 where
                                 typeop = getOperandType op1
+genInstruction (SUB []) op1 op2 | typeop == (IntegerType 64)             = Sub False False op1 op2 []
+                                | typeop == (FloatingPointType DoubleFP) = FSub noFastMathFlags op1 op2 []
+                                where
+                                typeop = getOperandType op1
+genInstruction (DIV []) op1 op2 | typeop == (IntegerType 64)             = SDiv False op1 op2 []
+                                | typeop == (FloatingPointType DoubleFP) = FDiv noFastMathFlags op1 op2 []
+                                where
+                                typeop = getOperandType op1
+
 
 operatorInARow :: Op -> StateT Objects Maybe Operand
 operatorInARow (ADD [fst])          = genInstructionOperand fst
 operatorInARow (MUL [fst])          = genInstructionOperand fst
+operatorInARow (DIV [fst])          = genInstructionOperand fst
+operatorInARow (SUB [fst])          = genInstructionOperand fst
 operatorInARow (ADD (fst:snd))      = do
                                     firstop <- genInstructionOperand fst-- get first operand
                                     secondop <- operatorInARow (ADD snd) -- get second operand
@@ -89,6 +101,33 @@ operatorInARow (MUL (fst:snd))      = do
                                     let t = getOperandType firstop
                                     
                                     return (LocalReference t name)
+operatorInARow (SUB (fst:snd))      = do
+                                    firstop <- genInstructionOperand fst-- get first operand
+                                    secondop <- operatorInARow (SUB snd) -- get second operand
+                                    let inst = genInstruction (SUB []) firstop secondop
+                                    
+                                    name <- genNewName --operand name
+                                    
+                                    addInst (name := inst)
+
+                                    -- have to get operand type
+                                    let t = getOperandType firstop
+
+                                    return (LocalReference t name)
+operatorInARow (DIV (fst:snd))      = do
+                                    firstop <- genInstructionOperand fst-- get first operand
+                                    secondop <- operatorInARow (DIV snd) -- get second operand
+                                    let inst = genInstruction (DIV []) firstop secondop
+                                    
+                                    name <- genNewName --operand name
+                                    
+                                    addInst (name := inst)
+
+                                    -- have to get operand type
+                                    let t = getOperandType firstop
+                                    
+                                    return (LocalReference t name)
+
 
 genInstructionOperand :: Op -> StateT Objects Maybe Operand
 genInstructionOperand (VAL v)           = return $ getConstVal v -- Constant
