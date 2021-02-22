@@ -11,18 +11,41 @@ import LLVM.AST
 import LLVM.AST.Type
 import DataType2
 
-data Objects = Objects { 
-                        blockCount :: Integer,
-                        nameCount :: Integer, -- for named instructions
-                        insts :: [Named Instruction],
-                        blocks :: [BasicBlock],
-                        
-                        lastOperand :: Maybe Operand, -- for block construction
-                        
-                        localVars :: Map String (Name, Type),
-                        retType :: Type
-                        -- globalVars :: Map String (Type)
-                        }
+data BlockId = LOOP Name | NONE deriving (Show)
+
+data InfoRet = InfoRet Name Bool BlockId deriving (Show)
+
+data Objects = Objects {
+                blockCount :: Integer,
+                nameCount :: Integer, -- for named instructions
+                insts :: [Named Instruction],
+                blocks :: [BasicBlock],
+                
+                -- globalVars :: Map String (Type),
+                localVars :: Map String (Name, Type),
+                retType :: Type,
+                retStack :: [InfoRet],-- callbackLoop, isTheLastBlock, blockId
+                lastOperand :: Maybe Operand
+
+                } deriving (Show)
+
+getCB :: InfoRet -> Name
+getCB (InfoRet a _ _) = a
+
+getLastBlock ::InfoRet -> Bool
+getLastBlock (InfoRet _ b _ ) = b
+
+-- parcoursToutEst à True
+canReturn :: [InfoRet] -> Bool
+canReturn []                            = True
+canReturn ((InfoRet _ False _):r)       = False
+canReturn ((InfoRet _ True _):r)        = canReturn r
+
+getBlockId :: [InfoRet] -> BlockId
+getBlockId []                   = NONE
+-- getBlockId ((InfoRet n b bId):_) = bId
+getBlockId [(InfoRet n b bId)]  = bId
+getBlockId (a:rest)             = getBlockId rest
 
 functorHelper :: (a -> b) -> StateT Objects Maybe (a -> b)
 functorHelper fct = do
@@ -30,14 +53,14 @@ functorHelper fct = do
 
 emptyObjects :: Objects
 emptyObjects = Objects {
-                        blockCount = 0, 
-                        nameCount = 0, 
-                        insts = [], 
+                        blockCount = 0,
+                        nameCount = 0,
+                        insts = [],
                         blocks = [],
-                        lastOperand = Nothing,
                         localVars = empty,
-                        -- globalVar
-                        retType = (IntegerType 64)
+                        retType = (IntegerType 64),
+                        retStack = [],
+                        lastOperand = Nothing
                         }
 
 getCurrentBlockCount :: StateT Objects Maybe Integer
@@ -52,20 +75,6 @@ increaseBlockCount = do
                     modify (\s -> s {blockCount = o + 1} )
                     
                     return ()
-
-getNextBlock :: Expr -> StateT Objects Maybe Name
-getNextBlock (IfThen _ _)       = do
-                                newBlock <- gets blockCount
-                                return (UnName $fromInteger (newBlock + 2))
-getNextBlock (IfElse _ _ _)       = do
-                                newBlock <- gets blockCount
-                                return (UnName $fromInteger (newBlock + 3))
-getNextBlock (While _ _)        = do
-                                newBlock <- gets blockCount
-                                return (UnName $fromInteger (newBlock + 3))
-getNextBlock (For _ _ _ _)      = do
-                                newBlock <- gets blockCount
-                                return (UnName $fromInteger (newBlock + 3))
 
 genNewBlockName :: Integer -> StateT Objects Maybe Name
 genNewBlockName inc = do
@@ -97,7 +106,6 @@ getInsts = do
 resetInsts :: StateT Objects Maybe ()
 resetInsts = do
             s <- get
-            
             modify (\s -> s {insts = []} )
             return ()
 

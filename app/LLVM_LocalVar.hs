@@ -47,9 +47,7 @@ localVar (Typed str _) = do
 
                 return (LocalReference t nameInst)
 
-
 -- internal process
-
 getLocalVar :: String -> StateT Objects Maybe (Name, Type)
 getLocalVar str =   do
                     vars <- gets localVars
@@ -103,6 +101,7 @@ addFunctionParameter ((Typed str tk):rest)  = do
                                                 addInst (Do $ Store False op (LocalReference t name) Nothing 0 [])
                                                 addFunctionParameter rest
 
+-- 
 fillRetType :: Type -> StateT Objects Maybe ()
 fillRetType t = do
                 (modify (\s -> s {retType = t}) )
