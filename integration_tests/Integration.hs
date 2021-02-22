@@ -6,7 +6,7 @@ import DataType2
 import BuilderState
 import StatementHelper
 import LLVM_Block
-import LLVM_LocalVar
+import LLVM_Var
 
 
 import LLVM.AST

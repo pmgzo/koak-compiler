@@ -20,8 +20,7 @@ data Objects = Objects {
                 nameCount :: Integer, -- for named instructions
                 insts :: [Named Instruction],
                 blocks :: [BasicBlock],
-                
-                -- globalVars :: Map String (Type),
+                globalVars :: Map String (Name, Type),
                 localVars :: Map String (Name, Type),
                 retType :: Type,
                 retStack :: [InfoRet],-- callbackLoop, isTheLastBlock, blockId
@@ -58,6 +57,7 @@ emptyObjects = Objects {
                         insts = [],
                         blocks = [],
                         localVars = empty,
+                        globalVars = empty,
                         retType = (IntegerType 64),
                         retStack = [],
                         lastOperand = Nothing

@@ -13,7 +13,7 @@ import Data.ByteString.Char8 as BS
 genModule :: String -> [Expr] -> AST.Module
 genModule name exprs =  AST.defaultModule {
                             AST.moduleName = fromString name,
-                            AST.moduleDefinitions = genDefinitions exprs
+                            AST.moduleDefinitions = genDefinitions exprs []
                         }
 
 genObjFromExpr :: String -> [Expr] -> IO ()

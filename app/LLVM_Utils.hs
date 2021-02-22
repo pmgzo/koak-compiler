@@ -24,6 +24,10 @@ getOperandType (LocalReference t n)         = t
 getOperandType (ConstantOperand (Int _ _))  = IntegerType 64
 getOperandType (ConstantOperand (Float _))  = FloatingPointType DoubleFP
 
+getConstantFromValue :: Value -> Constant
+getConstantFromValue (I v) = (Int 64 v)
+getConstantFromValue (D v) = (Float (Double v))
+
 getConstVal :: Value -> Operand
 getConstVal (I v) = (ConstantOperand (Int 64 v) )
 getConstVal (D v) = (ConstantOperand (Float (Double v)) )

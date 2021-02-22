@@ -1,7 +1,7 @@
 module LLVM_Instruction where
 
 import DataType2
-import LLVM_LocalVar
+import LLVM_Var
 import BuilderState
 import LLVM_Utils
 

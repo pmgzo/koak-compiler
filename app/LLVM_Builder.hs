@@ -20,8 +20,9 @@ import LLVM.AST.CallingConvention -- call function
 import LLVM.AST.ParameterAttribute
 
 import LLVM_Utils
-import LLVM_LocalVar
+import LLVM_Var
 import LLVM_Instruction
+import LLVM_Global
 import LLVM_Block
 import DataType2
 import BuilderState
@@ -55,20 +56,54 @@ getTypeFromIdentifier (Typed _ t) = typeConversion t
 getNameFromIdentifier :: Identifier -> String
 getNameFromIdentifier (Typed str _) = str
 
-genDefinition :: Expr -> Definition
-genDefinition (Protof id params (Exprs xprs)) = GlobalDefinition 
-                                                functionDefaults
-                                                {   name = (mkName name),
-                                                    parameters = (parameters, False),
-                                                    returnType = retType,
-                                                    basicBlocks = genDefHelper $fromJust $execStateT (initState callList) emptyObjects
-                                                }
-                                                where
-                                                parameters = genProtoParameter params
-                                                name    = getNameFromIdentifier id
-                                                retType = getTypeFromIdentifier id
-                                                callList = [(fillRetType retType), (addFunctionParameter params), (genCodeBlock xprs)]
+fillRetType :: Type -> StateT Objects Maybe ()
+fillRetType t = do
+                (modify (\s -> s {retType = t}) )
 
-genDefinitions :: [Expr] -> [Definition]
-genDefinitions [xpr]      = [genDefinition xpr]
-genDefinitions (xpr:rest) = [genDefinition xpr] ++ genDefinitions rest
+genGlobalVariableList :: [(String, Type)] -> StateT Objects Maybe ()
+genGlobalVariableList list = do
+                            (modify (\s -> s { globalVars = mapWithKey lbd (fromList list) } ))
+                            where lbd = (\name -> \t -> ((mkName name), t))
+
+genFunction :: Expr -> [(String, Type)] -> (Definition, [(String, Type)])
+genFunction (Protof id params (Exprs xprs)) globVarList = (def, globVarList)                                            
+                                where 
+                                def = GlobalDefinition 
+                                        functionDefaults
+                                        {   name = (mkName name),
+                                            parameters = (parameters, False),
+                                            returnType = retType,
+                                            basicBlocks = genDefHelper 
+                                                        $fromJust $execStateT 
+                                                                (initState callList)
+                                                                            emptyObjects
+                                        }
+                                parameters = genProtoParameter params
+                                name    = getNameFromIdentifier id
+                                retType = getTypeFromIdentifier id
+                                callList = [(fillRetType retType), 
+                                            (addFunctionParameter params), 
+                                            (genGlobalVariableList globVarList),
+                                                (genCodeBlock xprs)]
+
+initState :: [StateT Objects Maybe ()] -> StateT Objects Maybe ()
+initState [fctState]        = fctState
+initState (fctState:rest)   = do
+                            fctState
+                            initState rest
+
+genDefinition :: Expr -> [(String, Type)] -> (Definition, [(String, Type)])
+genDefinition p@(Protof _ _ _) globVarList = genFunction p globVarList
+genDefinition (Operation a@(ASSIGN _ _)) globVarList = concat (handleGlobalVariable a) globVarList
+                                            where concat = (\(def, a) list -> (def, list ++ [a]))
+
+genDefinitions :: [Expr] -> [(String, Type)] -> [Definition]
+genDefinitions [xpr] globVarList     = [def]
+                                    where
+                                    res = genDefinition xpr globVarList
+                                    def = fst res
+genDefinitions (xpr:rest) globVarList = [def] ++ (genDefinitions rest newVarList)
+                                    where
+                                    res = genDefinition xpr globVarList
+                                    def = fst res
+                                    newVarList = snd res
