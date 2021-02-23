@@ -127,6 +127,10 @@ for1 = fctWrapper "for1" [(genericFor [addA1]), (Id (Typed "a" INT))]
 
 while13 = fctWrapper "whileImbr" [(genericWhile (condLT "a" 25) [((Operation (ASSIGN (Typed "b" INT) (VAL (I 0))))), (genericWhile (condLT "b" 5) [addB1, addA1])]), (Id (Typed "a" INT))]
 
+globalVar1 = (Operation (ASSIGN (Typed "global1" INT) (VAL (I 7)) ))
+
+whileGlobalVar = fctWrapper "whileImbrGlobalVar" [(genericWhile (condLT "global1" 25) [((Operation (ASSIGN (Typed "b" INT) (VAL (I 0))))), (genericWhile (condLT "b" 5) [addB1, addINT "global1"])]), (Id (Typed "global1" INT))]
+
 getBlocks :: Expr -> [BasicBlock]
 getBlocks (Protof id params (Exprs xprs)) = 
     genDefHelper $fromJust $execStateT (initState callList) emptyObjects
@@ -146,7 +150,8 @@ main = do
                         add, callFTest, callFTest2, callCondition, 
                         callCondition2, unaryNot, unaryMinus, ifFunction, 
                         ifElseFunction, while1, ifElseCallBack, ifElse2, ifElse3, factorial,
-                        testImbrication1, testImbrication2, testImbr1, testImbr2, for1, while13
+                        testImbrication1, testImbrication2, testImbr1, testImbr2, for1, while13,
+                        globalVar1,whileGlobalVar
                         ]
     
     -- genObjFromExpr "mod1" [add, callFTest, callFTest2, callCondition, callCondition2, unaryNot, unaryMinus, ifFunction, ifElseFunction, ifElseCallBack]

@@ -21,11 +21,10 @@ import LLVM.AST.Float
 
 assign :: Identifier -> Op -> StateT Objects Maybe Operand
 assign  id@(Typed str t) op = do
-                                -- have handle global var
                                 op2 <- genInstructionOperand op
-                                op1 <- getLocalPtr id
-                                addInst (Do $ Store False op1 op2 Nothing 0 [])                                
-                                localVar id
+                                op1 <- getPtr id
+                                addInst (Do $ Store False op1 op2 Nothing 0 [])
+                                var id
                                 -- (n, tp) <- getLocalVar str --in case the return is a = 1
                                 -- return (LocalReference tp n)
 
@@ -205,12 +204,8 @@ genUnary (Unary Not xpr)     =   do
                                 return (LocalReference t instname)
 
 genInstructions :: Expr -> StateT Objects Maybe Operand -- Operand
--- Constant
 genInstructions (Val v)             = return $ getConstVal v
--- LocalRef //have to check if it exists
--- genInstructions (Id id)             = return (LocalReference i64 $mkName "a") -- have to handle global
-genInstructions (Id id)             = localVar id -- have to handle global
--- Operand
+genInstructions (Id id)             = var id
 genInstructions (Operation op)      = genInstructionOperand op
 genInstructions (Callf id args)     = genCallFunction id args
 genInstructions u@(Unary _ _)       = genUnary u

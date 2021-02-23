@@ -42,7 +42,6 @@ canReturn ((InfoRet _ True _):r)        = canReturn r
 
 getBlockId :: [InfoRet] -> BlockId
 getBlockId []                   = NONE
--- getBlockId ((InfoRet n b bId):_) = bId
 getBlockId [(InfoRet n b bId)]  = bId
 getBlockId (a:rest)             = getBlockId rest
 

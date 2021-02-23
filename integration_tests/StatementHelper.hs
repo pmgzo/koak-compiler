@@ -51,6 +51,9 @@ assignB val = (Operation (ASSIGN (Typed "b" INT) (VAL (I val))))
 addA1 :: Expr
 addA1 = (Operation (ASSIGN (Typed "a" INT) (ADD [(XPR (Id (Typed "a" INT))), (VAL (I 1))] )) )
 
+addINT :: String -> Expr
+addINT str = (Operation (ASSIGN (Typed str INT) (ADD [(XPR (Id (Typed str INT))), (VAL (I 1))] )) )
+
 addB1 :: Expr
 addB1 = (Operation (ASSIGN (Typed "b" INT) (ADD [(XPR (Id (Typed "b" INT))), (VAL (I 1))] )) )
 
