@@ -133,7 +133,15 @@ addA1 = (Operation (ASSIGN (Wait "a") (ADD [(XPR (Id (Wait "a"))), (VAL (I 1))] 
 genericFor :: [Expr] -> Expr
 genericFor xprs = (For ((Wait "b"), (Val (I 0))) ((Wait "b"), (Val (I 5))) (addB1) (Exprs xprs))
 
+cond1 :: Expr
+cond1 = (Operation (DataType2.LT (XPR (Id (Wait "a"))) (VAL (I 5)) ))
+
+genWhile :: Expr -> [Expr] -> Expr
+genWhile cond xprs = (While cond (Exprs xprs))
+
 fctWrapper :: String -> [Expr] -> Expr
 fctWrapper str xprs = (Protof (Typed str INT) [(Typed "a" INT)] (Exprs xprs))
 
 ifor2 = fctWrapper "ifor2" [(genericFor [addA1]), (Id (Wait "a"))]
+
+iwhile1 = fctWrapper "iwhile1" [(genWhile cond1 [addA1]), (Id (Wait "a"))]

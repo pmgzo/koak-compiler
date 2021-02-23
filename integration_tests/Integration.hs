@@ -30,7 +30,7 @@ getBlocks (Protof id params (Exprs xprs)) =
 main = do
     
     genObjFromExpr "mod2" $inferringType [imod1,
-                        iadd, icallFTest, icallFTest2, icallCondition, iaddf, ifor2]-- 
+                        iadd, icallFTest, icallFTest2, icallCondition, iaddf, ifor2, iwhile1]-- 
                         -- icallCondition2, iunaryNot, iunaryMinus, iifFunction, 
                         -- iifElseFunction, iwhile1, iifElseCallBack, iifElse2, iifElse3, ifactorial,
                         -- itestImbrication1, itestImbrication2, itestImbr1, itestImbr2, ifor1, iwhile13,

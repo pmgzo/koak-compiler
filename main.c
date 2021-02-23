@@ -27,6 +27,7 @@ int icaller();
 double itestf(double a);
 int icond1();
 int ifor2(int a);
+int iwhile1(int a);
 
 /* float icond2(); */
 /* int inot1(); */
@@ -79,6 +80,7 @@ int main()
     printf("%f\n", itestf(9.0));  // 9.0 + 4.0
     printf("%d\n", icond1(9.0));  // 1
     printf("%d\n", ifor2(17));  // 22
+    printf("%d\n", iwhile1(0));  // 5
 
     /* printf("%f\n", icond2(9.0));  // 0 */
     /* printf("%d\n", inot1());      // 1 */
