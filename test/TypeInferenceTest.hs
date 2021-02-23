@@ -48,8 +48,14 @@ expectedRes10 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (For ((Typed 
 
 test10 = TestCase $ assertEqual "y = 2; for i = 5: i < 10: 1 do y = y * 2" expectedRes10 input10
 
+ 
+input11 = inferringType [(Protof (Typed "icond1" INT) [] (Exprs [(Operation (DataType2.EQ (VAL (I 0)) (VAL (I 0))))]))]
+expectedRes11 = [(Protof (Typed "icond1" INT) [] (Exprs [(Operation (DataType2.EQ (VAL (I 0)) (VAL (I 0))))]))]
+
+test11 = TestCase $ assertEqual "0 == 0" expectedRes11 input11
 
 
 
 
-typeInferenceTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10]
+
+typeInferenceTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11]

@@ -139,7 +139,7 @@ handleIdentifier c id op ast = [(Err ("error in handleIdentifier "++(show c)++";
 -------------------------------------------------------------------------------------------
 handleFor :: [Expr] -> Identifier -> Expr -> Identifier -> Expr -> Expr -> Expr -> Expr
 handleFor c i val i2 cond inc (Exprs args)
-          = (exprToFor init condT ((checkIdentifier [inc] newC)!!0) (Exprs (inferType args newC)))
+          = (exprToFor init condT ((inferType [inc] newC)!!0) (Exprs (inferType args newC)))
              where init          = (checkAssign [(Operation (ASSIGN i (XPR val)))] c)!!0
                    newC          = (assignToCache init):c
                    condT         = ((inferType [(Operation (DataType2.LT (XPR (Id i2)) (XPR cond)))] newC)!!0)
@@ -214,9 +214,9 @@ inferType :: [Expr] -> [Expr] -> [Expr]
 -- inferType [] c = c -- TO GET CACHE TO DEBUG
 inferType [] _ = []
 inferType exprs c
-              | assign /= exprs && assign /= []         = assign
-              | func /= exprs && func /= []             = func
-              | identifier /= exprs && identifier /= [] = identifier
+              | assign /= exprs && assign /= []   = assign
+              | func /= []                        = func
+              | identifier /= []                  = identifier
               where assign     = checkAssign exprs c
                     func       = checkFunc exprs c
                     identifier = checkIdentifier exprs c

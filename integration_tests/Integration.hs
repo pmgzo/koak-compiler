@@ -29,12 +29,13 @@ getBlocks (Protof id params (Exprs xprs)) =
 
 main = do
     
-    genObjFromExpr "mod2" $inferringType [add]
-                        -- add, callFTest, callFTest2, callCondition, 
-                        -- callCondition2, unaryNot, unaryMinus, ifFunction, 
-                        -- ifElseFunction, while1, ifElseCallBack, ifElse2, ifElse3, factorial,
-                        -- testImbrication1, testImbrication2, testImbr1, testImbr2, for1, while13,
-                        -- globalVar1,whileGlobalVar
+    genObjFromExpr "mod2" $inferringType [
+                        iadd, icallFTest, icallFTest2, icallCondition--, 
+                        -- icallCondition2, iunaryNot, iunaryMinus, iifFunction, 
+                        -- iifElseFunction, iwhile1, iifElseCallBack, iifElse2, iifElse3, ifactorial,
+                        -- itestImbrication1, itestImbrication2, itestImbr1, itestImbr2, ifor1, iwhile13,
+                        -- iglobalVar1, iwhileGlobalVar
+                        ]
 
     -- let bs = getBlocks ifElse3
 
