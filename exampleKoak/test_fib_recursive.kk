@@ -1,0 +1,9 @@
+def fib(x : int) : int
+    if x < 3 then
+        1
+    else
+        fib(x-1)+fib(x-2);
+
+
+fib(5)
+fib(10)

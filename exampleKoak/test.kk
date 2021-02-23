@@ -1,18 +1,17 @@
-def factorial(a): Int
-    if a == 1
+def factorial(a : int): int
+    if a == 1 then
         1
     else a > 1
-        a * call(a - 1)
+        a * call(a - 1);
 
-def sum(a, b): Int
-    a + b
+def sum(a : int, b : int): int
+    a + b;
 
-def fact2(a): Int
-    res = 1
+def fact2(a : int): int
+    res = 1:
     while a != 0 do
-        res = res * a
-        a = a - 1
-    res
+        res = res * a:
+        a = a - 1,
+    res;
 
-def fct1(a, b): Int
-    
+# def fct1(a : int, b : int): Int;
