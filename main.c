@@ -25,8 +25,9 @@
 int iadd(int a, int b);
 int icaller();
 double itestf(double a);
-
 int icond1();
+int ifor2(int a);
+
 /* float icond2(); */
 /* int inot1(); */
 /* double iminus1(); */
@@ -77,6 +78,8 @@ int main()
     printf("%d\n", icaller());    // 13
     printf("%f\n", itestf(9.0));  // 9.0 + 4.0
     printf("%d\n", icond1(9.0));  // 1
+    printf("%d\n", ifor2(17));  // 22
+
     /* printf("%f\n", icond2(9.0));  // 0 */
     /* printf("%d\n", inot1());      // 1 */
     /* printf("%f\n", iminus1());    //-17 */

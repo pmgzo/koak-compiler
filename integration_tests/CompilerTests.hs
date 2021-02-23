@@ -20,6 +20,11 @@ mod1 = (Protof (Typed "fct1" INT)
             [(Typed "a" INT), (Typed "b" INT)] 
             (Exprs [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)) ) ), (Id (Typed "y" INT) )] ))
 
+addf:: Expr -- ok
+addf = (Protof (Typed "iaddf" DOUBLE) 
+            [(Typed "a" DOUBLE), (Typed "b" DOUBLE)] 
+            (Exprs [(Operation (ASSIGN (Typed "y" DOUBLE) (ADD [(XPR (Id (Typed "a" DOUBLE))), (XPR (Id (Typed "b" DOUBLE) ))]) ) ), (Id (Typed "y" DOUBLE) )]) )
+
 mod2:: Expr -- ok
 mod2 = (Protof (Typed "fct2" INT) 
             [(Typed "a" INT), (Typed "b" INT)] 
