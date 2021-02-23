@@ -1,0 +1,4 @@
+module InferingTypeCompilationTests where
+
+import StatementHelper
+import DataType2

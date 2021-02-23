@@ -7,5 +7,5 @@ import TypeInferenceTest
 -- test11ParserList     = TestCase $ assertEqual "(#t ) " resTest11ParserList (parseList "(#t ) ")
 
 main = do
-    -- runTestTT llvmBuilderTests
+    runTestTT llvmBuilderTests
     runTestTT typeInferenceTests
