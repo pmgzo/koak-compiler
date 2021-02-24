@@ -110,23 +110,23 @@ definition = Parser (\str -> runParser def str)
 -- after  : 3 * 4 / 5 / 6 -> [[3*4]/5/6]
 assignOp :: Op -> Char -> Op -> Op
 assignOp single '*' opR = case opR of
-    Mul arr -> Mul (single:arr)
-    Div (a:b) -> Div ((Mul (single:a:[])):b)
-    Sub (a:b) -> Sub ((Mul (single:a:[])):b)
-    Add (a:b) -> Add ((Mul (single:a:[])):b)
-    any -> Mul (single:any:[])
+    MUL arr -> MUL (single:arr)
+    DIV (a:b) -> DIV ((MUL (single:a:[])):b)
+    SUB (a:b) -> SUB ((MUL (single:a:[])):b)
+    ADD (a:b) -> ADD ((MUL (single:a:[])):b)
+    any -> MUL (single:any:[])
 assignOp single '/' opR = case opR of
-    Div arr -> Div (single:arr)
-    Sub (a:b) -> Sub ((Div (single:a:[])):b)
-    Add (a:b) -> Add ((Div (single:a:[])):b)
-    any -> Div (single:any:[])
+    DIV arr -> DIV (single:arr)
+    SUB (a:b) -> SUB ((DIV (single:a:[])):b)
+    ADD (a:b) -> ADD ((DIV (single:a:[])):b)
+    any -> DIV (single:any:[])
 assignOp single '-' opR = case opR of
-    Sub arr -> Sub (single:arr)
-    Add (a:b) -> Add ((Sub (single:a:[])):b)
-    any -> Sub (single:any:[])
+    SUB arr -> SUB (single:arr)
+    ADD (a:b) -> ADD ((SUB (single:a:[])):b)
+    any -> SUB (single:any:[])
 assignOp single '+' opR = case opR of
-    Add arr -> Add (single:arr)
-    any -> Add (single:any:[])
+    ADD arr -> ADD (single:arr)
+    any -> ADD (single:any:[])
 
 parseOpSign :: Parser Op
 parseOpSign = Parser (\str -> runParser opPiece str)
@@ -138,14 +138,14 @@ parseOpSign = Parser (\str -> runParser opPiece str)
         v _ r _ = r
         par = (v (char '(') (parseOneOp) (char ')'))
         simp = (valu <|> call)
-        call = (Xpr <$> recu)
-        valu = parseSpaces ((VAL <$> Int <$> parseInte) <|> (VAL <$> Double <$> parseDouble))
+        call = (XPR <$> recu)
+        valu = parseSpaces ((VAL <$> I <$> parseInte) <|> (VAL <$> D <$> parseDouble))
 
 assignComp :: Op -> String -> Op -> Op
-assignComp op1 "<" op2 = Lt op1 op2
-assignComp op1 ">" op2 = Gt op1 op2
-assignComp op1 "==" op2 = Eq op1 op2
-assignComp op1 "!=" op2 = NotEq op1 op2
+assignComp op1 "<" op2 = DataType2.LT op1 op2
+assignComp op1 ">" op2 = DataType2.GT op1 op2
+assignComp op1 "==" op2 = DataType2.EQ op1 op2
+assignComp op1 "!=" op2 = NOTEQ op1 op2
 
 parseComp :: Parser Op
 parseComp = Parser (\str -> runParser opComp str)
@@ -157,10 +157,10 @@ parseOneOp :: Parser Op
 parseOneOp = Parser (\str -> runParser allOp str)
     where
         allOp = assign <|> comp <|> sign <|> call <|> valu
-        assign = parseSpaces (Assign <$> parseId <* (char '=') *> parseOneOp)
+        assign = parseSpaces (ASSIGN <$> parseId <* (char '=') *> parseOneOp)
         sign = parseSpaces (parseOpSign)
-        call = (Xpr <$> recu)
-        valu = parseSpaces ((VAL <$> Int <$> parseInte) <|> (VAL <$> Double <$> parseDouble))
+        call = (XPR <$> recu)
+        valu = parseSpaces ((VAL <$> I <$> parseInte) <|> (VAL <$> D <$> parseDouble))
         comp = parseSpaces (parseComp)
 
 parseOp :: Parser Expr
