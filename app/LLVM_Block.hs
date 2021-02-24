@@ -164,6 +164,12 @@ handleWhile bool (While (Operation op) (expr)) =  -- here exprs
 
     genLoopBlock expr nameCond
 
+incrementFor :: Identifier -> Expr -> Expr
+incrementFor _ xpr@(Operation (ASSIGN _ _))  = xpr
+incrementFor id xpr@(Val v)                  = (Operation (ASSIGN id add))
+                                            where
+                                            add = (ADD [(XPR (Id id)), (XPR xpr)])
+
 handleFor :: Bool -> Expr -> StateT Objects Maybe ()
 handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs)) = 
     do
@@ -183,7 +189,9 @@ handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs
 
     addBlock (condbr condinst loop previousScope)
 
-    genLoopBlock (Exprs (xprs ++ [inc])) condBlock
+    let newInc = incrementFor idass inc
+
+    genLoopBlock (Exprs (xprs ++ [newInc])) condBlock
 
 genSpecialBlock :: Bool -> Expr ->StateT Objects Maybe ()
 genSpecialBlock cb stt@(IfThen _ _)     = handleIf cb stt
