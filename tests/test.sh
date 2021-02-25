@@ -12,7 +12,7 @@ make re
 for arg in "${arr[@]}"; do
     rm -f *.o
     echo -e "\033[1;35m"./koak $arg"\033[0m"
-    ./koak $arg && gcc main.c *.o && ./a.out
+    ./koak $arg && gcc main.c exampleKoak/*.o && ./a.out
     # ./exec_test.sh $arg
 done
 #######################################################
