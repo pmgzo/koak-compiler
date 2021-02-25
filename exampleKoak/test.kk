@@ -1,9 +1,3 @@
-def factorial(a : int): int
-    if a == 1 then
-        1
-    else a > 1
-        a * call(a - 1);
-
 def sum(a : int, b : int): int
     a + b;
 
@@ -14,4 +8,38 @@ def fact2(a : int): int
         a = a - 1,
     res;
 
-# def fct1(a : int, b : int): Int;
+def itest1(): int
+    sum(sum(5, 6), sum(-4 -7));
+
+def itest2(): int
+    sum(2, -5);
+
+def itest3(): int
+    fact2(1);
+
+def itest4(): int
+    fact2(15);
+
+def dtest1(): double
+    -1.0;
+
+def dtest2(): double
+    -1.0;
+
+def dtest3(): double
+    -1.0;
+
+def dtest4(): double
+    -1.0;
+
+iexpected_res1 = 0;
+iexpected_res2 = -3;
+iexpected_res3 = 1;
+iexpected_res4 = 1307674368000;
+dexpected_res1 = -1.0;
+dexpected_res2 = -1.0;
+dexpected_res3 = -1.0;
+dexpected_res4 = -1.0;
+
+returnType = 0;
+testId = 7;
