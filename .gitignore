@@ -14,3 +14,4 @@ stack.yaml.lock
 Test/
 koak.cabal
 tests/mine/
+a.out

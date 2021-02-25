@@ -39,6 +39,7 @@ tests_bash_chmod: clean
 	chmod +x tests/test.sh && ./tests/test.sh
 
 fclean:	clean
+	rm -f $(NAME)
 
 re:	fclean all
 
