@@ -165,10 +165,10 @@ handleWhile bool (While (Operation op) (expr)) =  -- here exprs
     genLoopBlock expr nameCond
 
 incrementFor :: Identifier -> Expr -> Expr
-incrementFor _ xpr@(Operation (ASSIGN _ _))  = xpr
-incrementFor id xpr@(Val v)                  = (Operation (ASSIGN id add))
+incrementFor id xpr@(Val v)                 = (Operation (ASSIGN id add))
                                             where
                                             add = (ADD [(XPR (Id id)), (XPR xpr)])
+incrementFor _ xpr                          = xpr
 
 handleFor :: Bool -> Expr -> StateT Objects Maybe ()
 handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs)) = 
