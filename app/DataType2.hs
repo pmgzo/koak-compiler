@@ -27,7 +27,7 @@ data Op = VAL Value
 data Expr = Val Value -- Constant
             | Id Identifier -- Identifier
 
-            | Protof Identifier [Identifier] Expr -- (name, return type) args block
+            | Protof Identifier [Identifier] Expr-- (name, return type) args block
 
             | Callf Identifier [Expr] -- appel de function avec arguments
 

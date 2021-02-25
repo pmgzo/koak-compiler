@@ -20,6 +20,10 @@ word w = Parser (\str -> runParser (parseSpaces (parseWord w)) str)
 recu :: Parser Expr
 recu = Parser (\str -> runParser (parseSpaces parse) str)
 
+-- recu :: Parser Expr
+-- recu = Parser (\str -> Just ((Val (I 9)), str))
+
+
 parseId :: Parser Identifier
 parseId = Parser (\str -> runParser (parseSpaces (Wait <$> parseLetters)) str)
 
@@ -34,7 +38,7 @@ parseIf = Parser (\str -> runParser ifExpr str)
 parseWhile :: Parser Expr
 parseWhile = Parser (\str -> runParser while str)
     where
-        while = parseSpaces (While <$> recu <* (word "do") *> recu) -- while i < 9 do expr;
+        while = parseSpaces (While <$> ((word "while") *> recu) <* (word "do") *> recu) -- while i < 9 do expr;
 
 toTuple :: Identifier -> Expr -> (Identifier, Expr)
 toTuple id expr = (id, expr)
@@ -47,12 +51,12 @@ toTuple id expr = (id, expr)
 for2 :: Parser (Identifier, Expr)
 for2 = Parser (\str -> runParser convert str)
     where
-        convert = parseSpaces (toTuple <$> parseId <* (char '<') *> recu <* (char ','))
+        convert = parseSpaces (toTuple <$> (parseId <* (char '<')) <*> (recu <* (char ',')))
 
 for1 :: Parser (Identifier, Expr)
 for1 = Parser (\str -> runParser convert str)
     where
-        convert = parseSpaces (toTuple <$> ignoreFor <* (char '=') *> recu <* (char ','))
+        convert = parseSpaces (toTuple <$> (ignoreFor <* (char '=')) <*> (recu <* (char ',')))
         ignoreFor = parseAndWith (\_ b -> b) (word "for") parseId
 
 parseFor :: Parser Expr
@@ -75,15 +79,23 @@ parseUnary = Parser(\str -> runParser unary str)
         unary = parseSpaces (Unary <$> unop *> recu)
         unop = parseSpaces (parseUnop)
 
+parseType :: Parser TypeKoak
+parseType = Parser (\str -> case runParser (word "int") str of
+    Nothing -> case runParser (word "double") str of
+        Nothing -> Nothing
+        Just (_, r) -> Just (DOUBLE, r)
+    Just (_, r) -> Just (INT, r)
+    )
+
 typeVar :: Parser TypeKoak
 typeVar = Parser (\str -> runParser argType str)
     where
-        argType = parseSpaces ((INT <$> (word "int")) <|> (DOUBLE <$> (word "double")) <|> VOID)
+        argType = parseSpaces (parseType)
 
 parseArg :: Parser Identifier
 parseArg = Parser (\str -> runParser argument str)
     where
-        argument = parseSpaces (Typed <$> parseLetters <* (char ':') *> typeVar)
+        argument = parseSpaces (Typed <$> (parseLetters <* (char ':')) <*> typeVar)
 
 argArr :: Maybe [Identifier] -> Parser [Identifier]
 argArr Nothing = Parser (\str -> Nothing)
@@ -98,12 +110,15 @@ argArr (Just array) = Parser (\str -> case runParser (parseAndWith (\_ l -> l) (
     (Just (id@(Typed a b), r)) -> runParser (argArr (Just (array ++ [id]))) r
     )
 
+extractFunc :: String -> [Identifier] -> TypeKoak -> Expr -> Expr
+extractFunc id args typ def = Protof (Typed id typ) args def
+
 definition :: Parser Expr
 definition = Parser (\str -> runParser def str)
     where
-        def = parseSpaces (Protof <$> proto1 <* (char '(') *> proto2 <* (char ':') *> typeVar <*> recu)
+        def = parseSpaces (extractFunc <$> proto1 <*> (proto2 <* (char ':')) <*> typeVar <*> recu)
         b = parseAndWith (\_ b -> b)
-        proto1 = parseSpaces (b (word "def") parseId)
+        proto1 = ((word "def") *> proto1 <* (char '('))
         proto2 = parseSpaces (argArr (Just []))
 
 -- before : 3 * 4 / 5 / 6 -> [3*[4/5/6]]
@@ -132,13 +147,14 @@ parseOpSign :: Parser Op
 parseOpSign = Parser (\str -> runParser opPiece str)
     where
         opPiece = withSign <|> without
-        withSign = parseSpaces (assignOp <$> single <*> (parseAnyChar "*/-+") <*> parseOpSign)
+        withSign = parseSpaces (assignOp <$> single <*> (parseSpaces (parseAnyChar "*/-+")) <*> parseOpSign)
         without = single
         single = (par <|> simp)
-        v _ r _ = r
-        par = (v (char '(') (parseOneOp) (char ')'))
+        -- v _ r _ = r
+        par = ((char '(') *> (parseOneOp) <* (char ')'))
         simp = (valu <|> call)
-        call = (XPR <$> recu)
+        call = (XPR <$> (parseSpaces parseMainOp))
+        -- call = Parser (\str -> Just ((XPR (Val (I 3))), str))
         valu = parseSpaces ((VAL <$> I <$> parseInte) <|> (VAL <$> D <$> parseDouble))
 
 assignComp :: Op -> String -> Op -> Op
@@ -150,16 +166,21 @@ assignComp op1 "!=" op2 = NOTEQ op1 op2
 parseComp :: Parser Op
 parseComp = Parser (\str -> runParser opComp str)
     where
-        opComp = parseSpaces (assignComp <$> parseOneOp <*> comps <*> parseOneOp)
-        comps = (parseAnyStr ("<":">":"==":"!=":[]))
+        opComp = parseSpaces (assignComp <$> parseOpSign <*> comps <*> parseOpSign)
+        comps = parseSpaces (parseAnyStr ("<":">":"==":"!=":[]))
+
+-- 7 + 3 < 4 * 5
+-- (7 + 3) < (4 * 5)
+-- 
 
 parseOneOp :: Parser Op
 parseOneOp = Parser (\str -> runParser allOp str)
     where
         allOp = assign <|> comp <|> sign <|> call <|> valu
-        assign = parseSpaces (ASSIGN <$> parseId <* (char '=') *> parseOneOp)
+        assign = parseSpaces (ASSIGN <$> (parseId <* (char '=')) <*> parseOneOp)
         sign = parseSpaces (parseOpSign)
-        call = (XPR <$> recu)
+        call = (XPR <$> (parseSpaces parseMainOp))
+        -- call = Parser (\str -> Just ((XPR (Val (I 9))), str))
         valu = parseSpaces ((VAL <$> I <$> parseInte) <|> (VAL <$> D <$> parseDouble))
         comp = parseSpaces (parseComp)
 
@@ -182,8 +203,18 @@ callArg (Just array) = Parser (\str -> case runParser (parseAndWith (\_ l -> l) 
 parseCall :: Parser Expr
 parseCall = Parser (\str -> runParser call str)
     where
-        call = parseSpaces (Call <$> parseId <* (char '(') *> call2)
+        call = parseSpaces (Callf <$> (parseId <* (char '(')) <*> call2)
         call2 = parseSpaces (callArg (Just []))
+
+parseMainOp :: Parser Expr
+parseMainOp = Parser (\str -> case str of
+    [] -> Just(Nil, [])
+    s -> runParser (parseAll) s
+    )
+    where
+        parseAll = parseUnary <|> parseCall <|> id <|> parseOp
+        builtIn = (parseFor <|> parseWhile <|> parseIf)
+        id = parseSpaces (Id <$> parseId)
 
 parse :: Parser Expr
 parse = Parser (\str -> case str of
@@ -191,6 +222,6 @@ parse = Parser (\str -> case str of
     s -> runParser (parseAll) s
     )
     where
-        parseAll = parseUnary <|> builtIn <|> definition <|> parseOp <|> id <|> parseCall
+        parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> id <|> parseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
-        id = parseSpaces (Id <$> parseId)
+        id = parseSpaces (Id <$> (parseId <* (char ';')))

@@ -186,18 +186,43 @@ parseLetters = let
     \ str -> runParser (parseAndWith (\x y -> x:y) parseOneLetter parseRest) str
     )
 
+compWords :: String -> String -> Bool
+compWords [] _ = True
+compWords _ [] = False
+compWords (x:xs) (y:ys) | x == y = compWords xs ys
+                        | otherwise = False
+
+getWordDif :: String -> String -> String
+getWordDif [] _ = []
+getWordDif a [] = a
+getWordDif a@(_:xs) b@(_:ys) | compWords b a == False = a
+                             | otherwise = getWordDif xs ys
+
 parseWord :: String -> Parser String
-parseWord word = let
-    in Parser (
+parseWord word = Parser (
     \ str -> case runParser parseLetters str of
-        Just(word, r) -> Just(word, r)
+        Just(res, r) -> case (compWords word res) of
+            True -> Just(word, getWordDif res word)
+            False -> Nothing
         _ -> Nothing
     )
 
+parseString :: String -> Parser String
+parseString [] = Parser (\str -> Just ([], str))
+parseString (x:xs) = Parser (
+    \ str -> case runParser (parseChar x) str of
+        Just(res, r) -> case runParser (parseString xs) r of
+            Just (arr, s) -> Just (res:arr, s)
+            Nothing -> Nothing
+        Nothing -> Nothing
+    )
+
+
 parseAnyStr :: [String] -> Parser String
+parseAnyStr [] = Parser (\str -> Nothing)
 parseAnyStr (a:r) = Parser (\str -> runParser parseOneStr str)
     where
-        parseOneStr = (parseWord a) <|> (parseAnyStr r)
+        parseOneStr = (parseString a) <|> (parseAnyStr r)
 
 parseSign :: Parser Char
 parseSign = Parser (
