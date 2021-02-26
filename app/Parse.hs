@@ -1,4 +1,4 @@
--- 
+--
 -- EPITECH PROJECT, 2020
 -- B-YEP-500-PAR-5-1-koak-aurele.auboin
 -- File description:
@@ -31,14 +31,14 @@ parseIf :: Parser Expr
 parseIf = Parser (\str -> runParser ifExpr str)
     where
         ifExpr = ifElse <|> ifThen
-        ifElse = parseSpaces (IfElse <$> ignoreIf <* (word "then") *> recu <* (word "else") *> recu)
-        ifThen = parseSpaces (IfElse <$> ignoreIf <* (word "then") *> recu)
+        ifElse = parseSpaces (IfElse <$> ignoreIf <*> ((word "then") *> recu) <*> ((word "else") *> recu))
+        ifThen = parseSpaces (IfThen <$> ignoreIf <*> ((word "then") *> recu))
         ignoreIf = parseAndWith (\_ b -> b) (word "if") recu
 
 parseWhile :: Parser Expr
 parseWhile = Parser (\str -> runParser while str)
     where
-        while = parseSpaces (While <$> ((word "while") *> recu) <* (word "do") *> recu) -- while i < 9 do expr;
+        while = parseSpaces (While <$> ((word "while") *> recu) <*> ((word "do") *> recu)) -- while i < 9 do expr;
 
 toTuple :: Identifier -> Expr -> (Identifier, Expr)
 toTuple id expr = (id, expr)
@@ -171,7 +171,7 @@ parseComp = Parser (\str -> runParser opComp str)
 
 -- 7 + 3 < 4 * 5
 -- (7 + 3) < (4 * 5)
--- 
+--
 
 parseOneOp :: Parser Op
 parseOneOp = Parser (\str -> runParser allOp str)
