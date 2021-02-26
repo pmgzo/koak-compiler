@@ -101,22 +101,31 @@ argArr :: Maybe [Identifier] -> Parser [Identifier]
 argArr Nothing = Parser (\str -> Nothing)
 argArr (Just []) = Parser (\str -> case runParser (parseArg) str of
     Nothing -> Nothing
-    (Just (id@(Typed a b), r)) -> runParser (argArr (Just [id])) r
+    (Just (id, r)) -> case runParser (argArr (Just [id])) r of
+        Nothing -> Just ([id], r)
+        res -> res
     )
 argArr (Just array) = Parser (\str -> case runParser (parseAndWith (\_ l -> l) (char ',') parseArg) str of
     Nothing -> case runParser (char ')') str of
         Nothing -> Nothing
         (Just (')', r)) -> Just (array, r)
-    (Just (id@(Typed a b), r)) -> runParser (argArr (Just (array ++ [id]))) r
+    (Just (id, r)) -> case runParser (argArr (Just (array ++ [id]))) r of
+        Nothing -> Just ((array ++ [id]), r)
+        res -> res
     )
 
 extractFunc :: String -> [Identifier] -> TypeKoak -> Expr -> Expr
 extractFunc id args typ def = Protof (Typed id typ) args def
 
 definition :: Parser Expr
-definition = Parser (\str -> runParser def str)
+definition = Parser (\str -> case runParser (word "def") str of
+    Nothing -> Nothing
+    _ -> case runParser def str of
+        Nothing -> Just (Err "invalid definition", str)
+        r -> r
+    )
     where
-        def = parseSpaces (extractFunc <$> proto1 <*> (proto2 <* (char ':')) <*> typeVar <*> recu)
+        def = parseSpaces (extractFunc <$> proto1 <*> (proto2 <* (char ':')) <*> typeVar <*> recu <* (char ';'))
         b = parseAndWith (\_ b -> b)
         proto1 = ((word "def") *> (parseSpaces parseLetters) <* (char '('))
         proto2 = parseSpaces (argArr (Just []))
@@ -224,4 +233,43 @@ parse = Parser (\str -> case str of
     where
         parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> id <|> parseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
-        id = parseSpaces (Id <$> (parseId <* (char ';')))
+        id = parseSpaces (Id <$> (parseId))
+
+-- parseLine :: Parser Expr
+-- parseLine = Parser (\str -> case runParser (parse getLine))
+
+-- recSplit :: Parser [Expr]
+-- recSplit = Parser (\str -> case str of
+--     [] -> Just([], [])
+--     s -> runParser ((\ x y -> x:y) <$> splitLine <*> recSplit) s
+--     )
+
+-- parseFile :: String -> Maybe [Expr]
+-- parseFile [] = Just []
+-- parseFile content = case runParser recSplit content of
+--     Just (expr, r) -> Just expr
+--     Nothing -> Nothing
+
+-- mergeMaybe :: Maybe [a] -> Maybe [a] -> Maybe [a]
+-- mergeMaybe Nothing b = Nothing
+-- mergeMaybe a Nothing = Nothing
+-- mergeMaybe (Just a) (Just b) = Just (a ++ b)
+
+-- parseFiles :: [String] -> Maybe [Expr]
+-- parseFiles [] = Just []
+-- parseFiles (file:xs) = mergeMaybe (parseFile file) (parseFiles xs)
+
+-- getContent :: [String] -> IO(Maybe [String])
+-- getContent [] = return (Just [])
+-- getContent (file:r) = do
+--     b <- doesFileExist file
+--     case b of
+--         False -> return Nothing
+--         True -> do
+--             f <- readFile file
+--             rest <- getContent r
+--             case rest of
+--                 Just list -> return $ Just (f:list)
+--                 Nothing -> return Nothing
+
+-- readFiles :: [String] -> 

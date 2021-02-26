@@ -211,7 +211,7 @@ parseWord :: String -> Parser String
 parseWord word = Parser (
     \ str -> case runParser parseLetters str of
         Just(res, r) -> case (compWords word res) of
-            True -> Just(word, r)
+            True -> Just(word, getWordDif str res)
             False -> Nothing
         _ -> Nothing
     )
