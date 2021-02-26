@@ -1,4 +1,4 @@
--- 
+--
 -- EPITECH PROJECT, 2020
 -- B-FUN-501-PAR-5-1-HAL-paul.cochet
 -- File description:
@@ -43,7 +43,7 @@ parseChar :: Char -> Parser Char
 parseChar c = Parser (
     \ str -> case str of
         (a:str) | (a == c) -> Just (c, str)
-        _ -> Nothing 
+        _ -> Nothing
     )
 
 parseOr :: Parser a -> Parser a -> Parser a
