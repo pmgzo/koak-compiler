@@ -118,7 +118,7 @@ definition = Parser (\str -> runParser def str)
     where
         def = parseSpaces (extractFunc <$> proto1 <*> (proto2 <* (char ':')) <*> typeVar <*> recu)
         b = parseAndWith (\_ b -> b)
-        proto1 = ((word "def") *> proto1 <* (char '('))
+        proto1 = ((word "def") *> (parseSpaces parseLetters) <* (char '('))
         proto2 = parseSpaces (argArr (Just []))
 
 -- before : 3 * 4 / 5 / 6 -> [3*[4/5/6]]
