@@ -10,6 +10,7 @@ module Parse where
 import MyParser
 import DataType2
 import Control.Applicative
+import Parse2
 
 char :: Char -> Parser Char
 char c = Parser (\str -> runParser (parseSpaces (parseChar c)) str)
@@ -164,7 +165,7 @@ parseOpSign = Parser (\str -> runParser opPiece str)
         simp = (valu <|> call)
         call = (XPR <$> (parseSpaces parseMainOp))
         -- call = Parser (\str -> Just ((XPR (Val (I 3))), str))
-        valu = parseSpaces ((VAL <$> I <$> parseInte) <|> (VAL <$> D <$> parseDouble))
+        valu = parseSpaces ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
 
 assignComp :: Op -> String -> Op -> Op
 assignComp op1 "<" op2 = DataType2.LT op1 op2
@@ -190,7 +191,7 @@ parseOneOp = Parser (\str -> runParser allOp str)
         sign = parseSpaces (parseOpSign)
         call = (XPR <$> (parseSpaces parseMainOp))
         -- call = Parser (\str -> Just ((XPR (Val (I 9))), str))
-        valu = parseSpaces ((VAL <$> I <$> parseInte) <|> (VAL <$> D <$> parseDouble))
+        valu = parseSpaces ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
         comp = parseSpaces (parseComp)
 
 parseOp :: Parser Expr
