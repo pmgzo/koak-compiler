@@ -273,4 +273,4 @@ parse = Parser (\str -> case str of
 --                 Just list -> return $ Just (f:list)
 --                 Nothing -> return Nothing
 
--- readFiles :: [String] -> 
+-- readFiles :: [String] ->
