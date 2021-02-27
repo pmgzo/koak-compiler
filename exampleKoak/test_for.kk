@@ -1,23 +1,23 @@
 def fct1(break : double): 
-    a = 0
+    a = 0:
     for id = 2, id < break, 1 in
         a = a * 1 + id,
     a;
 
 def fct2(break : int) : int
-    i = 34
+    i = 34:
     for id = 0, id < break, 1 in
         i = i + 1,
     i;
 
 def fct3(break : int) : int
-    i = 0
+    i = 0:
     for id = 0, id < break, 1 in
         i = i + 1,
     i;
 
 def fct4(break : int) : int
-    v = 1
+    v = 1:
     for id = 0, id < break, 1 in
         v = v * 2,
     v;
