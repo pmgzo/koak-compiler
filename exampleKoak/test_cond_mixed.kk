@@ -7,10 +7,10 @@ def While2(max : int) : int
     i = 0:
     j = 0:
     while i < max do
-        i = i + 1
+        i = i + 1:
         while j < i * max do
-            j = j + 1
-            j + 2;
+            j = j + 1,
+    j + 2;
 
 def For2(max : int) : int
     a = 0:
