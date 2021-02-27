@@ -10,6 +10,7 @@ module Parse where
 import MyParser
 import DataType2
 import Control.Applicative
+import Parse2
 
 char :: Char -> Parser Char
 char c = Parser (\str -> runParser (parseSpaces (parseChar c)) str)
