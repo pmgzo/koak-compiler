@@ -236,4 +236,40 @@ inferType _ _  = []
 -- Func to call to hanle type inference
 inferringType :: [Expr] -> [Expr]
 inferringType [] = []
-inferringType exprs = inferType exprs []
+inferringType exprs
+              | error == [] = inferredType
+              | otherwise   = error
+              where inferredType = inferType exprs []
+                    error        = checkError inferredType
+
+
+
+
+-- keep only (Err str) in the list
+checkError :: [Expr] -> [Expr]
+checkError [] = []
+checkError (x@(Err _):xs) = x:(checkError xs)
+checkError ((Exprs e):xs) = (checkError e) ++ (checkError xs)
+checkError ((Protof _ _ e):xs) = (checkError [e]) ++ (checkError xs)
+checkError ((Callf _ e):xs) = (checkError e) ++ (checkError xs)
+checkError ((Unary _ e):xs) = (checkError [e]) ++ (checkError xs)
+checkError ((For (_, e1) (_, e2) e3 e4):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError [e4]) ++ (checkError xs)
+checkError ((While e1 e2):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
+checkError ((IfThen e1 e2):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
+checkError ((IfElse e1 e2 e3):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError xs)
+checkError ((Operation op):xs) = (checkErrorOp [op]) ++ (checkError xs)
+checkError (x:xs) = checkError xs
+
+checkErrorOp :: [Op] -> [Expr]
+checkErrorOp [] = []
+checkErrorOp ((XPR e):xs) = (checkError [e]) ++ (checkErrorOp xs)
+checkErrorOp ((ADD op):xs) = (checkErrorOp op) ++ (checkErrorOp xs)
+checkErrorOp ((SUB op):xs) = (checkErrorOp op) ++ (checkErrorOp xs)
+checkErrorOp ((MUL op):xs) = (checkErrorOp op) ++ (checkErrorOp xs)
+checkErrorOp ((DIV op):xs) = (checkErrorOp op) ++ (checkErrorOp xs)
+checkErrorOp ((DataType2.LT op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+checkErrorOp ((DataType2.GT op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+checkErrorOp ((DataType2.EQ op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+checkErrorOp ((DataType2.NOTEQ op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+checkErrorOp ((ASSIGN _ op):xs) = (checkErrorOp [op]) ++ (checkErrorOp xs)
+checkErrorOp (x:xs) = checkErrorOp xs

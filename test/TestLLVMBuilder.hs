@@ -33,7 +33,7 @@ import Data.Maybe
 
 
 -- testHelper :: String -> Expr -> [Named Instruction] -> Test
--- testHelper comm input expected = TestCase (do 
+-- testHelper comm input expected = TestCase (do
 --                                     s <- execStateT (genInstructions input) emptyObjects
 
 --                                     let res = insts s
@@ -59,8 +59,8 @@ expectedRes1 = [UnName 1 := Add False False (constIntOp 5) (constIntOp 6) [] ]
 test1 = testHelperInstruction "test1" input1 expectedRes1
 
 input2 = (Operation (ADD [(VAL (I 5)), (VAL (I 6)), (ADD [(VAL (I 8)), (VAL (I 0))])]))
-expectedRes2 = [UnName 1 := Add False False (constIntOp 8) (constIntOp 0) [], 
-                UnName 2 := Add False False (constIntOp 6) (localIntOp 1) [], 
+expectedRes2 = [UnName 1 := Add False False (constIntOp 8) (constIntOp 0) [],
+                UnName 2 := Add False False (constIntOp 6) (localIntOp 1) [],
                 UnName 3 := Add False False (constIntOp 5) (localIntOp 2) []]
 
 test2 = testHelperInstruction "test2" input2 expectedRes2
@@ -87,8 +87,8 @@ test6 = TestCase (assertEqual "test6" (scoreBlock input6) (6) )
 -- ifElse3 = (Protof (Typed "condIE3" INT) [(Typed "a" INT)] (Exprs [ifElseElem5, (Id (Typed "a" INT))]) )
 
 input71 = (Operation (ADD [(VAL (I 7)), (VAL (I 90))]))
-input7 = (IfElse (Operation 
-                (DataType2.GT (XPR (Id (Typed "a" INT))) (VAL (I 5)) )) 
+input7 = (IfElse (Operation
+                (DataType2.GT (XPR (Id (Typed "a" INT))) (VAL (I 5)) ))
                     (Exprs [input71, input71])
                         (Exprs [input71]))
 test7 = TestCase (assertEqual "test7" (getCallbackBlock [input7]) 3)
