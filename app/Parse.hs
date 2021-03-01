@@ -145,30 +145,25 @@ definition = Parser (\str -> case runParser (word "def") str of
         proto1 = ((word "def") *> (parseSpaces parseLetters) <* (char '('))
         proto2 = parseSpaces (argArr (Just []))
 
--- before : 3 * 4 / 5 / 6 -> [3*[4/5/6]]
--- after  : 3 * 4 / 5 / 6 -> [[3*4]/5/6]
 assignOp :: Op -> Char -> Op -> Op
 assignOp single '*' opR = case opR of
     MUL arr -> MUL (single:arr)
-    DIV (a:b) -> DIV ((MUL (single:a:[])):b)
-    SUB (a:b) -> SUB ((MUL (single:a:[])):b)
-    ADD (a:b) -> ADD ((MUL (single:a:[])):b)
+    DIV (a:b) -> DIV ((assignOp single '*' a):b)
+    SUB (a:b) -> SUB ((assignOp single '*' a):b)
+    ADD (a:b) -> ADD ((assignOp single '*' a):b)
     any -> MUL (single:any:[])
 assignOp single '/' opR = case opR of
     DIV arr -> DIV (single:arr)
-    SUB (a:b) -> SUB ((DIV (single:a:[])):b)
-    ADD (a:b) -> ADD ((DIV (single:a:[])):b)
+    SUB (a:b) -> SUB ((assignOp single '/' a):b)
+    ADD (a:b) -> ADD ((assignOp single '/' a):b)
     any -> DIV (single:any:[])
 assignOp single '-' opR = case opR of
     SUB arr -> SUB (single:arr)
-    ADD (a:b) -> ADD ((SUB (single:a:[])):b)
+    ADD (a:b) -> ADD ((assignOp single '-' a):b)
     any -> SUB (single:any:[])
 assignOp single '+' opR = case opR of
     ADD arr -> ADD (single:arr)
     any -> ADD (single:any:[])
-
-Operation (ADD [MUL [XPR (Id (Wait "a")),SUB [ADD [XPR (Id (Wait "a")),VAL (I 10)],VAL (I 10)]],DIV [SUB [VAL (I 7),VAL (I 8)],VAL (I 2)]])
--- 
 
 parseOpSign :: Parser Op
 parseOpSign = Parser (\str -> runParser opPiece str)
