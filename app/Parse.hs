@@ -74,11 +74,11 @@ parseUnop = Parser (\str -> case runParser (char '!') str of
     Just (_, r) -> Just (Not, r)
     )
 
-parseUnary :: Parser Expr
-parseUnary = Parser(\str -> runParser unary str)
-    where
-        unary = parseSpaces (Unary <$> unop <*> recu)
-        unop = parseSpaces (parseUnop)
+-- parseUnary :: Parser Expr
+-- parseUnary = Parser(\str -> runParser unary str)
+--     where
+--         unary = parseSpaces (Unary <$> unop <*> recu)
+--         unop = parseSpaces (parseUnop)
 
 simplifyOp :: Expr -> Expr
 simplifyOp (Operation (XPR (Val v))) = (Val v)
@@ -248,7 +248,7 @@ parseCall = Parser (\str -> runParser call str)
 parseMain :: Parser Expr
 parseMain = Parser (\str -> runParser (parseAll) str)
     where
-        parseAll = parseUnary <|> builtIn <|> parseCall <|> wrapperParseOp
+        parseAll = builtIn <|> parseCall <|> wrapperParseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
         -- id = parseSpaces (Id <$> (parseId))
 
