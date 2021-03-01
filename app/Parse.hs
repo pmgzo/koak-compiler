@@ -74,11 +74,11 @@ parseUnop = Parser (\str -> case runParser (char '!') str of
     Just (_, r) -> Just (Not, r)
     )
 
-parseUnary :: Parser Expr
-parseUnary = Parser(\str -> runParser unary str)
-    where
-        unary = parseWSpace (Unary <$> unop <*> recu)
-        unop = parseWSpace (parseUnop)
+-- parseUnary :: Parser Expr
+-- parseUnary = Parser(\str -> runParser unary str)
+--     where
+--         unary = parseSpaces (Unary <$> unop <*> recu)
+--         unop = parseSpaces (parseUnop)
 
 simplifyOp :: Expr -> Expr
 simplifyOp (Operation (XPR (Val v))) = (Val v)
@@ -145,23 +145,21 @@ definition = Parser (\str -> case runParser (word "def") str of
         proto1 = ((word "def") *> (parseWSpace parseLetters) <* (char '('))
         proto2 = parseWSpace (argArr (Just []))
 
--- before : 3 * 4 / 5 / 6 -> [3*[4/5/6]]
--- after  : 3 * 4 / 5 / 6 -> [[3*4]/5/6]
 assignOp :: Op -> Char -> Op -> Op
 assignOp single '*' opR = case opR of
     MUL arr -> MUL (single:arr)
-    DIV (a:b) -> DIV ((MUL (single:a:[])):b)
-    SUB (a:b) -> SUB ((MUL (single:a:[])):b)
-    ADD (a:b) -> ADD ((MUL (single:a:[])):b)
+    DIV (a:b) -> DIV ((assignOp single '*' a):b)
+    SUB (a:b) -> SUB ((assignOp single '*' a):b)
+    ADD (a:b) -> ADD ((assignOp single '*' a):b)
     any -> MUL (single:any:[])
 assignOp single '/' opR = case opR of
     DIV arr -> DIV (single:arr)
-    SUB (a:b) -> SUB ((DIV (single:a:[])):b)
-    ADD (a:b) -> ADD ((DIV (single:a:[])):b)
+    SUB (a:b) -> SUB ((assignOp single '/' a):b)
+    ADD (a:b) -> ADD ((assignOp single '/' a):b)
     any -> DIV (single:any:[])
 assignOp single '-' opR = case opR of
     SUB arr -> SUB (single:arr)
-    ADD (a:b) -> ADD ((SUB (single:a:[])):b)
+    ADD (a:b) -> ADD ((assignOp single '-' a):b)
     any -> SUB (single:any:[])
 assignOp single '+' opR = case opR of
     ADD arr -> ADD (single:arr)
@@ -248,7 +246,7 @@ parseCall = Parser (\str -> runParser call str)
 parseMain :: Parser Expr
 parseMain = Parser (\str -> runParser (parseAll) str)
     where
-        parseAll = parseUnary <|> builtIn <|> parseCall <|> wrapperParseOp
+        parseAll = builtIn <|> parseCall <|> wrapperParseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
         -- id = parseWSpace (Id <$> (parseId))
 
@@ -305,4 +303,22 @@ parse = Parser (\str -> runParser (parseAll) str)
 --                 Just list -> return $ Just (f:list)
 --                 Nothing -> return Nothing
 
--- readFiles :: [String] ->
+-- main :: IO()
+-- main = do
+--     args <- getArgs
+--     case args of
+--         [] -> hPutStrLn stderr "The REPL is not implemented" >>
+--             exitWith (ExitFailure 84)
+--         _ -> do
+--             argRes <- parseArgs args
+--             case argRes of
+--                 84 -> exitWith (ExitFailure 84)
+--                 _ -> do
+--                     contents <- getContent args
+--                     case contents of
+--                         Nothing -> hPutStrLn stderr "Non-existant file" >>
+--                             exitWith (ExitFailure 84)
+--                         Just cont -> case parseFiles cont of
+--                             Nothing -> hPutStrLn stderr "The files are invalid" >>
+--                                 exitWith (ExitFailure 84)
+--                             Just expr -> putStrLn (evalExpr expr)
