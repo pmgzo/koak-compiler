@@ -191,7 +191,7 @@ handleFunc c id args block ast = typedExpr:(inferType ast newCache)
              where typedExpr  = (Protof id args (Exprs (inferType block blockCache)))
                    newCache   = c ++ [(Id id)]
                    blockCache = newCache ++ (identifierToExpr args)
-handleFunc c id ag b ast = [(Err ("error in handleFunc"++(show c)++"; "++(show id)++"; "++(show ag)++"; "++(show b)++"; "++(show ast)))]
+-- handleFunc c id ag b ast = [(Err ("error in handleFunc"++(show c)++"; "++(show id)++"; "++(show ag)++"; "++(show b)++"; "++(show ast)))]
 
 handleFuncArgs :: [Expr] -> [Expr] -> [Expr] -> [Expr]
 handleFuncArgs [] _ _ = [] -- error
