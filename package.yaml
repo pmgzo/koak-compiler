@@ -20,7 +20,8 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/koak#readme>
 
 dependencies:
-- base >= 4.7 && < 5
+  - base >= 4.7 && < 5
+  - directory
 
 library:
   source-dirs: src
@@ -62,7 +63,7 @@ executables:
 tests:
   koak-test:
     main:                Spec.hs
-    source-dirs:         
+    source-dirs:
     - test
     - app
     ghc-options:
@@ -79,4 +80,3 @@ tests:
     - bytestring
     - containers
     - transformers
-

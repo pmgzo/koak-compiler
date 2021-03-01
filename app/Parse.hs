@@ -91,7 +91,7 @@ simplifyOp r = r
 -- parseOpUnary = Parser(\str -> runParser unary str)
 --     where
 --         unary = parseWSpace (Unary <$> (parseWSpace (parseUnop)) <*> (simplifyOp <$> Operation <$> parseOpSign))
---         unop = 
+--         unop =
 
 
 parseType :: Parser TypeKoak
@@ -263,7 +263,7 @@ wrapperGlobalVariable :: Parser Expr
 wrapperGlobalVariable = Parser (lbd psr)
         where
         psr = parseMain <* (char ';')
-        lbd = (\psr str -> 
+        lbd = (\psr str ->
                 case (runParser psr str) of
                 ass@(Just (Operation (ASSIGN (Wait _) (VAL _)), _)) -> ass
                 _ -> Nothing)
