@@ -39,22 +39,22 @@ parseIf :: Parser Expr
 parseIf = Parser (\str -> runParser ifExpr str)
     where
         ifExpr = ifElse <|> ifThen
-        ifElse = parseWSpace (IfElse <$> ignoreIf <*> ((word "then") *> arrRecu) <*> ((word "else") *> arrRecu))
-        ifThen = parseWSpace (IfThen <$> ignoreIf <*> ((word "then") *> arrRecu))
-        ignoreIf = parseAndWith (\_ b -> b) (word "if") recu
+        ifElse = parseWSpace (IfElse <$> cond <*> midElse <*> endElse)
+        ifThen = parseWSpace (IfThen <$> cond <*> endThen)
+        cond = ((char '(') *> (word "if") *> recu)
+        midElse = ((word "then") *> arrRecu)
+        endElse = ((word "else") *> arrRecu <* (char ')'))
+        endThen = ((word "then") *> arrRecu <* (char ')'))
 
+-- while i < 9 do expr;
 parseWhile :: Parser Expr
 parseWhile = Parser (\str -> runParser while str)
     where
-        while = parseWSpace (While <$> ((word "while") *> recu) <*> ((word "do") *> arrRecu)) -- while i < 9 do expr;
+        while = parseWSpace (While <$> ((char '(') *> (word "while") *> recu) <*> content)
+        content = ((word "do") *> arrRecu <* (char ')'))
 
 toTuple :: Identifier -> Expr -> (Identifier, Expr)
 toTuple id expr = (id, expr)
-
--- for2 :: Parser (Identifier, Expr)
--- for2 = Parser (\str -> runParser convert str)
---     where
---         convert = parseWSpace (toTuple <$> parseId <* (char '<') *> recu <* (char ','))
 
 for2 :: Parser (Identifier, Expr)
 for2 = Parser (\str -> runParser convert str)
@@ -64,13 +64,14 @@ for2 = Parser (\str -> runParser convert str)
 for1 :: Parser (Identifier, Expr)
 for1 = Parser (\str -> runParser convert str)
     where
-        convert = parseWSpace (toTuple <$> (ignoreFor <* (char '=')) <*> (recu <* (char ',')))
-        ignoreFor = parseAndWith (\_ b -> b) (word "for") parseId
+        convert = parseWSpace (toTuple <$> iden <*> (recu <* (char ',')))
+        iden = ((char '(') *> (word "for") *> parseId <* (char '='))
 
+-- for x = 1, x < 9, (1 or x = x + 1) in expr;
 parseFor :: Parser Expr
 parseFor = Parser (\str -> runParser for str)
     where
-        for = parseWSpace (For <$> for1 <*> for2 <*> for3 <*> arrRecu) -- for x = 1, x < 9, (1 or x = x + 1) in expr;
+        for = parseWSpace (For <$> for1 <*> for2 <*> for3 <*> (arrRecu <* (char ')')))
         for3 = parseWSpace (parseAndWith (\a b -> a) recu (word "in"))
 
 parseUnop :: Parser Unop
@@ -276,7 +277,9 @@ wrapperGlobalVariable = Parser (lbd psr)
                 _ -> Nothing)
 
 parse :: Parser Expr
-parse = Parser (\str -> runParser (parseAll) str)
+parse = Parser (\str -> case runParser (parseExtSpaces parseAll) str of
+    Just (r, []) -> Just (r, [])
+    _ -> Nothing)
     where
         parseAll = definition <|> wrapperGlobalVariable
         -- id = parseWSpace (Id <$> (parseId))
