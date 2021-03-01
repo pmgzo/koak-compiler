@@ -167,6 +167,9 @@ assignOp single '+' opR = case opR of
     ADD arr -> ADD (single:arr)
     any -> ADD (single:any:[])
 
+Operation (ADD [MUL [XPR (Id (Wait "a")),SUB [ADD [XPR (Id (Wait "a")),VAL (I 10)],VAL (I 10)]],DIV [SUB [VAL (I 7),VAL (I 8)],VAL (I 2)]])
+-- 
+
 parseOpSign :: Parser Op
 parseOpSign = Parser (\str -> runParser opPiece str)
     where
@@ -296,4 +299,22 @@ parse = Parser (\str -> runParser (parseAll) str)
 --                 Just list -> return $ Just (f:list)
 --                 Nothing -> return Nothing
 
--- readFiles :: [String] ->
+-- main :: IO()
+-- main = do
+--     args <- getArgs
+--     case args of
+--         [] -> hPutStrLn stderr "The REPL is not implemented" >>
+--             exitWith (ExitFailure 84)
+--         _ -> do
+--             argRes <- parseArgs args
+--             case argRes of
+--                 84 -> exitWith (ExitFailure 84)
+--                 _ -> do
+--                     contents <- getContent args
+--                     case contents of
+--                         Nothing -> hPutStrLn stderr "Non-existant file" >>
+--                             exitWith (ExitFailure 84)
+--                         Just cont -> case parseFiles cont of
+--                             Nothing -> hPutStrLn stderr "The files are invalid" >>
+--                                 exitWith (ExitFailure 84)
+--                             Just expr -> putStrLn (evalExpr expr)
