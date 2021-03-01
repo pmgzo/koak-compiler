@@ -196,6 +196,15 @@ parseOneOp = Parser (\str -> runParser allOp str)
 parseOp :: Parser Expr
 parseOp = Parser (\str -> runParser (Operation <$> parseOneOp) str)
 
+wrapperParseOp :: Parser Expr
+wrapperParseOp = Parser (lbd parseOp)
+            where
+            lbd = (\psr str -> 
+                    case runParser psr str of
+                    Just ((Operation (XPR (Val v))), rest) -> Just ((Val v), rest)
+                    Just ((Operation (VAL v)), rest) -> Just ((Val v), rest)
+                    Just ((Operation (XPR (Id id))), rest) -> Just ((Id id), rest)
+                    xpr -> xpr)
 
 callArg :: Maybe [Expr] -> Parser [Expr]
 callArg Nothing = Parser (\str -> Nothing)
@@ -222,7 +231,7 @@ parseMainOp = Parser (\str -> case str of
     s -> runParser (parseAll) s
     )
     where
-        parseAll = parseUnary <|> parseCall <|> id <|> parseOp
+        parseAll = parseUnary <|> parseCall <|> id <|> wrapperParseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
         id = parseSpaces (Id <$> parseId)
 
@@ -232,7 +241,7 @@ parse = Parser (\str -> case str of
     s -> runParser (parseAll) s
     )
     where
-        parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> parseOp
+        parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> wrapperParseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
         -- id = parseSpaces (Id <$> (parseId))
 
