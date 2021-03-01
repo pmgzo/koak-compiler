@@ -243,12 +243,21 @@ parseCall = Parser (\str -> runParser call str)
         call = parseWSpace (Callf <$> (parseId <* (char '(')) <*> call2)
         call2 = parseWSpace (callArg (Just []))
 
+initArray :: Expr -> [Expr]
+initArray a = a:[]
+
+addArray :: Expr -> [Expr] -> [Expr]
+addArray a arr = a:arr
+
 parseMain :: Parser Expr
 parseMain = Parser (\str -> runParser (parseAll) str)
     where
-        parseAll = builtIn <|> parseCall <|> wrapperParseOp
+        parseAll = exprs <|> oneExpr
+        oneExpr = builtIn <|> parseCall <|> wrapperParseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
-        -- id = parseWSpace (Id <$> (parseId))
+        exprs = Exprs <$> (addArray <$> (oneExpr <* (char ':')) <*> (endExprs <|> nextExprs))
+        nextExprs = (addArray <$> (oneExpr <* (char ':')) <*> (endExprs <|> nextExprs))
+        endExprs = (initArray <$> oneExpr)
 
 wrapperGlobalVariable :: Parser Expr
 wrapperGlobalVariable = Parser (lbd psr)
