@@ -91,7 +91,7 @@ expectedRes27 = Just (Operation (ADD [VAL (I 1),SUB [MUL [VAL (I 25),VAL (I 3)],
 test27 = TestCase $ assertEqual "1 + 25 * 3 - 2 * (6 - 3)" expectedRes27 (runParser parseOp "1 + 25 * 3 - 2 * (6 - 3)")
 
 expectedRes28 = Just (Operation (DataType2.EQ (XPR (Unary UMinus (Val (I 5)))) (XPR (Unary Not (Unary UMinus (Val (I 2)))))), "")
-test28 = TestCase $ assertEqual "-5 == !-2" expectedRes28 (runParser parseOp "5 == !2")
+test28 = TestCase $ assertEqual "-5 == !-2" expectedRes28 (runParser parseOp "-5 == !-2")
 
 
 -----------------------------
