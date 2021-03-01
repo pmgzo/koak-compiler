@@ -80,8 +80,27 @@ expectedRes22 = Just (For (Wait "i", Operation (VAL (I 0))) (Wait "i", Operation
 -- expectedRes22 = Just (For (Wait "i", Val (I 0)) (Wait "i", Val (I 5)) (Operation (ASSIGN (Wait "i") (ADD [XPR (Id (Wait "i")), VAL (I 1)]))) (Callf (Wait "toto") [Val (I 5)]), "")
 test22 = TestCase $ assertEqual "for i = 0, i < 5, i = i + 1 in toto(5)" expectedRes22 (runParser parseFor "for i = 0, i < 5, i = i + 1 in toto(5)")
 
+expectedRes23 = Just (Protof (Typed "toto" INT) [Typed "x" INT] (Val (I 5)), "")
+test23 = TestCase $ assertEqual "def toto(x:int):int 5;" expectedRes23 (runParser definition "def toto(x:int):int 5;")
+
+expectedRes24 = Just (Protof (Typed "toto" INT) [Typed "x" INT, Typed "y" INT] (Callf (Wait "tata") [Val (I 5)]), "")
+test24 = TestCase $ assertEqual "def toto(x : int, y : int) : int tata(5);" expectedRes24 (runParser definition "def toto(x : int, y : int) : int tata(5);")
+
+expectedRes25 = Just (Operation (ADD [VAL (I 1),VAL (I 25)]), "")
+test25 = TestCase $ assertEqual "1 + 25" expectedRes25 (runParser parseOp "1 + 25")
+
+expectedRes26 = Just (Operation (ASSIGN (Wait "a") (ADD [VAL (I 1),VAL (I 25)])), "")
+test26 = TestCase $ assertEqual "a = 1 + 25" expectedRes26 (runParser parseOp "a = 1 + 25")
+
+expectedRes27 = Just (Operation (ADD [VAL (I 1),SUB [MUL [VAL (I 25),VAL (I 3)],MUL [VAL (I 2), SUB [VAL (I 6),VAL (I 3)]]]]), "")
+test27 = TestCase $ assertEqual "1 + 25 * 3 - 2 * (6 - 3)" expectedRes27 (runParser parseOp "1 + 25 * 3 - 2 * (6 - 3)")
+
+expectedRes28 = Just (Operation (DataType2.EQ (XPR (Unary UMinus (Val (I 5)))) (XPR (Unary Not (Unary UMinus (Val (I 2)))))), "")
+test28 = TestCase $ assertEqual "-5 == !-2" expectedRes28 (runParser parseOp "5 == !2")
 
 
 
 
-parsingTests = TestList [word1, word2, word3, word4, char1, test12, test13, test14, test15, test16, test17, test18, test19, test20, test21, test22]
+
+parsingTests = TestList [word1, word2, word3, word4, char1, test12, test13, test14, test15, test16, test17, test18, test19, test20, test21, test22, test23, test24, test25, test26, test27, test28]
+
