@@ -80,6 +80,13 @@ parseUnary = Parser(\str -> runParser unary str)
         unary = parseSpaces (Unary <$> unop <*> recu)
         unop = parseSpaces (parseUnop)
 
+parseOpUnary :: Parser Expr
+parseOpUnary = Parser(\str -> runParser unary str)
+    where
+        unary = parseSpaces (Unary <$> unop <*> parseOp)
+        unop = parseSpaces (parseUnop)
+
+
 parseType :: Parser TypeKoak
 parseType = Parser (\str -> case runParser (word "int") str of
     Nothing -> case runParser (word "double") str of
@@ -153,6 +160,13 @@ assignOp single '+' opR = case opR of
     ADD arr -> ADD (single:arr)
     any -> ADD (single:any:[])
 
+-- 2 * (6 - 3)
+-- MUL 2 (SUB 6 3)
+-- 
+-- * 2 (- 6 3)
+-- - (* 2 6) 3
+-- 2 * (6 - 3) + 1
+-- + (* 2 (- 6 3)) 1
 parseOpSign :: Parser Op
 parseOpSign = Parser (\str -> runParser opPiece str)
     where
@@ -160,8 +174,9 @@ parseOpSign = Parser (\str -> runParser opPiece str)
         withSign = parseSpaces (assignOp <$> single <*> (parseSpaces (parseAnyChar "*/-+")) <*> parseOpSign)
         without = single
         single = (par <|> simp)
-        par = ((char '(') *> (parseOneOp) <* (char ')'))
-        simp = (call <|> id <|> valu)
+        par = (PAR <$> ((char '(') *> (parseOneOp) <* (char ')')))
+        simp = (unary <|> call <|> id <|> valu)
+        unary = (XPR <$> parseOpUnary)
         call = (XPR <$> (parseSpaces parseCall))
         valu = parseSpaces ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
         id = (XPR <$> Id <$> parseId)
@@ -191,16 +206,34 @@ parseComp = Parser (\str -> runParser opComp str)
 parseOneOp :: Parser Op
 parseOneOp = Parser (\str -> runParser allOp str)
     where
-        allOp = assign <|> comp <|> sign <|> call <|> id <|> valu
+        allOp = assign <|> comp <|> sign <|> unary <|> call <|> id <|> valu
         assign = parseSpaces (ASSIGN <$> (parseId <* (char '=')) <*> parseOneOp)
         sign = parseSpaces (parseOpSign)
+        unary = (XPR <$> parseOpUnary)
         call = (XPR <$> parseCall)
         valu = parseSpaces ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
         id = (parseSpaces (XPR <$> Id <$> parseId))
         comp = parseSpaces (parseComp)
 
+removeParArr :: [Op] -> [Op]
+removeParArr [] =  []
+removeParArr (x:xs) = (removePar x):removeParArr xs
+
+removePar :: Op -> Op
+removePar (PAR op) = removePar op
+removePar (ADD arr@(x:xs)) = ADD (removeParArr arr)
+removePar (SUB arr@(x:xs)) = SUB (removeParArr arr)
+removePar (MUL arr@(x:xs)) = MUL (removeParArr arr)
+removePar (DIV arr@(x:xs)) = DIV (removeParArr arr)
+removePar (DataType2.LT a b) = DataType2.LT (removePar a) (removePar b)
+removePar (DataType2.GT a b) = DataType2.GT (removePar a) (removePar b)
+removePar (DataType2.EQ a b) = DataType2.EQ (removePar a) (removePar b)
+removePar (NOTEQ a b) = NOTEQ (removePar a) (removePar b)
+removePar (ASSIGN var op) = (ASSIGN var (removePar op))
+removePar op = op
+
 parseOp :: Parser Expr
-parseOp = Parser (\str -> runParser (Operation <$> parseOneOp) str)
+parseOp = Parser (\str -> runParser (Operation <$> removePar <$> parseOneOp) str)
 
 wrapperParseOp :: Parser Expr
 wrapperParseOp = Parser (lbd parseOp)

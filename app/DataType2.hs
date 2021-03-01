@@ -14,6 +14,7 @@ data Unop = Not | UMinus deriving (Show, Eq)
 
 data Op = VAL Value
         | XPR Expr
+        | PAR Op
         | ADD [Op]
         | SUB [Op]
         | MUL [Op]
