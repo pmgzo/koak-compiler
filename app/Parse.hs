@@ -19,7 +19,7 @@ word :: String -> Parser String
 word w = Parser (\str -> runParser (parseSpaces (parseWord w)) str)
 
 recu :: Parser Expr
-recu = Parser (\str -> runParser (parseSpaces parse) str)
+recu = Parser (\str -> runParser (parseSpaces parseMain) str)
 
 -- recu :: Parser Expr
 -- recu = Parser (\str -> Just ((Val (I 9)), str))
@@ -264,12 +264,19 @@ parseCall = Parser (\str -> runParser call str)
         call = parseSpaces (Callf <$> (parseId <* (char '(')) <*> call2)
         call2 = parseSpaces (callArg (Just []))
 
+parseMain :: Parser Expr
+parseMain = Parser (\str -> runParser (parseAll) str)
+    where
+        parseAll = parseUnary <|> builtIn <|> parseCall <|> wrapperParseOp
+        builtIn = (parseFor <|> parseWhile <|> parseIf)
+        -- id = parseSpaces (Id <$> (parseId))
+
 parse :: Parser Expr
 parse = Parser (\str -> runParser (parseAll) str)
     where
-        parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> wrapperParseOp
-        builtIn = (parseFor <|> parseWhile <|> parseIf)
+        parseAll = definition <|> parseMain
         -- id = parseSpaces (Id <$> (parseId))
+
 
 -- parseLine :: Parser Expr
 -- parseLine = Parser (\str -> case runParser (parse getLine))
