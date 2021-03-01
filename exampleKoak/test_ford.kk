@@ -1,25 +1,25 @@
 def fct1(break : double) : double
     a = 0.0:
-    for id = 2.0, id < break, 1.0 in
-        a = a * 1.0 + id,
+    (for id = 2.0, id < break, 1.0 in
+        a = a * 1.0 + id):
     a;
 
 def fct2(break : double) : double
     i = 34.0:
-    for id = 0.0, id < break, 1.0 in
-        i = i + 1.0,
+    (for id = 0.0, id < break, 1.0 in
+        i = i + 1.0):
     i;
 
 def fct3(break : double) : double
     i = 0.0:
-    for id = 0.0, id < break, 1.0 in
-        i = i + 1.0,
+    (for id = 0.0, id < break, 1.0 in
+        i = i + 1.0):
     i;
 
 def fct4(break : double) : double
     v = 1.0:
-    for id = 0.0, id < break, 1.0 in
-        v = v * 2.0,
+    (for id = 0.0, id < break, 1.0 in
+        v = v * 2.0):
     v;
 
 

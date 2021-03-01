@@ -1,8 +1,8 @@
 def factorial(a: int): int
-    if a < 2 then
+    (if a < 2 then
         a
     else
-        a * fact(a - 1);
+        a * fact(a - 1));
 
 def itest1(): int
     fact(5);

@@ -2,10 +2,10 @@ def fibi(x : int) : int
     a = 1:
     b = 1:
     c = 0:
-    for i = 3, i < x, 1 in
+    (for i = 3, i < x, 1 in
         c = a + b:
         a = b:
-        b = c,
+        b = c)
     b;
 
 def itest1(): int

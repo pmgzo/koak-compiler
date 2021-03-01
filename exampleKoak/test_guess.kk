@@ -1,22 +1,22 @@
 def youtwo(val: int): int
-    if val == 2 then 1
-    else 0;
+    (if val == 2 then 1
+    else 0);
 
 def younot(a : int): int
-    if a == 0 then 1
-    else 0;
+    (if a == 0 then 1
+    else 0);
 
 def youplay(a: int) : double
-    if a < 9 then
-        if a < 8 then
-            if a < 7 then
-             7
-    else 8;
+    (if a < 9 then
+        (if a < 8 then
+            (if a < 7 then 7)
+        )
+    else 8);
 
 def you23(a: int) : int
-    if a == 23 then
+    (if a == 23 then
         1
-    else 0;
+    else 0);
 
 def itest1(): int
     youtwo(2);
