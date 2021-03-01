@@ -44,4 +44,17 @@ parseDouble2 = Parser (lbd parseNum)
                                     Nothing       -> Nothing
                                     )
 
+parseId2 :: Parser String
+parseId2 = Parser (lbd (parseAnd p1 p2)) <|> p1
+        where
+        alpha = (['A' .. 'Z'] ++ ['a' .. 'z'])
+        digit = ['0' .. '9']
+        p1 = parseSome (parseAnyChar ((alpha)))
+        p2 = parseSome (parseAnyChar (alpha ++ digit))
+        lbd = (\fct -> 
+                \str -> case (runParser fct str) of
+                        (Just ((s1, s2), rest)) -> (Just ((s1 ++ s2), rest))
+                        Nothing -> Nothing)
+
+-- computeMultipleParse
 -- a -> b -> c -> d

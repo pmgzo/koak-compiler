@@ -26,7 +26,7 @@ recu = Parser (\str -> runParser (parseSpaces parse) str)
 
 
 parseId :: Parser Identifier
-parseId = Parser (\str -> runParser (parseSpaces (Wait <$> parseLetters)) str)
+parseId = Parser (\str -> runParser (parseSpaces (Wait <$> parseId2)) str)
 
 parseIf :: Parser Expr
 parseIf = Parser (\str -> runParser ifExpr str)
