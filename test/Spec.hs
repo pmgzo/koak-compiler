@@ -2,6 +2,7 @@ module Spec where
 import Test.HUnit
 import TestLLVMBuilder
 import TypeInferenceTest
+import TestParsing
 
 -- resTest11ParserList  = Just ((Value T EndList), " ")
 -- test11ParserList     = TestCase $ assertEqual "(#t ) " resTest11ParserList (parseList "(#t ) ")
@@ -9,3 +10,4 @@ import TypeInferenceTest
 main = do
     runTestTT llvmBuilderTests
     runTestTT typeInferenceTests
+    runTestTT parsingTests

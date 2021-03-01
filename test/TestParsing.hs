@@ -7,10 +7,11 @@
 
 module TestParsing where
 import Test.HUnit
+import MyParser
 import Parse
 import DataType2
 
 expectedRes1 = Just ("table", "top")
-test1 = TestCase $ assertEqual "y = 5: x = y" expectedRes1 (runParser (word "table") "tabletop")
+test1 = TestCase $ assertEqual "word table" expectedRes1 (runParser (word "table") "tabletop")
 
-testList = TestList [test1]
+parsingTests = TestList [test1]

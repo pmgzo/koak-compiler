@@ -182,7 +182,7 @@ parseComp = Parser (\str -> runParser opComp str)
 parseOneOp :: Parser Op
 parseOneOp = Parser (\str -> runParser allOp str)
     where
-        allOp = assign <|> comp <|> sign <|> call <|> valu <|>
+        allOp = assign <|> comp <|> sign <|> call <|> valu
         assign = parseSpaces (ASSIGN <$> (parseId <* (char '=')) <*> parseOneOp)
         sign = parseSpaces (parseOpSign)
         call = (XPR <$> (parseSpaces parseMainOp))
