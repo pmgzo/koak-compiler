@@ -22,9 +22,9 @@ expectedRes3 = (Operation (ADD [XPR (Id (Wait "a")),SUB [ADD [XPR (Id (Wait "a")
 test3 = TestCase $ assertEqual "test3" (Just (expectedRes3, "")) input3
 
 -- infinite loop here
--- input4 = runParser parse ")"
--- expectedRes4 = Nothing
--- test4 = TestCase $ assertEqual "test error handling" expectedRes4 input4
+input4 = runParser parse ")"
+expectedRes4 = Nothing
+test4 = TestCase $ assertEqual "test error handling" expectedRes4 input4
 
 input5 = runParser parseUnop "! a"
 expectedRes5 = (Not)
@@ -46,4 +46,16 @@ input9 = runParser parseId "a1a1a "
 expectedRes9 = (Wait "a1a1a")
 test9 = TestCase $ assertEqual "test parseId 2" (Just (expectedRes9, " ")) input9
 
-parseTests = TestList [test1, test2, test3, {-- test4,--} test5, test6, test7, test8, test9] -- test2, test5, test6, test7]
+input10 = runParser parseOp "a + (a * 10)"
+expectedRes10 = (Operation (ADD [XPR (Id (Wait "a")),MUL[XPR (Id (Wait "a")), VAL (I 10)]]))
+test10 = TestCase $ assertEqual "test operation priority 1" (Just (expectedRes10, "")) input10
+
+input11 = runParser parseOp "a * (a + 10)"
+expectedRes11 = (Operation (MUL [XPR (Id (Wait "a")),ADD[XPR (Id (Wait "a")), VAL (I 10)]]))
+test11 = TestCase $ assertEqual "test operation priority 1" (Just (expectedRes11, "")) input11
+
+input12 = runParser parseOp "a * (a + 10) - 10 + (7 - 8) / 2"
+expectedRes12 = (Operation (ADD [SUB [ MUL [(XPR (Id (Wait "a"))), (ADD [XPR (Id (Wait "a")), (VAL (I 10))])],  (VAL (I 10)) ] , DIV [SUB [(VAL (I 7)), (VAL (I 8))], (VAL (I 2))]]))
+test12 = TestCase $ assertEqual "test operation priority 2" (Just (expectedRes12, "")) input12
+
+parseTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test12]
