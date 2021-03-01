@@ -77,7 +77,7 @@ parseUnop = Parser (\str -> case runParser (char '!') str of
 parseUnary :: Parser Expr
 parseUnary = Parser(\str -> runParser unary str)
     where
-        unary = parseSpaces (Unary <$> unop *> recu)
+        unary = parseSpaces (Unary <$> unop <*> recu)
         unop = parseSpaces (parseUnop)
 
 parseType :: Parser TypeKoak
@@ -179,14 +179,10 @@ parseComp = Parser (\str -> runParser opComp str)
         opComp = parseSpaces (assignComp <$> parseOpSign <*> comps <*> parseOpSign)
         comps = parseSpaces (parseAnyStr ("<":">":"==":"!=":[]))
 
--- 7 + 3 < 4 * 5
--- (7 + 3) < (4 * 5)
---
-
 parseOneOp :: Parser Op
 parseOneOp = Parser (\str -> runParser allOp str)
     where
-        allOp = assign <|> comp <|> sign <|> call <|> valu
+        allOp = assign <|> comp <|> sign <|> call <|> valu <|>
         assign = parseSpaces (ASSIGN <$> (parseId <* (char '=')) <*> parseOneOp)
         sign = parseSpaces (parseOpSign)
         call = (XPR <$> (parseSpaces parseMainOp))
@@ -194,8 +190,12 @@ parseOneOp = Parser (\str -> runParser allOp str)
         valu = parseSpaces ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
         comp = parseSpaces (parseComp)
 
+-- parseOp :: Parser Expr
+-- parseOp = Parser (\str -> runParser (Operation <$> parseOneOp) str)
+
 parseOp :: Parser Expr
 parseOp = Parser (\str -> runParser (Operation <$> parseOneOp) str)
+
 
 callArg :: Maybe [Expr] -> Parser [Expr]
 callArg Nothing = Parser (\str -> Nothing)
@@ -232,9 +232,9 @@ parse = Parser (\str -> case str of
     s -> runParser (parseAll) s
     )
     where
-        parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> id <|> parseOp
+        parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> parseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
-        id = parseSpaces (Id <$> (parseId))
+        -- id = parseSpaces (Id <$> (parseId))
 
 -- parseLine :: Parser Expr
 -- parseLine = Parser (\str -> case runParser (parse getLine))

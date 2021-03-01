@@ -13,6 +13,7 @@ data Unop = Not | UMinus deriving (Show, Eq)
 -- data Binop = Time | Div | Plus | Minus | Lt | Gt | Eq | NotEq | Assign deriving (Show, Eq)
 
 data Op = VAL Value
+        | ID Identifier
         | XPR Expr
         | ADD [Op]
         | SUB [Op]
@@ -34,7 +35,7 @@ data Expr = Val Value -- Constant
             | Exprs [Expr] -- (: y = y + 1: y) list d'expressions qui se suivent
 
             | Operation Op -- [(Binop, Expr)]
-            | Unary Unop Expr -- -5 => UMinus (Val (Int 5))
+            | Unary Unop Expr -- -5 -> UMinus (Val (Int 5))
             | For (Identifier, Expr) (Identifier, Expr) Expr Expr -- exps
             -- for i = 0, i < 1, 1 in print(i);
             -- for i = 0, i < 10, 1 in i = i - 2 * 1 : i = 5 / 5 + i;
