@@ -13,7 +13,6 @@ data Unop = Not | UMinus deriving (Show, Eq)
 -- data Binop = Time | Div | Plus | Minus | Lt | Gt | Eq | NotEq | Assign deriving (Show, Eq)
 
 data Op = VAL Value
-        | ID Identifier
         | XPR Expr
         | ADD [Op]
         | SUB [Op]

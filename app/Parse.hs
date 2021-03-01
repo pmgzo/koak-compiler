@@ -26,7 +26,7 @@ recu = Parser (\str -> runParser (parseSpaces parse) str)
 
 
 parseId :: Parser Identifier
-parseId = Parser (\str -> runParser (parseSpaces (Wait <$> parseLetters)) str)
+parseId = Parser (\str -> runParser (parseSpaces (Wait <$> parseId2)) str)
 
 parseIf :: Parser Expr
 parseIf = Parser (\str -> runParser ifExpr str)
@@ -160,12 +160,11 @@ parseOpSign = Parser (\str -> runParser opPiece str)
         withSign = parseSpaces (assignOp <$> single <*> (parseSpaces (parseAnyChar "*/-+")) <*> parseOpSign)
         without = single
         single = (par <|> simp)
-        -- v _ r _ = r
         par = ((char '(') *> (parseOneOp) <* (char ')'))
-        simp = (valu <|> call)
-        call = (XPR <$> (parseSpaces parseMainOp))
-        -- call = Parser (\str -> Just ((XPR (Val (I 3))), str))
+        simp = (call <|> id <|> valu)
+        call = (XPR <$> (parseSpaces parseCall))
         valu = parseSpaces ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
+        id = (XPR <$> Id <$> parseId)
 
 assignComp :: Op -> String -> Op -> Op
 assignComp op1 "<" op2 = DataType2.LT op1 op2
@@ -179,23 +178,39 @@ parseComp = Parser (\str -> runParser opComp str)
         opComp = parseSpaces (assignComp <$> parseOpSign <*> comps <*> parseOpSign)
         comps = parseSpaces (parseAnyStr ("<":">":"==":"!=":[]))
 
+-- parseOneOp :: Parser Op
+-- parseOneOp = Parser (\str -> runParser allOp str)
+--     where
+--         allOp = assign <|> comp <|> sign <|> call <|> valu
+--         assign = parseSpaces (ASSIGN <$> (parseId <* (char '=')) <*> parseOneOp)
+--         sign = parseSpaces (parseOpSign)
+--         call = (XPR <$> (parseSpaces parseMainOp))
+--         valu = parseSpaces ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
+--         comp = parseSpaces (parseComp)
+
 parseOneOp :: Parser Op
 parseOneOp = Parser (\str -> runParser allOp str)
     where
-        allOp = assign <|> comp <|> sign <|> call <|> valu
+        allOp = assign <|> comp <|> sign <|> call <|> id <|> valu
         assign = parseSpaces (ASSIGN <$> (parseId <* (char '=')) <*> parseOneOp)
         sign = parseSpaces (parseOpSign)
-        call = (XPR <$> (parseSpaces parseMainOp))
-        -- call = Parser (\str -> Just ((XPR (Val (I 9))), str))
+        call = (XPR <$> parseCall)
         valu = parseSpaces ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
+        id = (parseSpaces (XPR <$> Id <$> parseId))
         comp = parseSpaces (parseComp)
-
--- parseOp :: Parser Expr
--- parseOp = Parser (\str -> runParser (Operation <$> parseOneOp) str)
 
 parseOp :: Parser Expr
 parseOp = Parser (\str -> runParser (Operation <$> parseOneOp) str)
 
+wrapperParseOp :: Parser Expr
+wrapperParseOp = Parser (lbd parseOp)
+            where
+            lbd = (\psr str -> 
+                    case runParser psr str of
+                    Just ((Operation (XPR (Val v))), rest) -> Just ((Val v), rest)
+                    Just ((Operation (VAL v)), rest) -> Just ((Val v), rest)
+                    Just ((Operation (XPR (Id id))), rest) -> Just ((Id id), rest)
+                    xpr -> xpr)
 
 callArg :: Maybe [Expr] -> Parser [Expr]
 callArg Nothing = Parser (\str -> Nothing)
@@ -216,23 +231,10 @@ parseCall = Parser (\str -> runParser call str)
         call = parseSpaces (Callf <$> (parseId <* (char '(')) <*> call2)
         call2 = parseSpaces (callArg (Just []))
 
-parseMainOp :: Parser Expr
-parseMainOp = Parser (\str -> case str of
-    [] -> Just(Nil, [])
-    s -> runParser (parseAll) s
-    )
-    where
-        parseAll = parseUnary <|> parseCall <|> id <|> parseOp
-        builtIn = (parseFor <|> parseWhile <|> parseIf)
-        id = parseSpaces (Id <$> parseId)
-
 parse :: Parser Expr
-parse = Parser (\str -> case str of
-    [] -> Just(Nil, [])
-    s -> runParser (parseAll) s
-    )
+parse = Parser (\str -> runParser (parseAll) str)
     where
-        parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> parseOp
+        parseAll = parseUnary <|> builtIn <|> definition <|> parseCall <|> wrapperParseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
         -- id = parseSpaces (Id <$> (parseId))
 
