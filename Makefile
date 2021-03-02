@@ -35,6 +35,9 @@ tests_integrations: clean
 tests_bash:
 	./tests/test.sh
 
+tests_bash_log:
+	./tests/test.sh a
+
 tests_bash_chmod: clean
 	chmod +x tests/test.sh && ./tests/test.sh
 

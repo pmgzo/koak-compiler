@@ -50,9 +50,10 @@ gTFC e i = getTypeFromCache e i
 getTypeFromExpr :: [Expr] -> TypeKoak
 getTypeFromExpr []                         = VOID -- error
 getTypeFromExpr ((Id (Typed _ t)):xs)      = t
-getTypeFromExpr ((Unary u e):xs)           = getTypeFromExpr [e]
+getTypeFromExpr ((Unary u e):xs)           = gTFE [e]
 getTypeFromExpr ((Val val):xs)             = gTFV val
 getTypeFromExpr ((Callf (Typed _ t) _):xs) = t
+getTypeFromExpr ((Operation (XPR e)):xs)  = gTFE [e]
 
 gTFE :: [Expr] -> TypeKoak
 gTFE e = getTypeFromExpr e

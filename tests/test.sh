@@ -32,8 +32,11 @@ make
 for arg in "${arr[@]}"; do
     rm -f exampleKoak/*.o
     echo -e "\033[1;35m"./koak $arg"\033[0m"
-    # ./koak $arg > .log && gcc tests/main.c exampleKoak/*.o && ./a.out $arg || echo -e "\033[1;91m"FAILED"\033[0m"
-    ./koak $arg && gcc tests/main.c exampleKoak/*.o && ./a.out $arg || echo -e "\033[1;91m"FAILED"\033[0m"
+    if [[ $# = 0 ]]
+        then ./koak $arg && gcc tests/main.c exampleKoak/*.o && ./a.out $arg || echo -e "\033[1;91m"FAILED"\033[0m"
+    else
+        ./koak $arg > .log && gcc tests/main.c exampleKoak/*.o && ./a.out $arg || echo -e "\033[1;91m"FAILED"\033[0m"
+    fi
 
     # ./exec_test.sh $arg
 done

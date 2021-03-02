@@ -51,7 +51,7 @@ def itest1(): int
     For2(5);
 
 def itest2(): int
-    ifElse(!ifElse(While2(5)));
+    IfElse(!IfElse(While2(5)));
 
 def itest3(): int
     For3(5);

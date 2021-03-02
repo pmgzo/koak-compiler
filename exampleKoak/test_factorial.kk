@@ -1,4 +1,4 @@
-def factorial(a: int): int
+def fact(a: int): int
     (if a < 2 then
         a
     else
