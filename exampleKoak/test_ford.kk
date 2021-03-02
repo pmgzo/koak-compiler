@@ -41,6 +41,7 @@ dexpectedRes3 = 9.0;
 dexpectedRes4 = 16.0;
 
 def itest1(): int
+    -1;
 
 def itest2(): int
     -1;
