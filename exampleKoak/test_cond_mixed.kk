@@ -10,7 +10,7 @@ def While2(max : int) : int
         i = i + 1:
         while j < i * max do
             j = j + 1
-        )
+    ):
     j + 2;
 
 def For2(max : int) : int
@@ -21,7 +21,7 @@ def For2(max : int) : int
                 a = a + e
             )
         )
-    )
+    ):
     5;
 
 def For3(max : int) : int
@@ -31,7 +31,7 @@ def For3(max : int) : int
             for e = 0, e < j * max, e = e + While2(j) in
                 a = a + e
         )
-    )
+    ):
     a;
 
 def For4(max : int) : int
@@ -44,7 +44,7 @@ def For4(max : int) : int
             if a == 90
                then b = 100
         )
-    )
+    ):
     b;
 
 def itest1(): int

@@ -26,9 +26,10 @@ int returnType; //0 == int, 1 == double
 int iprintTest(char *test_name, int res, int expected_res)
 {
     if (res == expected_res) {
-        printf("success %s\n", test_name);
+        printf("\033[1;32mSuccess %s\n\033[0m", test_name);
     } else {
-        printf("failed %s\n expected this =%d, receive this %d\n", test_name, expected_res, res);
+        printf("\033[1;31mFailed %s\033[0m\n expected this = %d, receive this %d\n", test_name, expected_res, res);
+        return (84);
     }
     return (0);
 }
@@ -36,9 +37,9 @@ int iprintTest(char *test_name, int res, int expected_res)
 int dprintTest(char *test_name, double res, double expected_res)
 {
     if (res == expected_res) {
-        printf("success %s\n", test_name);
+        printf("\033[1;32mSuccess %s\n\033[0m", test_name);
     } else {
-        printf("failed %s\n expected this =%f, received this %f\n", test_name, expected_res, res);
+        printf("\033[1;31mFailed %s\033[0m\n expected this = %f, received this %f\n", test_name, expected_res, res);
     }
     return (0);
 }

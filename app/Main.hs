@@ -37,9 +37,11 @@ parseFile content
           | otherwise      = res
           where res = getStatement content ""
 
-mergeMaybe :: Maybe a -> [a] -> [a]
-mergeMaybe Nothing _ = []
-mergeMaybe (Just a) b = a:b
+mergeMaybe :: Maybe [Expr] -> [[Expr]] -> [[Expr]]
+mergeMaybe Nothing _   = []
+-- mergeMaybe (Just []) _ = []
+-- mergeMaybe _ []        = []
+mergeMaybe (Just a) b  = a:b
 
 parseFiles :: [String] -> [[Expr]]
 parseFiles [] = []
