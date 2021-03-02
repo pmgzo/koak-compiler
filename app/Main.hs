@@ -39,12 +39,17 @@ parseFile content
 
 mergeMaybe :: Maybe [Expr] -> [[Expr]] -> [[Expr]]
 mergeMaybe Nothing _   = []
--- mergeMaybe (Just []) _ = []
--- mergeMaybe _ []        = []
+mergeMaybe (Just []) _ = []
+mergeMaybe _ []        = []
 mergeMaybe (Just a) b  = a:b
+
+checkNothing :: Maybe [Expr] -> [[Expr]]
+checkNothing Nothing  = []
+checkNothing (Just a) = [a]
 
 parseFiles :: [String] -> [[Expr]]
 parseFiles [] = []
+parseFiles (file:[]) = checkNothing $ parseFile file
 parseFiles (file:xs) = mergeMaybe (parseFile file) (parseFiles xs)
 
 

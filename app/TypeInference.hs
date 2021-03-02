@@ -184,7 +184,7 @@ handleAssign c id op ast = [(Err ("error in handleAssign "++(show c)++"; "++(sho
 checkFunc :: [Expr] -> [Expr] -> [Expr]
 checkFunc ((Protof id args (Exprs block)):xs) c = handleFunc c id args block xs
 -- checkFunc ((Callf id args):xs) c = (Callf (gIFC c id) (handleFuncArgs c c args)):(inferType xs c)
-checkFunc ((Callf id args):xs) c = (Callf (gIFC c id) (checkIdentifier args c)):(inferType xs c)
+checkFunc ((Callf id args):xs) c = (Callf (gIFC c id) (inferType args c)):(inferType xs c)
 checkFunc _ _ = []
 
 handleFunc :: [Expr] -> Identifier -> [Identifier] -> [Expr] -> [Expr] -> [Expr]

@@ -12,7 +12,7 @@ def fct4(a: double, c: double) : double
     if a > 7.0 then
         (if a == 7.0 then 90.0
         else 12.0)
-    else c
+    else c;
 
 def dtest1(): double
     fct1(1.0);
