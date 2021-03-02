@@ -265,7 +265,7 @@ parseMain :: Parser Expr
 parseMain = Parser (\str -> runParser (parseAll) str)
     where
         parseAll = exprs <|> oneExpr
-        oneExpr = builtIn <|> parseCall <|> wrapperParseOp
+        oneExpr = builtIn <|> wrapperParseOp <|> parseCall
         builtIn = (parseFor <|> parseWhile <|> parseIf)
         exprs = Exprs<$>(addArray<$> (oneExpr <* (char ':')) <*> (next <|> end))
         next = (addArray <$> (oneExpr <* (char ':')) <*> (next <|> end))
