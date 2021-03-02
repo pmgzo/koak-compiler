@@ -1,4 +1,4 @@
-def fct1(break : double): 
+def fct1(break : int): int
     a = 0:
     (for id = 2, id < break, 1 in
         a = a * 1 + id):

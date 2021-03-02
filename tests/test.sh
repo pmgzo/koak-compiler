@@ -22,7 +22,7 @@ CYAN='\033[0;36m'
 
 # declare -a arr=( "exampleKoak/test_fib_iterative.kk" "exampleKoak/test.kk" "exampleKoak/test_subject1.kk" "exampleKoak/test_fib_recursive.kk" "exampleKoak/test_simple_calcul.kk" "exampleKoak/test_subject2.kk" )
 
-declare -a arr=(exampleKoak/*.kk)
+declare -a arr=(exampleKoak/koak.kk)
 
 mv tests/test.sh .
 #######################################################

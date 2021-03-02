@@ -5,8 +5,7 @@ def fact2(a : int): int
     res = 1:
     (while a != 0 do
         res = res * a:
-        a = a - 1)
-    :
+        a = a - 1):
     res;
 
 def itest1(): int

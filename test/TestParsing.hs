@@ -39,7 +39,7 @@ test5 = TestCase $ assertEqual "char t abletop" expectedRes5 (runParser (char 't
 
 
 -----------------------------
---      for and while      --
+--    for, if and while    --
 -----------------------------
 
 expectedRes12 = Just (IfThen (Val (I 1)) (Exprs [Val (I 5)]), "")
@@ -93,6 +93,9 @@ test27 = TestCase $ assertEqual "1 + 25 * 3 - 2 * (6 - 3)" expectedRes27 (runPar
 expectedRes28 = Just (Operation (DataType2.EQ (XPR (Unary UMinus (Val (I 5)))) (XPR (Unary Not (Unary UMinus (Val (I 2)))))), "")
 test28 = TestCase $ assertEqual "-5 == !-2" expectedRes28 (runParser parseOp "-5 == !-2")
 
+expectedRes29 = Just (Protof (Typed "toto1" INT) [] (Exprs [Val (I 5)]), "")
+test29 = TestCase $ assertEqual "def toto1(): int 5;" expectedRes29 (runParser parse "def toto1(): int 5;")
+
 
 -----------------------------
 --       operations        --
@@ -138,4 +141,4 @@ test42 = TestCase $ assertEqual "One Id main conversion" expectedRes42 (runParse
 
 
 
-parsingTests = TestList [test1, test2, test3, test4, test5, test12, test13, test14, test15, test16, test17, test18, test19, test20, test21, test22, test23, test24, test25, test26, test27, test28, test30, test31, test32, test33, test34, test35, test36, test37, test38, test39, test40, test41, test42]
+parsingTests = TestList [test1, test2, test3, test4, test5, test12, test13, test14, test15, test16, test17, test18, test19, test20, test21, test22, test23, test24, test25, test26, test27, test28, test29, test30, test31, test32, test33, test34, test35, test36, test37, test38, test39, test40, test41, test42]

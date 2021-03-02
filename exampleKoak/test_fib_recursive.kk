@@ -1,8 +1,8 @@
 def fib(x : int) : int
-    (if x < 3 then
+    if x < 3 then
         1
     else
-        fib(x-1)+fib(x-2));
+        fib(x - 1) + fib(x - 2);
 
 def itest1(): int
     fibi(5);
