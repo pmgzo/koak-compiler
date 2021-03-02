@@ -33,14 +33,14 @@ def dtest3(): double
 def dtest4(): double
     -1.0;
 
-iexpected_res1 = 5;
-iexpected_res2 = 55;
-iexpected_res3 = 1;
-iexpected_res4 = 2584;
-dexpected_res1 = -1.0;
-dexpected_res2 = -1.0;
-dexpected_res3 = -1.0;
-dexpected_res4 = -1.0;
+iexpectedRes1 = 5;
+iexpectedRes2 = 55;
+iexpectedRes3 = 1;
+iexpectedRes4 = 2584;
+dexpectedRes1 = -1.0;
+dexpectedRes2 = -1.0;
+dexpectedRes3 = -1.0;
+dexpectedRes4 = -1.0;
 
 returnType = 0;
 testId = 2;

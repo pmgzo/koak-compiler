@@ -28,14 +28,14 @@ def dtest3(): double
 def dtest4(): double
     -1.0;
 
-iexpected_res1 = 120;
-iexpected_res2 = 5040;
-iexpected_res3 = 3628800;
-iexpected_res4 = 1307674368000;
-dexpected_res1 = -1.0;
-dexpected_res2 = -1.0;
-dexpected_res3 = -1.0;
-dexpected_res4 = -1.0;
+iexpectedRes1 = 120;
+iexpectedRes2 = 5040;
+iexpectedRes3 = 3628800;
+iexpectedRes4 = 1307674368000;
+dexpectedRes1 = -1.0;
+dexpectedRes2 = -1.0;
+dexpectedRes3 = -1.0;
+dexpectedRes4 = -1.0;
 
 returnType = 0;
 testId = 0;

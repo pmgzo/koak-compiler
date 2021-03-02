@@ -39,10 +39,10 @@ def itest3(): int
 def itest4(): int
     a = While2plus(While(4)) / 2;
 
-iexpected_res1 = 6;
-iexpected_res2 = 21;
-iexpected_res3 = 22;
-iexpected_res4 = 11;
+iexpectedRes1 = 6;
+iexpectedRes2 = 21;
+iexpectedRes3 = 22;
+iexpectedRes4 = 11;
 
 
 
@@ -58,10 +58,10 @@ def dtest3(): double
 def dtest4(): double
     -1.0;
 
-dexpected_res1 = -1.0;
-dexpected_res2 = -1.0;
-dexpected_res3 = -1.0;
-dexpected_res4 = -1.0;
+dexpectedRes1 = -1.0;
+dexpectedRes2 = -1.0;
+dexpectedRes3 = -1.0;
+dexpectedRes4 = -1.0;
 
 returnType = 0;
 testId = 10;

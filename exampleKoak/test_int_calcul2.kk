@@ -35,10 +35,10 @@ def itest4(): int
     a = 3:
     a;
 
-iexpected_res1 = 2;
-iexpected_res2 = -74;
-iexpected_res3 = 0;
-iexpected_res4 = 3;
+iexpectedRes1 = 2;
+iexpectedRes2 = -74;
+iexpectedRes3 = 0;
+iexpectedRes4 = 3;
 
 
 
@@ -54,10 +54,10 @@ def dtest3(): double
 def dtest4(): double
     -1.0;
 
-dexpected_res1 = -1.0;
-dexpected_res2 = -1.0;
-dexpected_res3 = -1.0;
-dexpected_res4 = -1.0;
+dexpectedRes1 = -1.0;
+dexpectedRes2 = -1.0;
+dexpectedRes3 = -1.0;
+dexpectedRes4 = -1.0;
 
 returnType = 0;
 testId = 8;

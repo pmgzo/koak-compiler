@@ -59,10 +59,10 @@ def itest3(): int
 def itest4(): int
     a = (For4(5) + 50) * 2;
 
-iexpected_res1 = 5;
-iexpected_res2 = 0;
-iexpected_res3 = 90;
-iexpected_res4 = 300;
+iexpectedRes1 = 5;
+iexpectedRes2 = 0;
+iexpectedRes3 = 90;
+iexpectedRes4 = 300;
 
 
 
@@ -78,10 +78,10 @@ def dtest3(): double
 def dtest4(): double
     -1.0;
 
-dexpected_res1 = -1.0;
-dexpected_res2 = -1.0;
-dexpected_res3 = -1.0;
-dexpected_res4 = -1.0;
+dexpectedRes1 = -1.0;
+dexpectedRes2 = -1.0;
+dexpectedRes3 = -1.0;
+dexpectedRes4 = -1.0;
 
 returnType = 0;
 testId = 11;

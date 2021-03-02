@@ -3,8 +3,8 @@ def test(x : double) : double x + 2.0;
 def itest1(): int
     -1;
 
-iexpected_res1 = -1;
-dexpected_res1 = 8.0;
+iexpectedRes1 = -1;
+dexpectedRes1 = 8.0;
 
 def dtest1(): double
     test(6.0);
@@ -12,8 +12,8 @@ def dtest1(): double
 def itest2(): int
     -1;
 
-iexpected_res2 = -1;
-dexpected_res2 = 1.0;
+iexpectedRes2 = -1;
+dexpectedRes2 = 1.0;
 
 def dtest2(): double
     test(-1.0);
@@ -21,8 +21,8 @@ def dtest2(): double
 def itest3(): int
     -1;
 
-iexpected_res3 = -1;
-dexpected_res3 = -1.0;
+iexpectedRes3 = -1;
+dexpectedRes3 = -1.0;
 
 def dtest3(): double
     test(-3.0);
@@ -30,8 +30,8 @@ def dtest3(): double
 def itest4(): int
     -1;
 
-iexpected_res4 = -1;
-dexpected_res4 = 131.0;
+iexpectedRes4 = -1;
+dexpectedRes4 = 131.0;
 
 def dtest4(): double
     test(129.0);

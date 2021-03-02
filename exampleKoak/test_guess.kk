@@ -30,15 +30,15 @@ def itest3(): int
 def itest4(): int
     you23(23);
 
-iexpected_res1 = 1;
-iexpected_res2 = 1;
-iexpected_res3 = 8;
-iexpected_res4 = 1;
+iexpectedRes1 = 1;
+iexpectedRes2 = 1;
+iexpectedRes3 = 8;
+iexpectedRes4 = 1;
 
-dexpected_res1 = -1.0;
-dexpected_res2 = -1.0;
-dexpected_res3 = -1.0;
-dexpected_res4 = -1.0;
+dexpectedRes1 = -1.0;
+dexpectedRes2 = -1.0;
+dexpectedRes3 = -1.0;
+dexpectedRes4 = -1.0;
 
 def dtest1(): double
     -1.0;
