@@ -89,6 +89,7 @@ simplifyOp (Operation (XPR (Val v))) = (Val v)
 simplifyOp (Operation (VAL v)) = (Val v)
 simplifyOp (Operation (XPR (Id id))) = (Id id)
 simplifyOp (Operation (XPR (Unary u r))) = (Unary u r)
+simplifyOp (Operation (XPR (Callf n a))) = (Callf n a)
 simplifyOp r = r
 
 parseType :: Parser TypeKoak
