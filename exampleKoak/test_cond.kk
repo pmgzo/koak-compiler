@@ -1,6 +1,6 @@
 def fct1(break: double): double
-    (if break == 1.0 then 5
-    else 6);
+    (if break == 1.0 then 5.0
+    else 6.0);
 
 def fct2(a : double, b: double) : double
     a * b;

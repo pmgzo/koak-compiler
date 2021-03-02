@@ -27,10 +27,12 @@ getBlocks (Protof id params (Exprs xprs)) =
     retType = getTypeFromIdentifier id
     callList = [(fillRetType retType), (addFunctionParameter params), (genCodeBlock xprs)]
 
+tmp1 = Protof (Typed "tmp1" DOUBLE) [Typed "break" DOUBLE] (Exprs [IfElse (Operation (EQ (XPR (Id (Wait "break"))) (VAL (D 1.0)))) (Exprs [Val (I 5)]) (Exprs [Val (I 6)])])
+
 main = do
     
     genObjFromExpr "mod2" $inferringType [imod1,
-                        iadd, icallFTest, icallFTest2, icallCondition, iaddf, ifor2, iwhile1, ifor3]-- 
+                        iadd, icallFTest, icallFTest2, icallCondition, iaddf, ifor2, iwhile1, ifor3, tmp1]-- 
                         -- icallCondition2, iunaryNot, iunaryMinus, iifFunction, 
                         -- iifElseFunction, iwhile1, iifElseCallBack, iifElse2, iifElse3, ifactorial,
                         -- itestImbrication1, itestImbrication2, itestImbr1, itestImbr2, ifor1, iwhile13,

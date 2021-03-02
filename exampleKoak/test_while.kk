@@ -40,10 +40,10 @@ def itest4(): int
     a = While2plus(While(4)) / 2;
 
 
-iexpectedRes1 = 6;
-iexpectedRes2 = 21;
-iexpectedRes3 = 22;
-iexpectedRes4 = 11;
+iexpectedRes1 = 7;
+iexpectedRes2 = 27;
+iexpectedRes3 = 29;
+iexpectedRes4 = 20;
 
 
 def dtest1(): double

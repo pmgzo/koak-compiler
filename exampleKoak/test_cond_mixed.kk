@@ -61,7 +61,7 @@ def itest4(): int
 
 iexpectedRes1 = 5;
 iexpectedRes2 = 0;
-iexpectedRes3 = 90;
+iexpectedRes3 = 152;
 iexpectedRes4 = 300;
 
 
