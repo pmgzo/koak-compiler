@@ -64,11 +64,11 @@ getErr ((Err str):xs) = str ++ (getErr xs)
 getErr _ = ""
 -- genErr _ = "" ++ (getErr xs)
 
-genFile :: [Expr] -> IO ()
-genFile expr
+genFile :: (String, [Expr]) -> IO ()
+genFile (filename,expr)
         | res == [] = print $ show expr -- print "empty array" >> exitWith (ExitFailure 84)
         | err /= "" = print err >> exitWith (ExitFailure 84)
-        | otherwise = genObjFromExpr "obj" res
+        | otherwise = genObjFromExpr filename res
         where res = inferringType expr
               err = getErr res
 
@@ -84,7 +84,7 @@ main = do
                 Nothing -> hPutStrLn stderr "file not found" >> exitWith (ExitFailure 84)
                 Just cont -> case parseFiles cont of
                     [] -> print "The files are invalid" >> exitWith (ExitFailure 84)
-                    expr -> (map genFile expr)!!0
+                    expr -> (map genFile (zip args expr) )!!0 -- in print "done"
                     -- expr -> case inferringType (expr!!0) of
                     --     [(Err str)] -> print(str) >> exitWith (ExitFailure 84)
                     --     [] -> print "empty array" >> exitWith (ExitFailure 84)

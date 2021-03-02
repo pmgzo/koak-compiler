@@ -16,15 +16,20 @@ genModule name exprs =  AST.defaultModule {
                             AST.moduleDefinitions = genDefinitions exprs []
                         }
 
+nameObjFile :: String -> String
+nameObjFile ('.':_) = ".o"  
+nameObjFile (f:r)   = [f] ++ (nameObjFile r)
+
 genObjFromExpr :: String -> [Expr] -> IO ()
 genObjFromExpr name exprs = withContext $ \ctx -> do
-                            let file  = (File (name ++ ".o"))
+                            print(exprs)
+                            let file  = (File (objname))
                             let mod = genModule name exprs
                             displayIR mod
                             withHostTargetMachineDefault (\machine -> (withModuleFromAST ctx mod (writeObjectToFile machine file)))
-
-                            let str = "object file \"" ++ name ++ ".o \"" ++ " generated"
-                            print str
+                            Prelude.putStrLn ("object file '" ++ objname ++ "' generated")
+                            where
+                            objname = (nameObjFile name)
 
 displayIR :: AST.Module -> IO ()
 displayIR mod = withContext $ \ctx -> do
