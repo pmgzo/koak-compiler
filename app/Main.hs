@@ -75,7 +75,7 @@ genFile :: (String, [Expr]) -> IO ()
 genFile (filename,expr)
         | res == [] = print $ show expr -- print "empty array" >> exitWith (ExitFailure 84)
         | err /= "" = print err >> exitWith (ExitFailure 84)
-        | otherwise = genObjFromExpr filename res
+        | otherwise = print "parse By the parser" >> print expr >> genObjFromExpr filename res
         where res = inferringType expr
               err = getErr res
 
@@ -91,8 +91,7 @@ main = do
                 Nothing -> hPutStrLn stderr "file not found" >> exitWith (ExitFailure 84)
                 Just cont -> case parseFiles cont of
                     [] -> print "The files are invalid" >> exitWith (ExitFailure 84)
-                    expr -> (map genFile (zip args expr))!!0 -- in print "done"
-                    -- expr -> case inferringType (expr!!0) of
+                    expr -> (map genFile (zip args expr) )!!0 -- in print "done"
                     --     [(Err str)] -> print(str) >> exitWith (ExitFailure 84)
                     --     [] -> print "empty array" >> exitWith (ExitFailure 84)
                     --     expr1 -> genObjFromExpr "obj" expr1

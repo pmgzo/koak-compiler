@@ -22,6 +22,7 @@ nameObjFile (f:r)   = [f] ++ (nameObjFile r)
 
 genObjFromExpr :: String -> [Expr] -> IO ()
 genObjFromExpr name exprs = withContext $ \ctx -> do
+                            print("get by type inference")
                             print(exprs)
                             let file  = (File (objname))
                             let mod = genModule name exprs
