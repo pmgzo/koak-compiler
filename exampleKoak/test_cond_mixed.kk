@@ -41,7 +41,7 @@ def For4(max : int) : int
         (for j = 0, j < i * max, j = j + 1 in
             (for e = 0, e < j * max, e = e + While2(j) in
                 a = a + e):
-            if a == 90
+            if a == 152
                then b = 100
         )
     ):

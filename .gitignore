@@ -17,3 +17,5 @@ tests/mine/
 a.out
 haskell-norm
 .log
+test_file_1
+main.c

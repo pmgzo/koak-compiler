@@ -6,7 +6,7 @@ def younot(a : int): int
     (if a == 0 then 1
     else 0);
 
-def youplay(a: int) : double
+def youplay(a: int) : int
     (if a < 9 then
         (if a < 8 then
             if a < 7 then 7
