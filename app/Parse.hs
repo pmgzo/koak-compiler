@@ -89,6 +89,7 @@ simplifyOp (Operation (XPR (Val v))) = (Val v)
 simplifyOp (Operation (VAL v)) = (Val v)
 simplifyOp (Operation (XPR (Id id))) = (Id id)
 simplifyOp (Operation (XPR (Unary u r))) = (Unary u r)
+simplifyOp (Operation (XPR (Callf n a))) = (Callf n a)
 simplifyOp r = r
 
 parseType :: Parser TypeKoak
@@ -270,18 +271,16 @@ parseMain = Parser (\str -> runParser (parseAll) str)
         next = (addArray <$> (oneExpr <* (char ':')) <*> (next <|> end))
         end = (initArray <$> oneExpr)
 
-wrapperGlobalVariable :: Parser Expr
-wrapperGlobalVariable = Parser (lbd psr)
-        where
-        psr = parseMain <* (char ';')
-        lbd = (\psr str ->
-                case (runParser psr str) of
-                ass@(Just (Operation (ASSIGN (Wait _) (VAL _)), _)) -> ass
-                _ -> Nothing)
+globalVar :: Parser Expr
+globalVar = Parser(\str -> case runParser (parseMain <* (char ';')) str of
+    regAssign@(Just (Operation (ASSIGN (Wait _) (VAL _)), _)) -> regAssign
+    unaryAssign@(Just (Operation (ASSIGN (Wait _) (XPR (Unary _ (Val _)))), _)) -> unaryAssign
+    _ -> Nothing
+    )
 
 parse :: Parser Expr
 parse = Parser (\str -> case runParser (parseExtSpaces parseAll) str of
     Just (r, []) -> Just (r, [])
     _ -> Nothing)
     where
-        parseAll = definition <|> wrapperGlobalVariable
+        parseAll = definition <|> globalVar
