@@ -32,7 +32,7 @@ tests_integrations: clean
 	./test.sh
 	rm test_bash/*.o
 
-tests_bash: clean
+tests_bash:
 	./tests/test.sh
 
 tests_bash_chmod: clean

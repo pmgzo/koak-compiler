@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 int itest1();
 double dtest1();
 
@@ -21,22 +23,22 @@ double dexpected_res4;
 
 int returnType; //0 == int, 1 == double
 
-int iprintTest(char *test_name, int received, int expected_res)
+int iprintTest(char *test_name, int res, int expected_res)
 {
-    if (fctcall == expected_res) {
+    if (res == expected_res) {
         printf("success %s\n", test_name);
     } else {
-        printf("failed %s\n expected this =%d, receive this %d\n", test_name; expected_res, fctcall);
+        printf("failed %s\n expected this =%d, receive this %d\n", test_name, expected_res, res);
     }
     return (0);
 }
 
-int dprintTest(char *test_name, double received, double expected_res)
+int dprintTest(char *test_name, double res, double expected_res)
 {
-    if (fctcall == expected_res) {
+    if (res == expected_res) {
         printf("success %s\n", test_name);
     } else {
-        printf("failed %s\n expected this =%f, received this %f\n", test_name, expected_res, received);
+        printf("failed %s\n expected this =%f, received this %f\n", test_name, expected_res, res);
     }
     return (0);
 }
@@ -49,7 +51,7 @@ int main(int ac, char **av, char **env)
         iprintTest(av[1], itest3(), iexpected_res3);
         iprintTest(av[1], itest4(), iexpected_res4);
     }
-    if (returnType == 1) {
+    else if (returnType == 1) {
         dprintTest(av[1], itest1(), dexpected_res1);
         dprintTest(av[1], itest2(), dexpected_res2);
         dprintTest(av[1], itest3(), dexpected_res3);

@@ -23,6 +23,7 @@ mergeLine (Just e) Nothing        = Just (e)
 mergeLine _ _                     = Nothing
 
 getStatement :: String -> String -> Maybe ([Expr])
+-- getStatement [] statement       = mergeLine (Just [(Err statement)]) (runParser parse statement)
 getStatement [] statement       = mergeLine (Just []) (runParser parse statement)
 getStatement (';':xs) statement = mergeLine (getStatement xs "") (runParser parse (statement ++ ";"))
 getStatement (x:xs) statement   = getStatement xs (statement ++ [x])
@@ -30,6 +31,7 @@ getStatement (x:xs) statement   = getStatement xs (statement ++ [x])
 
 parseFile :: String -> Maybe [Expr]
 parseFile [] = Just []
+-- parseFile str = Just [(Err str)]
 parseFile content
           | res == Nothing = Nothing
           | otherwise      = res
