@@ -25,11 +25,7 @@ def itest3(): int
     b = 6 + 1:
     c = add(a, b):
     d = -sub(15, c):
-    e = a + 1 > b - 2:
-    f = e != 1:
-    g = f == 0:
-    h = !g:
-    i = !!h;
+    d;
 
 def itest4(): int
     a = 3:
@@ -37,7 +33,7 @@ def itest4(): int
 
 iexpectedRes1 = 2;
 iexpectedRes2 = -74;
-iexpectedRes3 = 0;
+iexpectedRes3 = -3;
 iexpectedRes4 = 3;
 
 

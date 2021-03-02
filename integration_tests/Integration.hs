@@ -27,7 +27,7 @@ getBlocks (Protof id params (Exprs xprs)) =
     retType = getTypeFromIdentifier id
     callList = [(fillRetType retType), (addFunctionParameter params), (genCodeBlock xprs)]
 
-tmp1 = Protof (Typed "tmp1" DOUBLE) [Typed "break" DOUBLE] (Exprs [IfElse (Operation (EQ (XPR (Id (Wait "break"))) (VAL (D 1.0)))) (Exprs [Val (I 5)]) (Exprs [Val (I 6)])])
+tmp1 = Protof (Typed "tmp1" DOUBLE) [Typed "break" DOUBLE] (Exprs [IfElse (Operation (DataType2.EQ (XPR (Id (Wait "break"))) (VAL (D 1.0)))) (Exprs [Val (I 5)]) (Exprs [Val (I 6)])])
 
 main = do
     
