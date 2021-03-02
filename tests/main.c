@@ -53,10 +53,10 @@ int main(int ac, char **av, char **env)
         iprintTest(av[1], itest4(), iexpectedRes4);
     }
     else if (returnType == 1) {
-        dprintTest(av[1], itest1(), dexpectedRes1);
-        dprintTest(av[1], itest2(), dexpectedRes2);
-        dprintTest(av[1], itest3(), dexpectedRes3);
-        dprintTest(av[1], itest4(), dexpectedRes4);
+        dprintTest(av[1], dtest1(), dexpectedRes1);
+        dprintTest(av[1], dtest2(), dexpectedRes2);
+        dprintTest(av[1], dtest3(), dexpectedRes3);
+        dprintTest(av[1], dtest4(), dexpectedRes4);
     }
     return (0);
 }
