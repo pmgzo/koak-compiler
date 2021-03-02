@@ -15,6 +15,9 @@ import Parse2
 char :: Char -> Parser Char
 char c = Parser (\str -> runParser (parseWSpace (parseChar c)) str)
 
+chars :: String -> Parser Char
+chars s = Parser (\str -> runParser (parseWSpace (parseAnyChar s)) str)
+
 word :: String -> Parser String
 word w = Parser (\str -> runParser (parseWSpace (parseWord w)) str)
 
@@ -28,10 +31,6 @@ makeArray r = (Exprs [r])
 arrRecu :: Parser Expr
 arrRecu = Parser (\str -> runParser (makeArray <$> recu) str)
 
--- recu :: Parser Expr
--- recu = Parser (\str -> Just ((Val (I 9)), str))
-
-
 parseId :: Parser Identifier
 parseId = Parser (\str -> runParser (parseWSpace (Wait <$> parseId2)) str)
 
@@ -40,15 +39,12 @@ parseIf = Parser (\str -> runParser mainIf str)
     where
         mainIf = parIf <|> ifExpr
         parIf = ((char '(')*> ifExpr <* (char ')'))
-        ifExpr = ifElse <|> ifThen
-        ifElse = parseWSpace (IfElse <$> cond <*> midElse <*> endElse)
-        ifThen = parseWSpace (IfThen <$> cond <*> endThen)
+        ifExpr = parseWSpace (ifElse <|> ifThen)
+        ifElse = (IfElse <$> cond <*> iThen <*> ((word "else") *> arrRecu))
+        ifThen = (IfThen <$> cond <*> iThen)
         cond = ((word "if") *> recu)
-        midElse = ((word "then") *> arrRecu)
-        endElse = ((word "else") *> arrRecu)
-        endThen = ((word "then") *> arrRecu)
+        iThen = ((word "then") *> arrRecu)
 
--- while i < 9 do expr;
 parseWhile :: Parser Expr
 parseWhile = Parser (\str -> runParser mainWhile str)
     where
@@ -63,7 +59,8 @@ toTuple id expr = (id, expr)
 for2 :: Parser (Identifier, Expr)
 for2 = Parser (\str -> runParser convert str)
     where
-        convert = parseWSpace (toTuple <$> (parseId <* (char '<')) <*> (recu <* (char ',')))
+        convert = parseWSpace (toTuple <$> (parseId <* (char '<')) <*> inf)
+        inf = (recu <* (char ','))
 
 for1 :: Parser (Identifier, Expr)
 for1 = Parser (\str -> runParser convert str)
@@ -71,7 +68,6 @@ for1 = Parser (\str -> runParser convert str)
         convert = parseWSpace (toTuple <$> iden <*> (recu <* (char ',')))
         iden = ((word "for") *> parseId <* (char '='))
 
--- for x = 1, x < 9, (1 or x = x + 1) in expr;
 parseFor :: Parser Expr
 parseFor = Parser (\str -> runParser mainFor str)
     where
@@ -88,25 +84,12 @@ parseUnop = Parser (\str -> case runParser (char '!') str of
     Just (_, r) -> Just (Not, r)
     )
 
--- parseUnary :: Parser Expr
--- parseUnary = Parser(\str -> runParser unary str)
---     where
---         unary = parseSpaces (Unary <$> unop <*> recu)
---         unop = parseSpaces (parseUnop)
-
 simplifyOp :: Expr -> Expr
 simplifyOp (Operation (XPR (Val v))) = (Val v)
 simplifyOp (Operation (VAL v)) = (Val v)
 simplifyOp (Operation (XPR (Id id))) = (Id id)
 simplifyOp (Operation (XPR (Unary u r))) = (Unary u r)
 simplifyOp r = r
-
--- parseOpUnary :: Parser Expr
--- parseOpUnary = Parser(\str -> runParser unary str)
---     where
---         unary = parseWSpace (Unary <$> (parseWSpace (parseUnop)) <*> (simplifyOp <$> Operation <$> parseOpSign))
---         unop =
-
 
 parseType :: Parser TypeKoak
 parseType = Parser (\str -> case runParser (word "int") str of
@@ -126,22 +109,26 @@ parseArg = Parser (\str -> runParser argument str)
     where
         argument = parseWSpace (Typed <$> (parseId2 <* (char ':')) <*> typeVar)
 
+argArrEndPar :: [Identifier] -> Parser [Identifier]
+argArrEndPar array = Parser (\str -> case runParser (char ')') str of
+    Nothing -> Nothing
+    (Just (')', r)) -> Just (array, r))
+
+argArrInitArr :: Identifier -> Parser [Identifier]
+argArrInitArr id = Parser (\r -> case runParser (argArr (Just [id])) r of
+    Nothing -> Just ([id], r)
+    res -> res)
+
 argArr :: Maybe [Identifier] -> Parser [Identifier]
 argArr Nothing = Parser (\str -> Nothing)
 argArr (Just []) = Parser (\str -> case runParser (parseArg) str of
     Nothing -> Nothing
-    (Just (id, r)) -> case runParser (argArr (Just [id])) r of
-        Nothing -> Just ([id], r)
-        res -> res
-    )
-argArr (Just array) = Parser (\str -> case runParser (parseAndWith (\_ l -> l) (char ',') parseArg) str of
-    Nothing -> case runParser (char ')') str of
-        Nothing -> Nothing
-        (Just (')', r)) -> Just (array, r)
+    (Just (id, r)) -> runParser (argArrInitArr id) r)
+argArr (Just array) = Parser (\str->case runParser ((char ',')*>parseArg) str of
+    Nothing -> runParser (argArrEndPar array) str
     (Just (id, r)) -> case runParser (argArr (Just (array ++ [id]))) r of
         Nothing -> Just ((array ++ [id]), r)
-        res -> res
-    )
+        res -> res)
 
 extractFunc :: String -> [Identifier] -> TypeKoak -> Expr -> Expr
 extractFunc id args typ def = Protof (Typed id typ) args def
@@ -154,13 +141,28 @@ definition = Parser (\str -> case runParser (word "def") str of
     Nothing -> Nothing
     _ -> case runParser def str of
         Nothing -> Just (Err "invalid definition", str)
-        r -> r
-    )
+        r -> r)
     where
-        def = parseWSpace (extractFunc <$> proto1 <*> (proto2 <* (char ':')) <*> typeVar <*> arrRecu <* (char ';'))
-        b = parseAndWith (\_ b -> b)
-        proto1 = ((word "def") *> (parseWSpace parseId2) <* (char '('))
-        proto2 = (((char ')') *> emptyIdArr) <|> (parseWSpace (argArr (Just []))))
+        def = extractFunc<$>a<*>(b<*char ':')<*>typeVar<*>(arrRecu<*char ';')
+        a = ((word "def") *> (parseWSpace parseId2) <* (char '('))
+        b = (((char ')') *> emptyIdArr) <|> (parseWSpace (argArr (Just []))))
+
+assignOp3 :: Op -> Char -> Op -> Op
+assignOp3 single '-' opR = case opR of
+    SUB arr -> SUB (single:arr)
+    ADD (a:b) -> ADD ((assignOp single '-' a):b)
+    any -> SUB (single:any:[])
+assignOp3 single '+' opR = case opR of
+    ADD arr -> ADD (single:arr)
+    any -> ADD (single:any:[])
+
+assignOp2 :: Op -> Char -> Op -> Op
+assignOp2 single '/' opR = case opR of
+    DIV arr -> DIV (single:arr)
+    SUB (a:b) -> SUB ((assignOp single '/' a):b)
+    ADD (a:b) -> ADD ((assignOp single '/' a):b)
+    any -> DIV (single:any:[])
+assignOp2 a b c = assignOp3 a b c
 
 assignOp :: Op -> Char -> Op -> Op
 assignOp single '*' opR = case opR of
@@ -169,31 +171,18 @@ assignOp single '*' opR = case opR of
     SUB (a:b) -> SUB ((assignOp single '*' a):b)
     ADD (a:b) -> ADD ((assignOp single '*' a):b)
     any -> MUL (single:any:[])
-assignOp single '/' opR = case opR of
-    DIV arr -> DIV (single:arr)
-    SUB (a:b) -> SUB ((assignOp single '/' a):b)
-    ADD (a:b) -> ADD ((assignOp single '/' a):b)
-    any -> DIV (single:any:[])
-assignOp single '-' opR = case opR of
-    SUB arr -> SUB (single:arr)
-    ADD (a:b) -> ADD ((assignOp single '-' a):b)
-    any -> SUB (single:any:[])
-assignOp single '+' opR = case opR of
-    ADD arr -> ADD (single:arr)
-    any -> ADD (single:any:[])
+assignOp a b c = assignOp2 a b c
 
 parseOpSign :: Parser Op
 parseOpSign = Parser (\str -> runParser opPiece str)
     where
         opPiece = withSign <|> single
-        withSign = parseWSpace (assignOp <$> single <*> (parseWSpace (parseAnyChar "*/-+")) <*> parseOpSign)
-        single = parseWSpace (par <|> simp)
-        par = (PAR <$> ((char '(') *> (parseOneOp) <* (char ')')))
-        simp = (unary <|> call <|> id <|> valu)
-        unary = parseWSpace (XPR <$> (Unary <$> (parseWSpace (parseUnop)) <*> (simplifyOp <$> Operation <$> single)))
+        withSign = (assignOp <$> single <*> (chars "*/-+") <*> parseOpSign)
+        single = parseWSpace((PAR<$>(char '('*>parseOneOp<*char ')')) <|> simp)
+        simp = parseWSpace (unary <|> call <|> ((XPR<$>Id<$>parseId)) <|> valu)
+        unary = (XPR<$>(Unary<$>parseUnop<*>(simplifyOp<$>Operation<$>single)))
         call = (XPR <$> (parseWSpace parseCall))
-        valu = parseWSpace ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
-        id = (XPR <$> Id <$> parseId)
+        valu = ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
 
 assignComp :: Op -> String -> Op -> Op
 assignComp op1 "<" op2 = DataType2.LT op1 op2
@@ -204,7 +193,7 @@ assignComp op1 "!=" op2 = NOTEQ op1 op2
 parseComp :: Parser Op
 parseComp = Parser (\str -> runParser opComp str)
     where
-        opComp = parseWSpace (assignComp <$> parseOpSign <*> comps <*> parseOpSign)
+        opComp = (assignComp <$> parseOpSign <*> comps <*> parseOpSign)
         comps = parseWSpace (parseAnyStr ("<":">":"==":"!=":[]))
 
 parseOneOp :: Parser Op
@@ -214,7 +203,7 @@ parseOneOp = Parser (\str -> runParser allOp str)
         assign = parseWSpace (ASSIGN <$> (parseId <* (char '=')) <*> parseOneOp)
         sign = parseWSpace (parseOpSign)
         call = (XPR <$> parseCall)
-        valu = parseWSpace ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
+        valu = parseWSpace ((VAL<$>D<$>parseDouble2) <|> (VAL<$>I<$> parseInte))
         id = (parseWSpace (XPR <$> Id <$> parseId))
         comp = parseWSpace (parseComp)
 
@@ -222,37 +211,42 @@ removeParArr :: [Op] -> [Op]
 removeParArr [] =  []
 removeParArr (x:xs) = (removePar x):removeParArr xs
 
+removePar2 :: Op -> Op
+removePar2 (DataType2.LT a b) = DataType2.LT (removePar a) (removePar b)
+removePar2 (DataType2.GT a b) = DataType2.GT (removePar a) (removePar b)
+removePar2 (DataType2.EQ a b) = DataType2.EQ (removePar a) (removePar b)
+removePar2 (NOTEQ a b) = NOTEQ (removePar a) (removePar b)
+removePar2 (ASSIGN var op) = (ASSIGN var (removePar op))
+removePar2 op = op
+
 removePar :: Op -> Op
 removePar (PAR op) = removePar op
 removePar (ADD arr@(x:xs)) = ADD (removeParArr arr)
 removePar (SUB arr@(x:xs)) = SUB (removeParArr arr)
 removePar (MUL arr@(x:xs)) = MUL (removeParArr arr)
 removePar (DIV arr@(x:xs)) = DIV (removeParArr arr)
-removePar (DataType2.LT a b) = DataType2.LT (removePar a) (removePar b)
-removePar (DataType2.GT a b) = DataType2.GT (removePar a) (removePar b)
-removePar (DataType2.EQ a b) = DataType2.EQ (removePar a) (removePar b)
-removePar (NOTEQ a b) = NOTEQ (removePar a) (removePar b)
-removePar (ASSIGN var op) = (ASSIGN var (removePar op))
-removePar op = op
+removePar op = removePar2 op
 
 parseOp :: Parser Expr
-parseOp = Parser (\str -> runParser (Operation <$> removePar <$> parseOneOp) str)
+parseOp = Parser (\str->runParser (Operation <$> removePar <$> parseOneOp) str)
 
 wrapperParseOp :: Parser Expr
 wrapperParseOp = Parser (\str -> runParser (simplifyOp <$> parseOp) str)
 
+checkCallArgPar :: [Expr] -> Parser [Expr]
+checkCallArgPar arr = Parser (\str -> case runParser (char ')') str of
+    Nothing -> Nothing
+    Just (')', r) -> Just (arr, r)
+    )
+
 callArg :: Maybe [Expr] -> Parser [Expr]
 callArg Nothing = Parser (\str -> Nothing)
 callArg (Just []) = Parser (\str -> case runParser (recu) str of
-    Nothing -> Nothing
-    Just (xpr, r) -> runParser (callArg (Just (xpr:[]))) r
-    )
-callArg (Just array) = Parser (\str -> case runParser (parseAndWith (\_ l -> l) (char ',') recu) str of
-    Nothing -> case runParser (char ')') str of
-        Nothing -> Nothing
-        (Just (')', r)) -> Just (array, r)
-    (Just (xpr, r)) -> runParser (callArg (Just (array ++ [xpr]))) r
-    )
+    Nothing -> runParser (checkCallArgPar []) str
+    Just (xpr, r) -> runParser (callArg (Just (xpr:[]))) r)
+callArg (Just array) = Parser (\str->case runParser ((char ',') *> recu) str of
+    Nothing -> runParser (checkCallArgPar array) str
+    (Just (xpr, r)) -> runParser (callArg (Just (array ++ [xpr]))) r)
 
 parseCall :: Parser Expr
 parseCall = Parser (\str -> runParser call str)
@@ -272,9 +266,9 @@ parseMain = Parser (\str -> runParser (parseAll) str)
         parseAll = exprs <|> oneExpr
         oneExpr = builtIn <|> parseCall <|> wrapperParseOp
         builtIn = (parseFor <|> parseWhile <|> parseIf)
-        exprs = Exprs <$> (addArray <$> (oneExpr <* (char ':')) <*> (nextExprs <|> endExprs))
-        nextExprs = (addArray <$> (oneExpr <* (char ':')) <*> (nextExprs <|> endExprs))
-        endExprs = (initArray <$> oneExpr)
+        exprs = Exprs<$>(addArray<$> (oneExpr <* (char ':')) <*> (next <|> end))
+        next = (addArray <$> (oneExpr <* (char ':')) <*> (next <|> end))
+        end = (initArray <$> oneExpr)
 
 wrapperGlobalVariable :: Parser Expr
 wrapperGlobalVariable = Parser (lbd psr)
@@ -291,62 +285,3 @@ parse = Parser (\str -> case runParser (parseExtSpaces parseAll) str of
     _ -> Nothing)
     where
         parseAll = definition <|> wrapperGlobalVariable
-        -- id = parseWSpace (Id <$> (parseId))
-
-
--- parseLine :: Parser Expr
--- parseLine = Parser (\str -> case runParser (parse getLine))
-
--- recSplit :: Parser [Expr]
--- recSplit = Parser (\str -> case str of
---     [] -> Just([], [])
---     s -> runParser ((\ x y -> x:y) <$> splitLine <*> recSplit) s
---     )
-
--- parseFile :: String -> Maybe [Expr]
--- parseFile [] = Just []
--- parseFile content = case runParser recSplit content of
---     Just (expr, r) -> Just expr
---     Nothing -> Nothing
-
--- mergeMaybe :: Maybe [a] -> Maybe [a] -> Maybe [a]
--- mergeMaybe Nothing b = Nothing
--- mergeMaybe a Nothing = Nothing
--- mergeMaybe (Just a) (Just b) = Just (a ++ b)
-
--- parseFiles :: [String] -> Maybe [Expr]
--- parseFiles [] = Just []
--- parseFiles (file:xs) = mergeMaybe (parseFile file) (parseFiles xs)
-
--- getContent :: [String] -> IO(Maybe [String])
--- getContent [] = return (Just [])
--- getContent (file:r) = do
---     b <- doesFileExist file
---     case b of
---         False -> return Nothing
---         True -> do
---             f <- readFile file
---             rest <- getContent r
---             case rest of
---                 Just list -> return $ Just (f:list)
---                 Nothing -> return Nothing
-
--- main :: IO()
--- main = do
---     args <- getArgs
---     case args of
---         [] -> hPutStrLn stderr "The REPL is not implemented" >>
---             exitWith (ExitFailure 84)
---         _ -> do
---             argRes <- parseArgs args
---             case argRes of
---                 84 -> exitWith (ExitFailure 84)
---                 _ -> do
---                     contents <- getContent args
---                     case contents of
---                         Nothing -> hPutStrLn stderr "Non-existant file" >>
---                             exitWith (ExitFailure 84)
---                         Just cont -> case parseFiles cont of
---                             Nothing -> hPutStrLn stderr "The files are invalid" >>
---                                 exitWith (ExitFailure 84)
---                             Just expr -> putStrLn (evalExpr expr)
