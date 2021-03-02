@@ -58,4 +58,8 @@ input12 = runParser parseOp "a * (a + 10) - 10 + (7 - 8) / 2"
 expectedRes12 = (Operation (ADD [SUB [ MUL [(XPR (Id (Wait "a"))), (ADD [XPR (Id (Wait "a")), (VAL (I 10))])],  (VAL (I 10)) ] , DIV [SUB [(VAL (I 7)), (VAL (I 8))], (VAL (I 2))]]))
 test12 = TestCase $ assertEqual "test operation priority a * (a + 10) - 10 + (7 - 8) / 2" (Just (expectedRes12, "")) input12
 
-parseTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test12]
+input13 = runParser parse "def fct1(a1:int, b2:int): int a1;"
+expectedRes13 = (Protof (Typed "fct1" INT) [(Typed "a1" INT), (Typed "b2" INT)] (Exprs [(Id (Wait "a1"))]))
+test13 = TestCase $ assertEqual "test id in definition" (Just (expectedRes13, "")) input13
+
+parseTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test12, test13]

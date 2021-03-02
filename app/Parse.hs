@@ -118,7 +118,7 @@ typeVar = Parser (\str -> runParser argType str)
 parseArg :: Parser Identifier
 parseArg = Parser (\str -> runParser argument str)
     where
-        argument = parseWSpace (Typed <$> (parseLetters <* (char ':')) <*> typeVar)
+        argument = parseWSpace (Typed <$> (parseId2 <* (char ':')) <*> typeVar)
 
 argArr :: Maybe [Identifier] -> Parser [Identifier]
 argArr Nothing = Parser (\str -> Nothing)
@@ -150,7 +150,7 @@ definition = Parser (\str -> case runParser (word "def") str of
     where
         def = parseWSpace (extractFunc <$> proto1 <*> (proto2 <* (char ':')) <*> typeVar <*> arrRecu <* (char ';'))
         b = parseAndWith (\_ b -> b)
-        proto1 = ((word "def") *> (parseWSpace parseLetters) <* (char '('))
+        proto1 = ((word "def") *> (parseWSpace parseId2) <* (char '('))
         proto2 = parseWSpace (argArr (Just []))
 
 assignOp :: Op -> Char -> Op -> Op
