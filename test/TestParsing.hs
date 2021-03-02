@@ -43,7 +43,7 @@ test5 = TestCase $ assertEqual "char t abletop" expectedRes5 (runParser (char 't
 -----------------------------
 
 expectedRes12 = Just (IfThen (Val (I 1)) (Exprs [Val (I 5)]), "")
-test12 = TestCase $ assertEqual "if 1 then 5" expectedRes12 (runParser parseIf "(if 1 then 5)")
+test12 = TestCase $ assertEqual "if 1 then 5" expectedRes12 (runParser parseIf "if 1 then 5")
 
 expectedRes13 = Just (IfThen (Operation (DataType2.LT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]), "")
 test13 = TestCase $ assertEqual "if 5 < 6 then 5" expectedRes13 (runParser parseIf "(if 5 < 6 then 5)")
@@ -52,7 +52,7 @@ expectedRes14 = Just (IfElse (Operation (DataType2.LT (VAL (I 5)) (VAL (I 6)))) 
 test14 = TestCase $ assertEqual "if 5 < 6 then 5 else 6" expectedRes14 (runParser parseIf "(if 5 < 6 then 5 else 6)")
 
 expectedRes15 = Just (IfElse (Callf (Wait "toto") [Val (I 5)]) (Exprs [Val (I 5)]) (Exprs [Val (I 6)]), "")
-test15 = TestCase $ assertEqual "if toto(5) then 5 else 6" expectedRes15 (runParser parseIf "(if toto(5) then 5 else 6)")
+test15 = TestCase $ assertEqual "if toto(5) then 5 else 6" expectedRes15 (runParser parseIf "if toto(5) then 5 else 6")
 
 expectedRes16 = Just (While (Val (I 1)) (Exprs [Val (I 5)]), "")
 test16 = TestCase $ assertEqual "while 1 do 5" expectedRes16 (runParser parseWhile "(while 1 do 5)")
@@ -64,7 +64,7 @@ expectedRes18 = Just (While (Operation (DataType2.GT (VAL (I 5)) (VAL (I 6)))) (
 test18 = TestCase $ assertEqual "while 5 > 6 do 5" expectedRes18 (runParser parseWhile "(while 5 > 6 do 5)")
 
 expectedRes19 = Just (While (Callf (Wait "toto") [Val (I 5)]) (Exprs [Val (I 5)]), "")
-test19 = TestCase $ assertEqual "while toto(5) do 5" expectedRes19 (runParser parseWhile "(while toto(5) do 5)")
+test19 = TestCase $ assertEqual "while toto(5) do 5" expectedRes19 (runParser parseWhile "while toto(5) do 5")
 
 expectedRes20 = Just (For (Wait "i", Val (I 0)) (Wait "i", Val (I 5)) (Val (I 1)) (Exprs [Val (I 6)]), "")
 test20 = TestCase $ assertEqual "for i = 0, i < 5, 1 in 6" expectedRes20 (runParser parseFor "(for i = 0, i < 5, 1 in 6)")
@@ -73,7 +73,7 @@ expectedRes21 = Just (For (Wait "i", Val (I 0)) (Wait "i", Val (I 5)) (Operation
 test21 = TestCase $ assertEqual "for i = 0, i < 5, i = i + 1 in 6" expectedRes21 (runParser parseFor "(for i = 0, i < 5, i = i + 1 in 6)")
 
 expectedRes22 = Just (For (Wait "i", Val (I 0)) (Wait "i", Val (I 5)) (Operation (ASSIGN (Wait "i") (ADD [XPR (Id (Wait "i")), VAL (I 1)]))) (Exprs [Callf (Wait "toto") [Val (I 5)]]), "")
-test22 = TestCase $ assertEqual "for i = 0, i < 5, i = i + 1 in toto(5)" expectedRes22 (runParser parseFor "(for i = 0, i < 5, i = i + 1 in toto(5))")
+test22 = TestCase $ assertEqual "for i = 0, i < 5, i = i + 1 in toto(5)" expectedRes22 (runParser parseFor "for i = 0, i < 5, i = i + 1 in toto(5)")
 
 expectedRes23 = Just (Protof (Typed "toto" INT) [Typed "x" INT] (Exprs [Val (I 5)]), "")
 test23 = TestCase $ assertEqual "def toto(x:int):int 5;" expectedRes23 (runParser definition "def toto(x:int):int 5;")
