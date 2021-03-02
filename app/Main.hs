@@ -24,7 +24,7 @@ mergeLine _ _                     = Nothing
 
 getStatement :: String -> String -> Maybe ([Expr])
 getStatement [] statement       = mergeLine (Just []) (runParser parse statement)
-getStatement (';':xs) statement = mergeLine (getStatement xs "") (runParser parse statement)
+getStatement (';':xs) statement = mergeLine (getStatement xs "") (runParser parse (statement ++ ";"))
 getStatement (x:xs) statement   = getStatement xs (statement ++ [x])
 
 
@@ -64,7 +64,7 @@ getErr _ = ""
 
 genFile :: [Expr] -> IO ()
 genFile expr
-        | res == [] = print "empty array" >> exitWith (ExitFailure 84)
+        | res == [] = print $ show expr -- print "empty array" >> exitWith (ExitFailure 84)
         | err /= "" = print err >> exitWith (ExitFailure 84)
         | otherwise = genObjFromExpr "obj" res
         where res = inferringType expr
