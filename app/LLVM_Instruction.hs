@@ -53,21 +53,16 @@ genCond cond l r          = do
 genInstruction :: Op -> Operand -> Operand -> Instruction
 genInstruction (ADD []) op1 op2 | typeop == (IntegerType 64)             = Add False False op1 op2 []
                                 | typeop == (FloatingPointType DoubleFP) = FAdd noFastMathFlags op1 op2 []
-                                where
-                                typeop = getOperandType op1
+                                where typeop = getOperandType op1
 genInstruction (MUL []) op1 op2 | typeop == (IntegerType 64)             = Mul False False op1 op2 []
                                 | typeop == (FloatingPointType DoubleFP) = FMul noFastMathFlags op1 op2 []
-                                where
-                                typeop = getOperandType op1
+                                where typeop = getOperandType op1
 genInstruction (SUB []) op1 op2 | typeop == (IntegerType 64)             = Sub False False op1 op2 []
                                 | typeop == (FloatingPointType DoubleFP) = FSub noFastMathFlags op1 op2 []
-                                where
-                                typeop = getOperandType op1
+                                where typeop = getOperandType op1
 genInstruction (DIV []) op1 op2 | typeop == (IntegerType 64)             = SDiv False op1 op2 []
                                 | typeop == (FloatingPointType DoubleFP) = FDiv noFastMathFlags op1 op2 []
-                                where
-                                typeop = getOperandType op1
-
+                                where typeop = getOperandType op1
 
 operatorInARow :: Op -> StateT Objects Maybe Operand
 operatorInARow (ADD [fst])          = genInstructionOperand fst
@@ -144,6 +139,7 @@ genInstructionOperand classicOp                     = operatorInARow classicOp
 
 -- Callf id args
 buildCallfParameter :: [Expr] -> StateT Objects Maybe ([(Operand, [ParameterAttribute])], [Type])
+buildCallfParameter []          = return ([],[])
 buildCallfParameter [xpr]       =   do 
                                     op  <- genInstructions xpr
                                     let top = getOperandType op
@@ -158,7 +154,6 @@ genCallFunction :: Identifier -> [Expr] -> StateT Objects Maybe Operand
 genCallFunction (Typed id t) exprs    =   do
                                         (ops, paramtyped) <- buildCallfParameter exprs
                                         instname <- genNewName
-                                        
                                         let name = mkName id
                                         let fctType = typeConversion t
                                         let fctSig = (PointerType (FunctionType fctType paramtyped False) (AddrSpace 0))
