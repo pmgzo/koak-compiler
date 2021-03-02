@@ -36,22 +36,26 @@ parseId :: Parser Identifier
 parseId = Parser (\str -> runParser (parseWSpace (Wait <$> parseId2)) str)
 
 parseIf :: Parser Expr
-parseIf = Parser (\str -> runParser ifExpr str)
+parseIf = Parser (\str -> runParser mainIf str)
     where
+        mainIf = parIf <|> ifExpr
+        parIf = ((char '(')*> ifExpr <* (char ')'))
         ifExpr = ifElse <|> ifThen
         ifElse = parseWSpace (IfElse <$> cond <*> midElse <*> endElse)
         ifThen = parseWSpace (IfThen <$> cond <*> endThen)
-        cond = ((char '(') *> (word "if") *> recu)
+        cond = ((word "if") *> recu)
         midElse = ((word "then") *> arrRecu)
-        endElse = ((word "else") *> arrRecu <* (char ')'))
-        endThen = ((word "then") *> arrRecu <* (char ')'))
+        endElse = ((word "else") *> arrRecu)
+        endThen = ((word "then") *> arrRecu)
 
 -- while i < 9 do expr;
 parseWhile :: Parser Expr
-parseWhile = Parser (\str -> runParser while str)
+parseWhile = Parser (\str -> runParser mainWhile str)
     where
-        while = parseWSpace (While <$> ((char '(') *> (word "while") *> recu) <*> content)
-        content = ((word "do") *> arrRecu <* (char ')'))
+        mainWhile = parWhile <|> while
+        parWhile = ((char '(')*> while <* (char ')'))
+        while = (While <$> ((word "while") *> recu) <*> content)
+        content = ((word "do") *> arrRecu)
 
 toTuple :: Identifier -> Expr -> (Identifier, Expr)
 toTuple id expr = (id, expr)
@@ -65,13 +69,15 @@ for1 :: Parser (Identifier, Expr)
 for1 = Parser (\str -> runParser convert str)
     where
         convert = parseWSpace (toTuple <$> iden <*> (recu <* (char ',')))
-        iden = ((char '(') *> (word "for") *> parseId <* (char '='))
+        iden = ((word "for") *> parseId <* (char '='))
 
 -- for x = 1, x < 9, (1 or x = x + 1) in expr;
 parseFor :: Parser Expr
-parseFor = Parser (\str -> runParser for str)
+parseFor = Parser (\str -> runParser mainFor str)
     where
-        for = parseWSpace (For <$> for1 <*> for2 <*> for3 <*> (arrRecu <* (char ')')))
+        mainFor = parFor <|> for
+        parFor = ((char '(')*> for <* (char ')'))
+        for = (For <$> for1 <*> for2 <*> for3 <*> arrRecu)
         for3 = parseWSpace (parseAndWith (\a b -> a) recu (word "in"))
 
 parseUnop :: Parser Unop
