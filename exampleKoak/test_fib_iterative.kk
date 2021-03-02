@@ -5,7 +5,8 @@ def fibi(x : int) : int
     (for i = 3, i < x, 1 in
         c = a + b:
         a = b:
-        b = c)
+        b = c
+    ):
     b;
 
 def itest1(): int
