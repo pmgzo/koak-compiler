@@ -233,15 +233,19 @@ parseOp = Parser (\str->runParser (Operation <$> removePar <$> parseOneOp) str)
 wrapperParseOp :: Parser Expr
 wrapperParseOp = Parser (\str -> runParser (simplifyOp <$> parseOp) str)
 
+checkCallArgPar :: [Expr] -> Parser [Expr]
+checkCallArgPar arr = Parser (\str -> case runParser (char ')') str of
+    Nothing -> Nothing
+    Just (')', r) -> Just (arr, r)
+    )
+
 callArg :: Maybe [Expr] -> Parser [Expr]
 callArg Nothing = Parser (\str -> Nothing)
 callArg (Just []) = Parser (\str -> case runParser (recu) str of
-    Nothing -> Nothing
+    Nothing -> runParser (checkCallArgPar []) str
     Just (xpr, r) -> runParser (callArg (Just (xpr:[]))) r)
 callArg (Just array) = Parser (\str->case runParser ((char ',') *> recu) str of
-    Nothing -> case runParser (char ')') str of
-        Nothing -> Nothing
-        (Just (')', r)) -> Just (array, r)
+    Nothing -> runParser (checkCallArgPar array) str
     (Just (xpr, r)) -> runParser (callArg (Just (array ++ [xpr]))) r)
 
 parseCall :: Parser Expr
