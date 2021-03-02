@@ -91,7 +91,7 @@ main = do
                 Nothing -> hPutStrLn stderr "file not found" >> exitWith (ExitFailure 84)
                 Just cont -> case parseFiles cont of
                     [] -> print "The files are invalid" >> exitWith (ExitFailure 84)
-                    expr -> (map genFile (zip args expr) )!!0 -- in print "done"
+                    expr -> (map genFile (zip args expr))!!0 -- in print "done"
                     -- expr -> case inferringType (expr!!0) of
                     --     [(Err str)] -> print(str) >> exitWith (ExitFailure 84)
                     --     [] -> print "empty array" >> exitWith (ExitFailure 84)

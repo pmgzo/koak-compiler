@@ -16,3 +16,4 @@ koak.cabal
 tests/mine/
 a.out
 haskell-norm
+.log

@@ -39,11 +39,11 @@ def itest3(): int
 def itest4(): int
     a = While2plus(While(4)) / 2;
 
+
 iexpectedRes1 = 6;
 iexpectedRes2 = 21;
 iexpectedRes3 = 22;
 iexpectedRes4 = 11;
-
 
 
 def dtest1(): double

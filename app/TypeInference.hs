@@ -77,7 +77,7 @@ checkIdentifier :: [Expr] -> [Expr] -> [Expr]
 checkIdentifier [] _ = []
 checkIdentifier ((Val val):xs) c = (Val val):(inferType xs c)
 checkIdentifier ((Id id):xs) c = (Id (gIFC c id)):(inferType xs c)
-checkIdentifier ((Unary u e):xs) c = (Unary u ((checkIdentifier [e] c)!!0)):(inferType xs c)
+checkIdentifier ((Unary u e):xs) c = (Unary u ((inferType [e] c)!!0)):(inferType xs c)
 checkIdentifier ((Operation op):xs) c = (Operation ((handleOp [op] c)!!0)):(inferType xs c)
 checkIdentifier ((Exprs e):xs) c = (Exprs (inferType e c)):(inferType xs c)
 checkIdentifier ((For (i, val) (i2, cond) inc args):xs) c = (handleFor c i val i2 cond inc args):(inferType xs c)
@@ -98,7 +98,7 @@ handleOp ((DataType2.EQ op1 op2):xs) c = (DataType2.EQ ((handleOp [op1] c)!!0) (
 handleOp ((DataType2.NOTEQ op1 op2):xs) c = (DataType2.NOTEQ ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):(handleOp xs c)
 handleOp (v@(VAL _):xs) c = v:(handleOp xs c)
 -- handleOp (v@(XPR (Id id)):xs) c = (XPR (Id (gIFC c id))):(handleOp xs c)
-handleOp (v@(XPR e):xs) c = (XPR ((checkIdentifier [e] c)!!0)):(handleOp xs c)
+handleOp (v@(XPR e):xs) c = (XPR ((inferType [e] c)!!0)):(handleOp xs c)
 handleOp op c = [(XPR (Err ("error in handleOp "++(show op)++"; "++(show c)++"; ")))]
 
 handleIdentifier :: [Expr] -> Identifier -> Op -> [Expr] -> [Expr]
@@ -228,16 +228,16 @@ inferringType exprs
 checkError :: [Expr] -> [Expr]
 checkError [] = []
 checkError (x@(Id (Typed str VOID)):xs) = (Err str):(checkError xs)
-checkError (x@(Err _):xs) = x:(checkError xs)
-checkError ((Exprs e):xs) = (checkError e) ++ (checkError xs)
-checkError ((Protof id1 id2 e):xs) = (checkErrorId [id1]) ++ (checkErrorId id2) ++ (checkError [e]) ++ (checkError xs)
-checkError ((Callf id e):xs) =  (checkErrorId [id]) ++ (checkError e) ++ (checkError xs)
-checkError ((Unary _ e):xs) = (checkError [e]) ++ (checkError xs)
+checkError (x@(Err _):xs)               = x:(checkError xs)
+checkError ((Exprs e):xs)               = (checkError e) ++ (checkError xs)
+checkError ((Protof id1 id2 e):xs)      = (checkErrorId [id1]) ++ (checkErrorId id2) ++ (checkError [e]) ++ (checkError xs)
+checkError ((Callf id e):xs)            = (checkErrorId [id]) ++ (checkError e) ++ (checkError xs)
+checkError ((Unary _ e):xs)             = (checkError [e]) ++ (checkError xs)
 checkError ((For (id1, e1) (id2, e2) e3 e4):xs) =  (checkErrorId [id1]) ++ (checkError [e1]) ++  (checkErrorId [id2]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError [e4]) ++ (checkError xs)
-checkError ((While e1 e2):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
-checkError ((IfThen e1 e2):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
-checkError ((IfElse e1 e2 e3):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError xs)
-checkError ((Operation op):xs) = (checkErrorOp [op]) ++ (checkError xs)
+checkError ((While e1 e2):xs)           = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
+checkError ((IfThen e1 e2):xs)          = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
+checkError ((IfElse e1 e2 e3):xs)       = (checkError [e1]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError xs)
+checkError ((Operation op):xs)          = (checkErrorOp [op]) ++ (checkError xs)
 checkError (x:xs) = checkError xs
 
 checkErrorId :: [Identifier] -> [Expr]
@@ -247,14 +247,14 @@ checkErrorId (_:xs) = (checkErrorId xs)
 
 checkErrorOp :: [Op] -> [Expr]
 checkErrorOp [] = []
-checkErrorOp ((XPR e):xs) = (checkError [e]) ++ (checkErrorOp xs)
-checkErrorOp ((ADD op):xs) = (checkErrorOp op) ++ (checkErrorOp xs)
-checkErrorOp ((SUB op):xs) = (checkErrorOp op) ++ (checkErrorOp xs)
-checkErrorOp ((MUL op):xs) = (checkErrorOp op) ++ (checkErrorOp xs)
-checkErrorOp ((DIV op):xs) = (checkErrorOp op) ++ (checkErrorOp xs)
-checkErrorOp ((DataType2.LT op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
-checkErrorOp ((DataType2.GT op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
-checkErrorOp ((DataType2.EQ op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+checkErrorOp ((XPR e):xs)   = (checkError [e]) ++ (checkErrorOp xs)
+checkErrorOp ((ADD op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
+checkErrorOp ((SUB op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
+checkErrorOp ((MUL op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
+checkErrorOp ((DIV op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
+checkErrorOp ((DataType2.LT op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+checkErrorOp ((DataType2.GT op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+checkErrorOp ((DataType2.EQ op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
 checkErrorOp ((DataType2.NOTEQ op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
-checkErrorOp ((ASSIGN id op):xs) =  (checkErrorId [id]) ++ (checkErrorOp [op]) ++ (checkErrorOp xs)
+checkErrorOp ((ASSIGN id op):xs) = (checkErrorId [id]) ++ (checkErrorOp [op]) ++ (checkErrorOp xs)
 checkErrorOp (x:xs) = checkErrorOp xs
