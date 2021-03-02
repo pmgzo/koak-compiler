@@ -21,7 +21,7 @@ double dexpected_res2;
 double dexpected_res3;
 double dexpected_res4;
 
-int returnType; //0 == int, 1 == double
+extern int returnType; //0 == int, 1 == double
 
 int iprintTest(char *test_name, int res, int expected_res)
 {
