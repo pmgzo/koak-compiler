@@ -24,7 +24,7 @@ CYAN='\033[0;36m'
 
 declare -a arr=(exampleKoak/*.kk)
 
-mv tests/test.sh .
+cp tests/test.sh .
 #######################################################
 # make fclean
 make
@@ -37,4 +37,4 @@ for arg in "${arr[@]}"; do
     # ./exec_test.sh $arg
 done
 #######################################################
-mv test.sh tests
+rm -f test.sh

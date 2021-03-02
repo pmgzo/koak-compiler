@@ -5,16 +5,16 @@ def fib(x : int) : int
         fib(x - 1) + fib(x - 2);
 
 def itest1(): int
-    fibi(5);
+    fib(5);
 
 def itest2(): int
-    fibi(10);
+    fib(10);
 
 def itest3(): int
-    fibi(1);
+    fib(1);
 
 def itest4(): int
-    fibi(18);
+    fib(18);
 
 def dtest1(): double
     -1.0;

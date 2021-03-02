@@ -2,29 +2,8 @@ module TypeInference where
 import DataType2
 
 
--- -- def coco(double: x) double: x;
-
--- -- Paul
--- (Def (Proto (Typed "coco" DOUBLE) [(Typed "x" DOUBLE)]) (OP1  (P (Id (Wait "x"))) []))
--- -- Aurele
--- (Def (Proto (Typed "coco" DOUBLE) [(Typed "x" DOUBLE)]) (OP1  (P (Id (Typed "x" DOUBLE))) []))
-
--- -- y = 2.0;
-
--- (Operation (ASSIGN (Wait "y") (VAL (I 2))))
-
--- (Xpr (OP1 (P (Id (Typed "y" DOUBLE))) [(Assign, (OP1 (P (L (D 2.0 ))) [] ) ) ] ) )
-
--- -- while y < 10 do y = y * 2;
-
--- (Xpr (While (OP1 (P (Id (Wait "y") ) )  [(Lt, (U (P (L (I 10))) ))] ) (Exprs [ (OP1 (P (Id (Wait "y" ))) [(Assign, (OP1 (P (Id (Wait "y"))) [(Time, (U (P (L (I 2))) ) )]) )] )] )) )
-
--- (Xpr (While (OP1 (P (Id (Typed "y" DOUBLE) ) )  [(Lt, (U (P (L (I 10))) ))] ) (Exprs [ (OP1 (P (Id (Typed "y" DOUBLE))) [(Assign, (OP1 (P (Id (Typed "y" DOUBLE))) [(Time, (U (P (L (I 2))) ) )]) )] )] )) )
-
-
 -- utils
 -------------------------------------------------------------------------------------------
-
 identifierToExpr :: [Identifier] -> [Expr]
 identifierToExpr [] = []
 identifierToExpr (x:xs) = (Id x):(identifierToExpr xs)
@@ -166,10 +145,11 @@ handleAssign :: [Expr] -> Identifier -> Op -> [Expr] -> [Expr]
 handleAssign c id@(Wait name) op@(VAL val) ast = typedExpr:toBeTypedExpr
              where typedExpr     = (Operation (ASSIGN (Typed name (gTFV val)) op))
                    toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name (gTFV val)))]))
-handleAssign c id@(Wait name) (XPR (Id id2@(Wait n))) ast = typedExpr:toBeTypedExpr
-             where typedExpr     = (Operation (ASSIGN (Typed name typ) (XPR (Id (gIFC c id2)))))
+handleAssign c id@(Wait name) (XPR expr) ast = typedExpr:toBeTypedExpr
+             where typedExpr     = (Operation (ASSIGN (Typed name typ) (XPR (e))))
                    toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name typ))]))
-                   typ           = gTFC c id2
+                   e             = (inferType [expr] c)!!0
+                   typ           = gTFE [e]
 handleAssign c id@(Wait name) op ast = typedExpr:toBeTypedExpr
              where typedExpr     = (Operation (ASSIGN (Typed name (gTFO newOp c)) newOp))
                    toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name (gTFO newOp c)))]))
@@ -205,8 +185,6 @@ handleFuncArgs c tmpCache (x@(Val _):xs) = x:(handleFuncArgs c c xs) -- add chec
 
 
 
----- 2 cache : cFunc, cVar
-
 
 
 
@@ -234,7 +212,7 @@ inferType _ _  = []
 
 
 
--- Func to call to hanle type inference
+-- Func to call to handle type inference
 inferringType :: [Expr] -> [Expr]
 inferringType [] = []
 inferringType exprs
@@ -249,17 +227,23 @@ inferringType exprs
 -- keep only (Err str) in the list
 checkError :: [Expr] -> [Expr]
 checkError [] = []
+checkError (x@(Id (Typed str VOID)):xs) = (Err str):(checkError xs)
 checkError (x@(Err _):xs) = x:(checkError xs)
 checkError ((Exprs e):xs) = (checkError e) ++ (checkError xs)
-checkError ((Protof _ _ e):xs) = (checkError [e]) ++ (checkError xs)
-checkError ((Callf _ e):xs) = (checkError e) ++ (checkError xs)
+checkError ((Protof id1 id2 e):xs) = (checkErrorId [id1]) ++ (checkErrorId id2) ++ (checkError [e]) ++ (checkError xs)
+checkError ((Callf id e):xs) =  (checkErrorId [id]) ++ (checkError e) ++ (checkError xs)
 checkError ((Unary _ e):xs) = (checkError [e]) ++ (checkError xs)
-checkError ((For (_, e1) (_, e2) e3 e4):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError [e4]) ++ (checkError xs)
+checkError ((For (id1, e1) (id2, e2) e3 e4):xs) =  (checkErrorId [id1]) ++ (checkError [e1]) ++  (checkErrorId [id2]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError [e4]) ++ (checkError xs)
 checkError ((While e1 e2):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
 checkError ((IfThen e1 e2):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
 checkError ((IfElse e1 e2 e3):xs) = (checkError [e1]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError xs)
 checkError ((Operation op):xs) = (checkErrorOp [op]) ++ (checkError xs)
 checkError (x:xs) = checkError xs
+
+checkErrorId :: [Identifier] -> [Expr]
+checkErrorId [] = []
+checkErrorId ((Typed str VOID):xs) = (Err str):(checkErrorId xs)
+checkErrorId (_:xs) = (checkErrorId xs)
 
 checkErrorOp :: [Op] -> [Expr]
 checkErrorOp [] = []
@@ -272,5 +256,5 @@ checkErrorOp ((DataType2.LT op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorO
 checkErrorOp ((DataType2.GT op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
 checkErrorOp ((DataType2.EQ op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
 checkErrorOp ((DataType2.NOTEQ op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
-checkErrorOp ((ASSIGN _ op):xs) = (checkErrorOp [op]) ++ (checkErrorOp xs)
+checkErrorOp ((ASSIGN id op):xs) =  (checkErrorId [id]) ++ (checkErrorOp [op]) ++ (checkErrorOp xs)
 checkErrorOp (x:xs) = checkErrorOp xs
