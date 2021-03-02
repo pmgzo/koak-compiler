@@ -1,27 +1,29 @@
 def While(max : int) : int
     i = 0:
-    while i < max do
-        i = i + 1,
+    (while i < max do
+        i = i + 1):
     i + 2;
 
 def While2(max : int) : int
     i = 0:
     j = 0:
-    while i < max do
+    (while i < max do
         i = i + 1:
-        while j < i * max do
-            j = j + 1,,
+        (while j < i * max do
+            j = j + 1)):
     j + 2;
 
 def While2plus(max : int) : int
     res = 0:
     i = 0:
     j = 0:
-    while i < max do
+    (while i < max do
         i = i + 1:
-        while j < i * max do
+        (while j < i * max do
             j = j + 1:
-            res = While(j + 2),,
+            res = While(j + 2)
+        )
+    ):
     res;
 
 def itest1(): int

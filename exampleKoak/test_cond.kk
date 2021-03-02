@@ -1,18 +1,18 @@
 def fct1(break: double): double
-    if break == 1.0 then 5
-    else 6;
+    (if break == 1.0 then 5
+    else 6);
 
 def fct2(a : double, b: double) : double
     a * b;
 
 def fct3(i: double) : double
-    if i == 3.0 then 1.0
+    (if i == 3.0 then 1.0);
 
 def fct4(a: double, c: double) : double
-    if a > 7.0 then
-        if a == 7.0 then 90.0 
-        else 12.0
-    else c
+    (if a > 7.0 then
+        (if a == 7.0 then 90.0 
+        else 12.0)
+    else c)
 
 def dtest1(): double
     fct1(1.0);

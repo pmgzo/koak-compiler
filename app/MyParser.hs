@@ -102,6 +102,12 @@ parseWSpace a = Parser (
     )
     where spaces = (parseMany (parseAnyChar " \t\r\n"))
 
+parseExtSpaces :: Parser a -> Parser a
+parseExtSpaces a = Parser (
+    \str -> runParser (spaces *> a <* spaces) str
+    )
+    where spaces = (parseMany (parseAnyChar " \t\r\n"))
+
 parseSomeSpaces :: Parser a -> Parser a
 parseSomeSpaces a = Parser (
     \str -> runParser (spaces *> a) str
