@@ -140,6 +140,9 @@ argArr (Just array) = Parser (\str -> case runParser (parseAndWith (\_ l -> l) (
 extractFunc :: String -> [Identifier] -> TypeKoak -> Expr -> Expr
 extractFunc id args typ def = Protof (Typed id typ) args def
 
+emptyIdArr :: Parser [Identifier]
+emptyIdArr = Parser(\str -> Just([], str))
+
 definition :: Parser Expr
 definition = Parser (\str -> case runParser (word "def") str of
     Nothing -> Nothing
@@ -151,7 +154,7 @@ definition = Parser (\str -> case runParser (word "def") str of
         def = parseWSpace (extractFunc <$> proto1 <*> (proto2 <* (char ':')) <*> typeVar <*> arrRecu <* (char ';'))
         b = parseAndWith (\_ b -> b)
         proto1 = ((word "def") *> (parseWSpace parseId2) <* (char '('))
-        proto2 = parseWSpace (argArr (Just []))
+        proto2 = (((char ')') *> emptyIdArr) <|> (parseWSpace (argArr (Just []))))
 
 assignOp :: Op -> Char -> Op -> Op
 assignOp single '*' opR = case opR of
