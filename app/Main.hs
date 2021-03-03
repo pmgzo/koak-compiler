@@ -14,7 +14,7 @@ import System.IO
 import Control.Exception
 import Data.Maybe
 
-
+import Error
 
 mergeLine :: Maybe ([Expr]) -> Maybe (Expr, String) -> Maybe ([Expr])
 mergeLine (Just e) (Just (e1, s)) = Just ([e1] ++ e)
@@ -73,11 +73,13 @@ getErr _ = ""
 
 genFile :: (String, [Expr]) -> IO ()
 genFile (filename,expr)
-        | res == [] = print $ show expr -- print "empty array" >> exitWith (ExitFailure 84)
-        | err /= "" = print err >> exitWith (ExitFailure 84)
-        | otherwise = print "parse By the parser" >> print expr >> genObjFromExpr filename res
+        | res == []  = print $ show expr -- print "empty array" >> exitWith (ExitFailure 84)
+        | err /= ""  = print err >> exitWith (ExitFailure 84)
+        | err2 /= "" = print err2 >> exitWith (ExitFailure 84)
+        | otherwise  = print "parse By the parser" >> print expr >> genObjFromExpr filename res
         where res = inferringType expr
               err = getErr res
+              err2 = getErr $findTrickyError res
 
 main :: IO()
 main = do
