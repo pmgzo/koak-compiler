@@ -19,3 +19,4 @@ haskell-norm
 .log
 test_file_1
 main.c
+ChangeLog.md

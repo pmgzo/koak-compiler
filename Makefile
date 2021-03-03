@@ -43,6 +43,7 @@ tests_bash_chmod: clean
 
 fclean:	clean
 	rm -f $(NAME)
+	rm -f a.out
 
 re:	fclean all
 
