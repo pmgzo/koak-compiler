@@ -34,7 +34,7 @@ echec=0
 
 for arg in "${arr[@]}"; do
     rm -f exampleKoak/*.o
-    echo -e "\033[1;35m"./koak $arg"\033[0m"
+    echo -e "\n\033[1;35m"./koak $arg"\033[0m"
     if [[ $# = 0 ]]
         then ./koak $arg && gcc tests/main.c exampleKoak/*.o && ./a.out $arg
         if [[ $? != 0 ]]

@@ -8,6 +8,15 @@ identifierToExpr :: [Identifier] -> [Expr]
 identifierToExpr [] = []
 identifierToExpr (x:xs) = (Id x):(identifierToExpr xs)
 
+alreadyExist :: Identifier -> [Expr] -> Bool
+alreadyExist _ []            = False
+alreadyExist id@(Wait name) ((Id (Typed name1 _)):xs)
+             | name == name1 = True
+             | otherwise     = alreadyExist id xs
+alreadyExist id@(Typed name _) ((Id (Typed name1 _)):xs)
+             | name == name1 = True
+             | otherwise     = alreadyExist id xs
+
 
 getTypeFromValue :: Value -> TypeKoak
 getTypeFromValue (I nb) = INT
@@ -163,9 +172,10 @@ handleAssign c id op ast = [(Err ("error in handleAssign "++(show c)++"; "++(sho
 -- function -- to add assign Unary, Operation, Callf
 -------------------------------------------------------------------------------------------
 checkFunc :: [Expr] -> [Expr] -> [Expr]
-checkFunc ((Protof id args (Exprs block)):xs) c = handleFunc c id args block xs
--- checkFunc ((Callf id args):xs) c = (Callf (gIFC c id) (handleFuncArgs c c args)):(inferType xs c)
 checkFunc ((Callf id args):xs) c = (Callf (gIFC c id) (inferType args c)):(inferType xs c)
+checkFunc ((Protof id args (Exprs block)):xs) c
+          | (alreadyExist id c) == False = handleFunc c id args block xs
+          | otherwise = [(Err "checkFunc variable already exist")]
 checkFunc _ _ = []
 
 handleFunc :: [Expr] -> Identifier -> [Identifier] -> [Expr] -> [Expr] -> [Expr]

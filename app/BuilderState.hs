@@ -72,7 +72,7 @@ increaseBlockCount = do
                     o <- getCurrentBlockCount -- return IO Int
 
                     modify (\s -> s {blockCount = o + 1} )
-                    
+
                     return ()
 
 genNewBlockName :: Integer -> StateT Objects Maybe Name
@@ -84,7 +84,7 @@ genNewName :: StateT Objects Maybe Name -- Name DataCtor
 genNewName = do
             nameC <- gets nameCount
             -- nameC <- gets (\s -> nameCount s )
-            
+
             modify (\s -> s {nameCount = nameC + 1} )
             -- return (nameC + 1)
             return (UnName $fromInteger (nameC + 1))
@@ -93,7 +93,7 @@ genNewName = do
 addInst :: Named Instruction -> StateT Objects Maybe ()
 addInst new_instruction = do
             instructions <- gets insts
-            
+
             modify $(\s -> s { insts = instructions ++ [new_instruction] })
             return ()
 
@@ -111,7 +111,7 @@ resetInsts = do
 addBlock :: Named Terminator -> StateT Objects Maybe ()
 addBlock term = do
                 currBlock <- getCurrentBlockCount
-                
+
                 let name = (UnName $fromInteger currBlock)
 
                 insts <- getInsts
@@ -119,7 +119,7 @@ addBlock term = do
                 let b = BasicBlock name insts term
 
                 bs <- gets blocks
-                
+
                 modify (\s -> s {blocks = bs ++ [b]} )
 
                 resetInsts

@@ -35,7 +35,7 @@ scoreBlock b@(While _ (Exprs exprs))    = threshold + getCallbackBlock exprs
                                         where threshold     = refScore b
 scoreBlock b@(IfThen _ (Exprs exprs))   = threshold + getCallbackBlock exprs
                                         where threshold = refScore b
-scoreBlock b@(IfElse _ (Exprs exprs) 
+scoreBlock b@(IfElse _ (Exprs exprs)
                         (Exprs exprs2)) = threshold + getCallbackBlock exprs + getCallbackBlock exprs2
                                     where threshold = refScore b
 scoreBlock _                            = 0
@@ -106,7 +106,7 @@ setLoopTerminator name = do
                         stack <- gets retStack
                         let lastElem = last stack
                         let modifiedElem = (InfoRet (getCB lastElem) (getLastBlock lastElem) (LOOP name) )
-                                                    
+
                         modify (\s -> s {retStack = (init stack) ++ [modifiedElem]} )
 
 getLastExitBlock :: StateT Objects Maybe Name
@@ -116,18 +116,18 @@ getLastExitBlock = do
                 return (getCB lastElem)
 
 handleIf :: Bool -> Expr -> StateT Objects Maybe ()
-handleIf bool (IfThen (Operation op) (Exprs xprs)) = 
+handleIf bool (IfThen (Operation op) (Exprs xprs)) =
     do
     nameCond <- genNewBlockName 1
     cond <- genInstructionOperand op
     exitB <- getLastExitBlock
     let term = condbr cond nameCond exitB
-    
+
     addBlock term
     genCodeBlock xprs
 
 handleIfElse :: Bool -> Expr -> StateT Objects Maybe ()
-handleIfElse bool (IfElse (Operation op) (Exprs b1) (Exprs b2))  = 
+handleIfElse bool (IfElse (Operation op) (Exprs b1) (Exprs b2))  =
     do
     cond <- genInstructionOperand op
     ifBlock <- genNewBlockName 1
@@ -171,7 +171,7 @@ incrementFor id xpr@(Val v)                 = (Operation (ASSIGN id add))
 incrementFor _ xpr                          = xpr
 
 handleFor :: Bool -> Expr -> StateT Objects Maybe ()
-handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs)) = 
+handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs)) =
     do
 
     assignBlock <- genNewBlockName 1

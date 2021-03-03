@@ -24,16 +24,16 @@ getPtr id@(Typed name _) = do
                             glvars <- gets globalVars
                             lvars <- gets localVars
                             if member name glvars
-                                then 
+                                then
                                 return (genVarPtr name glvars lvars)
                                 else
                                 getLocalPtr id
 
 getLocalPtr :: Identifier -> StateT Objects Maybe Operand
 getLocalPtr id@(Typed name tK)   = do
-                            
+
                                     localMap <- gets localVars
-                                    
+
                                     let isInMap = member name localMap
                                     let tC = typeConversion tK
 
@@ -46,7 +46,7 @@ getLocalPtr id@(Typed name tK)   = do
 
 getExistingLocalPtr :: Identifier -> StateT Objects Maybe Operand
 getExistingLocalPtr (Typed name t) = do
-                                    (n, t) <- getLocalVar name 
+                                    (n, t) <- getLocalVar name
                                     return (LocalReference (ptr t) n)
 
 -- getVar :: Identifier -> StateT Objects Maybe Operand
@@ -54,7 +54,7 @@ getExistingLocalPtr (Typed name t) = do
 --                     let b1 = member str globalVars
 --                     let b2 = member str localVars
 
-getVar :: String -> Map String (Name, Type) 
+getVar :: String -> Map String (Name, Type)
                 -> Map String (Name, Type) -> (Name, Type)
 getVar name globalVars localVars    | isInGlobalVar == True = fromJust $Data.Map.lookup name globalVars
                                     | isInLocalVar == True  = fromJust $Data.Map.lookup name localVars
@@ -62,9 +62,9 @@ getVar name globalVars localVars    | isInGlobalVar == True = fromJust $Data.Map
                                     isInGlobalVar = member name globalVars
                                     isInLocalVar = member name localVars
 
-genVarPtr :: String -> 
+genVarPtr :: String ->
                 Map String (Name, Type) -> Map String (Name, Type) -> Operand
-genVarPtr n globalVars localVars  
+genVarPtr n globalVars localVars
     | isInGlobalVar == True =  let (n, t) = fromJust res in (ConstantOperand (GlobalReference (ptr t) n))
     | isInLocalVar == True = let (n, t) = fromJust res2 in (LocalReference (ptr t) n)
     where
@@ -93,7 +93,7 @@ localVar (Typed str _) = do
                 -- handle just local var
                 nameInst <- genNewName
                 (name, t) <- getLocalVar str
-                
+
                 let namedInst = (nameInst := Load False (LocalReference (ptr t) name) Nothing 0 [])
 
                 addInst namedInst
@@ -110,7 +110,7 @@ getLocalVar str =   do
 addLocalVar :: (String, Type) -> StateT Objects Maybe Operand
 addLocalVar  (name, t) = do
                             localMap <- gets localVars
-                            
+
                             let n = mkName name
 
                             modify (\s -> s { localVars = (insert name (n, t) localMap) } )
@@ -163,15 +163,15 @@ addFunctionParameter ((Typed str tk):rest)  = do
 -- mapWithKey :: (k -> a -> b) -> Map k a -> Map k b
 -- fromList :: Ord k => [(k, a)] -> Map k a
 
--- 
+--
 -- GlobalDefinition globalVariableDefaults {
---     name = 
+--     name =
 --     isConstant = False,
 --     type' = i64,
 --     initializer = (Just ())
 -- }
--- where 
--- name = 
--- value = 
+-- where
+-- name =
+-- value =
 
 -- handleGlobalVariable ::  -> StateT Objects Maybe ()

@@ -47,7 +47,7 @@ genCond cond l r          = do
                             name <- genNewName --operand name
 
                             addInst (name := inst)
-                            
+
                             return (LocalReference i64 name) -- cond in i64 for now
 
 genInstruction :: Op -> Operand -> Operand -> Instruction
@@ -73,9 +73,9 @@ operatorInARow (ADD (fst:snd))      = do
                                     firstop <- genInstructionOperand fst-- get first operand
                                     secondop <- operatorInARow (ADD snd) -- get second operand
                                     let inst = genInstruction (ADD []) firstop secondop
-                                    
+
                                     name <- genNewName --operand name
-                                    
+
                                     addInst (name := inst)
 
                                     -- have to get operand type
@@ -86,22 +86,22 @@ operatorInARow (MUL (fst:snd))      = do
                                     firstop <- genInstructionOperand fst-- get first operand
                                     secondop <- operatorInARow (MUL snd) -- get second operand
                                     let inst = genInstruction (MUL []) firstop secondop
-                                    
+
                                     name <- genNewName --operand name
-                                    
+
                                     addInst (name := inst)
 
                                     -- have to get operand type
                                     let t = getOperandType firstop
-                                    
+
                                     return (LocalReference t name)
 operatorInARow (SUB (fst:snd))      = do
                                     firstop <- genInstructionOperand fst-- get first operand
                                     secondop <- operatorInARow (SUB snd) -- get second operand
                                     let inst = genInstruction (SUB []) firstop secondop
-                                    
+
                                     name <- genNewName --operand name
-                                    
+
                                     addInst (name := inst)
 
                                     -- have to get operand type
@@ -112,14 +112,14 @@ operatorInARow (DIV (fst:snd))      = do
                                     firstop <- genInstructionOperand fst-- get first operand
                                     secondop <- operatorInARow (DIV snd) -- get second operand
                                     let inst = genInstruction (DIV []) firstop secondop
-                                    
+
                                     name <- genNewName --operand name
-                                    
+
                                     addInst (name := inst)
 
                                     -- have to get operand type
                                     let t = getOperandType firstop
-                                    
+
                                     return (LocalReference t name)
 
 
@@ -140,11 +140,11 @@ genInstructionOperand classicOp                     = operatorInARow classicOp
 -- Callf id args
 buildCallfParameter :: [Expr] -> StateT Objects Maybe ([(Operand, [ParameterAttribute])], [Type])
 buildCallfParameter []          = return ([],[])
-buildCallfParameter [xpr]       =   do 
+buildCallfParameter [xpr]       =   do
                                     op  <- genInstructions xpr
                                     let top = getOperandType op
                                     return ([(op, [])], [top])
-buildCallfParameter (expr:rest) =   do 
+buildCallfParameter (expr:rest) =   do
                                     op  <- genInstructions expr
                                     let top = getOperandType op
                                     let lbd = (\(op, t) (op2, t2) -> ([op] ++ op2, [t] ++ t2) ) ((op, []), top)
@@ -191,7 +191,7 @@ genUnary (Unary Not xpr)     =   do
                                 -- (Eq (XPR) (Val (Value )))
                                 -- <- gencondition according to type
                                 let cond = (DataType2.EQ (XPR xpr) (VAL (I 0)) )
-                                let inst = genCondInstruction cond op op2 -- instruction 
+                                let inst = genCondInstruction cond op op2 -- instruction
 
                                 instname <- genNewName
 

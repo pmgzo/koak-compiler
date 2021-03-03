@@ -21,7 +21,7 @@ test4 = TestCase $ assertEqual "y = 5: x = y" expectedRes4 input4
 
 input5 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "x") (XPR (Id (Wait "y"))))), (Protof (Typed "add" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ADD [(XPR (Id (Wait "a"))), (XPR (Id (Wait "a")))]))])), (Callf (Wait "add") [(Val (I 2)), (Id (Wait "x"))])]
 expectedRes5 = [Operation (ASSIGN (Typed "y" INT) (VAL (I 5))),Operation (ASSIGN (Typed "x" INT) (XPR (Id (Typed "y" INT)))),Protof (Typed "add" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [XPR (Id (Typed "a" INT)),XPR (Id (Typed "a" INT))])]),Callf (Typed "add" INT) [Val (I 2),Id (Typed "x" INT)]]
-test5 = TestCase $ assertEqual "y = 5: x = y" expectedRes5 input5
+test5 = TestCase $ assertEqual "y = 5; x = y; def add(a:int, b:int) a + b; add(2, y)" expectedRes5 input5
 
 input6 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]
 expectedRes6 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]

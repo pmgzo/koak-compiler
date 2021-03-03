@@ -14,7 +14,7 @@ readVal (VAL v) = v
 
 handleGlobalVariable :: Op -> (AST.Definition, (String, Type))
 handleGlobalVariable (ASSIGN (Typed name INT) v)    = (def, (name, i64))
-                                                where 
+                                                where
                                                 val = readVal v
                                                 def = AST.GlobalDefinition (globalVariableDefaults {
                                                                     name = (mkName name),
@@ -23,7 +23,7 @@ handleGlobalVariable (ASSIGN (Typed name INT) v)    = (def, (name, i64))
                                                                     initializer = (Just (getConstantFromValue val))
                                                             })
 handleGlobalVariable (ASSIGN (Typed name DOUBLE) v) = (def, (name, double))
-                                                where 
+                                                where
                                                 val = readVal v
                                                 def = AST.GlobalDefinition (globalVariableDefaults {
                                                     name = (mkName name),

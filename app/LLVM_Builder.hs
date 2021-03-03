@@ -66,23 +66,23 @@ genGlobalVariableList list = do
                             where lbd = (\name -> \t -> ((mkName name), t))
 
 genFunction :: Expr -> [(String, Type)] -> (Definition, [(String, Type)])
-genFunction (Protof id params (Exprs xprs)) globVarList = (def, globVarList)                                            
-                                where 
-                                def = GlobalDefinition 
+genFunction (Protof id params (Exprs xprs)) globVarList = (def, globVarList)
+                                where
+                                def = GlobalDefinition
                                         functionDefaults
                                         {   name = (mkName name),
                                             parameters = (parameters, False),
                                             returnType = retType,
-                                            basicBlocks = genDefHelper 
-                                                        $fromJust $execStateT 
+                                            basicBlocks = genDefHelper
+                                                        $fromJust $execStateT
                                                                 (initState callList)
                                                                             emptyObjects
                                         }
                                 parameters = genProtoParameter params
                                 name    = getNameFromIdentifier id
                                 retType = getTypeFromIdentifier id
-                                callList = [(fillRetType retType), 
-                                            (addFunctionParameter params), 
+                                callList = [(fillRetType retType),
+                                            (addFunctionParameter params),
                                             (genGlobalVariableList globVarList),
                                                 (genCodeBlock xprs)]
 
