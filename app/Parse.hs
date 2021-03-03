@@ -177,13 +177,14 @@ assignOp a b c = assignOp2 a b c
 parseOpSign :: Parser Op
 parseOpSign = Parser (\str -> runParser opPiece str)
     where
-        opPiece = withSign <|> single
-        withSign = (assignOp <$> single <*> (chars "*/-+") <*> parseOpSign)
-        single = parseWSpace((PAR<$>(char '('*>parseOneOp<*char ')')) <|> simp)
-        simp = parseWSpace (unary <|> call <|> ((XPR<$>Id<$>parseId)) <|> valu)
-        unary = (XPR<$>(Unary<$>parseUnop<*>(simplifyOp<$>Operation<$>single)))
-        call = (XPR <$> (parseWSpace parseCall))
-        valu = ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
+    opPiece = withSign <|> single
+    withSign = (assignOp <$> single <*> (chars "*/-+") <*> parseOpSign)
+    single = parseWSpace((PAR<$>(char '('*>parseOneOp<*char ')')) <|> simp)
+    simp = parseWSpace (u <|> call <|> ((XPR<$>Id<$>parseId)) <|> valu)
+    u=XPR<$>(Unary<$>parseUnop<*>(simplifyOp<$>Operation<$>removePar<$>single))
+    parsedSingle = (simplifyOp<$>Operation<$>removePar<$>single)
+    call = (XPR <$> (parseWSpace parseCall))
+    valu = ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
 
 assignComp :: Op -> String -> Op -> Op
 assignComp op1 "<" op2 = DataType2.LT op1 op2
