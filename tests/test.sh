@@ -51,9 +51,11 @@ for arg in "${arr[@]}"; do
     rm -f exampleKoak/*.o
 done
 
-passed=$((size - echec))
-echo -e "\n${BGreen}PASSED = $passed tests."
-echo -e "${BRed}FAILED = $echec tests.$NC"
+
+echo -e "\n${BGreen}PASSED = $((size - echec)) tests.$NC"
+if [[ $echec != 0 ]]
+    then echo -e "${BRed}FAILED = $echec tests.$NC"
+fi
 
 #######################################################
 rm -f test.sh
