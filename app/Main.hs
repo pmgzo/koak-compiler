@@ -19,7 +19,7 @@ import Error
 mergeLine :: Maybe ([Expr]) -> Maybe (Expr, String) -> Maybe ([Expr])
 mergeLine (Just e) (Just (e1, s)) = Just ([e1] ++ e)
 mergeLine Nothing (Just (e1, s))  = Just ([e1])
-mergeLine (Just e) Nothing        = Just (e)
+mergeLine (Just e) Nothing        = Nothing
 mergeLine _ _                     = Nothing
 
 getStatement :: String -> String -> Maybe ([Expr])
@@ -44,8 +44,9 @@ mergeMaybe _ []        = []
 mergeMaybe (Just a) b  = a:b
 
 checkNothing :: Maybe [Expr] -> [[Expr]]
-checkNothing Nothing  = []
-checkNothing (Just a) = [a]
+checkNothing Nothing   = []
+checkNothing (Just []) = []
+checkNothing (Just a)  = [a]
 
 parseFiles :: [String] -> [[Expr]]
 parseFiles [] = []
@@ -92,7 +93,7 @@ main = do
             case contents of
                 Nothing -> hPutStrLn stderr "file not found" >> exitWith (ExitFailure 84)
                 Just cont -> case parseFiles cont of
-                    [] -> print "The files are invalid" >> exitWith (ExitFailure 84)
+                    [] -> hPutStrLn stderr "The files are invalid" >> exitWith (ExitFailure 84)
                     expr -> (map genFile (zip args expr) )!!0 -- in print "done"
                     --     [(Err str)] -> print(str) >> exitWith (ExitFailure 84)
                     --     [] -> print "empty array" >> exitWith (ExitFailure 84)
