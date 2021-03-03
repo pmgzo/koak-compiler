@@ -31,8 +31,7 @@ input4 = [
     Protof (Typed "dtest4" DOUBLE) [] (Exprs [Unary UMinus (Val (D 1.0))]),
     Operation (ASSIGN (Typed "returnType" INT) (VAL (I 0))),
     Operation (ASSIGN (Typed "testId" INT) (VAL (I 7)))]
-]
-expectedRes4 = [Err "No function named Typed \"afunc\" INT"]
+expectedRes4 = [Err "call: Typed \"sum\" INTlen arg differ"]
 test4 = TestCase $ assertEqual "call fct not same number of arg tricky" expectedRes4 (findTrickyError input4)
 
 trickyErrorTests = TestList [test1, test2, test3, test4]
