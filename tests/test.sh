@@ -29,16 +29,31 @@ cp tests/test.sh .
 # make fclean
 make
 
+size=${#arr[@]}
+echec=0
+
 for arg in "${arr[@]}"; do
     rm -f exampleKoak/*.o
     echo -e "\033[1;35m"./koak $arg"\033[0m"
     if [[ $# = 0 ]]
-        then ./koak $arg && gcc tests/main.c exampleKoak/*.o && ./a.out $arg || echo -e "\033[1;91m"FAILED"\033[0m"
+        then ./koak $arg && gcc tests/main.c exampleKoak/*.o && ./a.out $arg
+        if [[ $? != 0 ]]
+            then echo -e "\033[1;91m"FAILED"\033[0m" ; ((echec++))
+        fi
     else
-        ./koak $arg > .log && gcc tests/main.c exampleKoak/*.o && ./a.out $arg || echo -e "\033[1;91m"FAILED"\033[0m"
+        ./koak $arg > .log && gcc tests/main.c exampleKoak/*.o && ./a.out $arg
+        if [[ $? != 0 ]]
+            then echo -e "\033[1;91m"FAILED"\033[0m" ; ((echec++))
+        fi
     fi
 
     # ./exec_test.sh $arg
+    rm -f exampleKoak/*.o
 done
+
+passed=$((size - echec))
+echo -e "\n${BGreen}PASSED = $passed tests."
+echo -e "${BRed}FAILED = $echec tests.$NC"
+
 #######################################################
 rm -f test.sh
