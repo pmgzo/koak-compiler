@@ -95,7 +95,7 @@ checkErrXp pts ((Protof id1 id2 e):xs) t      = (checkTypeOfFunction [e] id1) ++
 checkErrXp pts (e@(Callf _ s):xs) t           = res ++ (checkErrXp pts s t) ++ (checkErrXp pts xs t)
                                         where
                                         res = errorWrapper (compareCall pts e)
-checkErrXp pts ((Unary Minus e):xs) t             = (checkErrXp pts [e] t) ++ (checkErrXp pts xs t)
+checkErrXp pts ((Unary _ e):xs) t             = (checkErrXp pts [e] t) ++ (checkErrXp pts xs t)
 checkErrXp pts ((For (id1, e1) (id2, e2) e3 e4):xs) t =  (checkErrorId [id1] t) ++ (checkErrXp pts [e1] t) ++  (checkErrorId [id2] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts [e3] t) ++ (checkErrXp pts [e4] t) ++ (checkErrXp pts xs t)
 checkErrXp pts ((While e1 e2):xs) t           = (checkErrXp pts [e1] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts xs t)
 checkErrXp pts ((IfThen e1 e2):xs) t          = (checkErrXp pts [e1] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts xs t)
