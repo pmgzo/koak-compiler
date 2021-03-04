@@ -51,7 +51,7 @@ def itest1(): int
     For2(5);
 
 def itest2(): int
-    IfElse(!IfElse(While2(5)));
+    IfElse(IfElse(While2(5)));
 
 def itest3(): int
     For3(5);
@@ -60,7 +60,7 @@ def itest4(): int
     a = (For4(5) + 50) * 2;
 
 iexpectedRes1 = 5;
-iexpectedRes2 = 0;
+iexpectedRes2 = 1;
 iexpectedRes3 = 152;
 iexpectedRes4 = 300;
 
