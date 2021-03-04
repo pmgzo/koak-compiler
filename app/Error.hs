@@ -1,25 +1,9 @@
 module Error where
 
 import DataType2
+import TypeInference
+-- import TypeInference (gTFE)
 
-import TypeInference (gTFE)
-
--- a :: [Expr] 
--- a = [
---     Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [XPR (Id (Typed "a" INT)),XPR (Id (Typed "b" INT))])]),
---     Protof (Typed "fact2" INT) [Typed "a" INT] (Exprs [Operation (ASSIGN (Typed "res" INT) (VAL (I 1))),While (Operation (NOTEQ (XPR (Id (Typed "a" INT))) (VAL (I 0)))) (Exprs [Operation (ASSIGN (Typed "res" INT) (MUL [XPR (Id (Typed "res" INT)),XPR (Id (Typed "a" INT))])),Operation (ASSIGN (Typed "a" INT) (SUB [XPR (Id (Typed "a" INT)),VAL (I 1)]))]),Id (Typed "res" INT)]),
---     Protof (Typed "itest1" INT) [] (Exprs [Callf (Typed "sum" INT) [Callf (Typed "sum" INT) [Val (I 5),Val (I 6)],Callf (Typed "sum" INT) [Operation (SUB [XPR (Unary UMinus (Val (I 4))),VAL (I 7)])]]]),
---     Protof (Typed "itest2" INT) [] (Exprs [Callf (Typed "sum" INT) [Val (I 2),Unary UMinus (Val (I 5))]]),
---     Protof (Typed "itest3" INT) [] (Exprs [Callf (Typed "fact2" INT) [Val (I 1)]]),Protof (Typed "itest4" INT) [] (Exprs [Callf (Typed "fact2" INT) [Val (I 15)]]),
---     Protof (Typed "dtest1" DOUBLE) [] (Exprs [Unary UMinus (Val (D 1.0))]),
---     Protof (Typed "dtest2" DOUBLE) [] (Exprs [Unary UMinus (Val (D 1.0))]),
---     Protof (Typed "dtest3" DOUBLE) [] (Exprs [Unary UMinus (Val (D 1.0))]),
---     Protof (Typed "dtest4" DOUBLE) [] (Exprs [Unary UMinus (Val (D 1.0))]),
---     Operation (ASSIGN (Typed "returnType" INT) (VAL (I 0))),
---     Operation (ASSIGN (Typed "testId" INT) (VAL (I 7)))]
--- ]
-
--- gTFO
 compareArg :: Expr -> Identifier -> Bool
 compareArg g (Typed _ t)    = (t == t2)
                             where t2 = gTFE [g] -- getTypeOfExpr
@@ -39,54 +23,115 @@ checkCall (Callf id args) (Protof id2 args2 _)
     where
     typeArgsAreOkay = compareCallArgs args args2
 
--- have to check function argument
--- | _     = checkCallArgument args args2
-
 compareCall :: [Expr] -> Expr -> String
 compareCall [] (Callf id _) = "No function named " ++ (show id)
 compareCall (p@(Protof (Typed i2 _) _ _ ):rest) c@(Callf (Typed i _) xprs)
     | i == i2       = checkCall c p
     | otherwise     = compareCall rest c
 
+getTypeFromOpError :: [Op] -> TypeKoak
+getTypeFromOpError ((VAL val):xs)              = gTFV val
+getTypeFromOpError ((ASSIGN id _):xs)          = gTFI id
+getTypeFromOpError ((XPR (Unary Not e)):xs)    = gTFEE [e]
+-- getTypeFromOpError ((XPR (Unary Not (Unary Not e))):xs)    = gTFEE [e]
+getTypeFromOpError ((XPR e):xs)                = gTFEE [e]
+getTypeFromOpError ((ADD op):xs)               = getTypeFromOpError op
+getTypeFromOpError ((SUB op):xs)               = getTypeFromOpError op
+getTypeFromOpError ((MUL op):xs)               = getTypeFromOpError op
+getTypeFromOpError ((DIV op):xs)               = getTypeFromOpError op
+getTypeFromOpError ((DataType2.LT op _):xs)    = getTypeFromOpError [op]
+getTypeFromOpError ((DataType2.GT op _):xs)    = getTypeFromOpError [op]
+getTypeFromOpError ((DataType2.EQ op _):xs)    = getTypeFromOpError [op]
+getTypeFromOpError ((DataType2.NOTEQ op _):xs) = getTypeFromOpError [op]
+getTypeFromOpError _                           = VOID
+
+gTFOE :: Op -> TypeKoak
+gTFOE (ADD op) = getTypeFromOpError op
+gTFOE (SUB op) = getTypeFromOpError op
+gTFOE (MUL op) = getTypeFromOpError op
+gTFOE (DIV op) = getTypeFromOpError op
+gTFOE op       = getTypeFromOpError [op]
+
+getTypeFromExprError :: [Expr] -> TypeKoak
+getTypeFromExprError []                         = VOID -- error
+getTypeFromExprError ((Id (Typed _ t)):xs)      = t
+getTypeFromExprError ((Unary u e):xs)           = gTFEE [e]
+getTypeFromExprError ((Val val):xs)             = gTFV val
+getTypeFromExprError ((Callf (Typed _ t) _):xs) = t
+getTypeFromExprError ((Operation op):xs)        = gTFOE op
+getTypeFromExprError ((Exprs e):xs)             = gTFEE e
+getTypeFromExprError ((IfThen _ e):xs)          = gTFEE [e]
+getTypeFromExprError ((IfElse _ e _):xs)        = gTFEE [e]
+getTypeFromExprError _                          = VOID -- error
+
+gTFEE :: [Expr] -> TypeKoak
+gTFEE e = getTypeFromExprError e
+
+
+checkTypeOfFunction :: [Expr] -> Identifier -> [Expr]
+checkTypeOfFunction [] _                    = []
+checkTypeOfFunction ((Exprs e):[]) id       = checkTypeOfFunction e id
+checkTypeOfFunction ((IfThen _ e):[]) id    = checkTypeOfFunction [e] id
+checkTypeOfFunction ((IfElse _ e _):[]) id  = checkTypeOfFunction [e] id
+checkTypeOfFunction (x:[]) id
+                    | gTFEE [x] == gTFI id  = []
+                    | otherwise = [(Err (show id ++ " expected but got " ++
+                                        (show $ gTFEE [x]) ++ " (" ++ show x ++ ")"))]
+checkTypeOfFunction (x:xs) id               = checkTypeOfFunction xs id
+
+
+
 errorWrapper :: String -> [Expr]
 errorWrapper "" = []
 errorWrapper str = [Err str]
 
-checkErrXp :: [Expr] -> [Expr] -> [Expr]
-checkErrXp pts [] = []
-checkErrXp pts (x@(Id (Typed str VOID)):xs) = (Err str):(checkErrXp pts xs)
-checkErrXp pts (x@(Err _):xs)               = x:(checkErrXp pts xs)
-checkErrXp pts ((Exprs e):xs)               = (checkErrXp pts e) ++ (checkErrXp pts xs)
-checkErrXp pts ((Protof id1 id2 e):xs)      = (checkErrorId [id1]) ++ (checkErrorId id2) ++ (checkErrXp pts [e]) ++ (checkErrXp pts xs)
-checkErrXp pts (e@(Callf _ s):xs)           = res ++ (checkErrXp pts s) ++ (checkErrXp pts xs)
-                                        where 
+checkErrXp :: [Expr] -> [Expr] -> TypeKoak -> [Expr]
+checkErrXp _ [] t = []
+-- checkErrXp pts (x@(Id (Typed str VOID)):xs) t = (Err str):(checkErrXp pts xs t)
+checkErrXp pts ((Id id):xs) t                 = (checkErrorId [id] t) ++ (checkErrXp pts xs t)
+checkErrXp pts (x@(Err _):xs) t               = x:(checkErrXp pts xs t)
+checkErrXp pts ((Exprs e):xs) t               = (checkErrXp pts e t) ++ (checkErrXp pts xs t)
+checkErrXp pts ((Protof id1 id2 e):xs) t      = (checkTypeOfFunction [e] id1) ++ (checkErrorId [id1] t) ++ (checkErrorId id2 t) ++ (checkErrXp pts [e] t) ++ (checkErrXp pts xs t)
+checkErrXp pts (e@(Callf _ s):xs) t           = res ++ (checkErrXp pts s t) ++ (checkErrXp pts xs t)
+                                        where
                                         res = errorWrapper (compareCall pts e)
-checkErrXp pts ((Unary _ e):xs)             = (checkErrXp pts [e]) ++ (checkErrXp pts xs)
-checkErrXp pts ((For (id1, e1) (id2, e2) e3 e4):xs) =  (checkErrorId [id1]) ++ (checkErrXp pts [e1]) ++  (checkErrorId [id2]) ++ (checkErrXp pts [e2]) ++ (checkErrXp pts [e3]) ++ (checkErrXp pts [e4]) ++ (checkErrXp pts xs)
-checkErrXp pts ((While e1 e2):xs)           = (checkErrXp pts [e1]) ++ (checkErrXp pts [e2]) ++ (checkErrXp pts xs)
-checkErrXp pts ((IfThen e1 e2):xs)          = (checkErrXp pts [e1]) ++ (checkErrXp pts [e2]) ++ (checkErrXp pts xs)
-checkErrXp pts ((IfElse e1 e2 e3):xs)       = (checkErrXp pts [e1]) ++ (checkErrXp pts [e2]) ++ (checkErrXp pts [e3]) ++ (checkErrXp pts xs)
-checkErrXp pts ((Operation op):xs)          = (checkErrorOp pts[op]) ++ (checkErrXp pts xs)
-checkErrXp pts (x:xs) = checkErrXp pts xs
+checkErrXp pts ((Unary Minus e):xs) t             = (checkErrXp pts [e] t) ++ (checkErrXp pts xs t)
+checkErrXp pts ((For (id1, e1) (id2, e2) e3 e4):xs) t =  (checkErrorId [id1] t) ++ (checkErrXp pts [e1] t) ++  (checkErrorId [id2] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts [e3] t) ++ (checkErrXp pts [e4] t) ++ (checkErrXp pts xs t)
+checkErrXp pts ((While e1 e2):xs) t           = (checkErrXp pts [e1] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts xs t)
+checkErrXp pts ((IfThen e1 e2):xs) t          = (checkErrXp pts [e1] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts xs t)
+checkErrXp pts ((IfElse e1 e2 e3):xs) t       = (checkErrXp pts [e1] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts [e3] t) ++ (checkErrXp pts xs t)
+checkErrXp pts ((Operation op):xs) t          = (checkErrorOp pts [op] (gTFOE op)) ++ (checkErrXp pts xs t)
+checkErrXp pts (x:xs) t = checkErrXp pts xs t
 
-checkErrorId :: [Identifier] -> [Expr]
-checkErrorId [] = []
-checkErrorId ((Typed str VOID):xs) = (Err str):(checkErrorId xs)
-checkErrorId (_:xs) = (checkErrorId xs)
+checkErrorId :: [Identifier] -> TypeKoak -> [Expr]
+checkErrorId [] _                    = []
+checkErrorId ((Typed str VOID):xs) t = (Err str):(checkErrorId xs t)
+checkErrorId (x@(Typed str t1):xs) t
+             | t /= NULL && t1 /= t = (Err (show t ++ " expected but got " ++ show x)):
+                                                       (checkErrorId xs t)
+             | otherwise            = checkErrorId xs t
+checkErrorId (_:xs) t = (checkErrorId xs t)
 
-checkErrorOp :: [Expr] -> [Op] -> [Expr]
-checkErrorOp pts [] = []
-checkErrorOp pts ((XPR e):xs)   = (checkErrXp pts [e]) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((ADD op):xs)  = (checkErrorOp pts op) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((SUB op):xs)  = (checkErrorOp pts op) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((MUL op):xs)  = (checkErrorOp pts op) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((DIV op):xs)  = (checkErrorOp pts op) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((DataType2.LT op1 op2):xs)    = (checkErrorOp pts [op1]) ++  (checkErrorOp pts [op2]) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((DataType2.GT op1 op2):xs)    = (checkErrorOp pts [op1]) ++  (checkErrorOp pts [op2]) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((DataType2.EQ op1 op2):xs)    = (checkErrorOp pts [op1]) ++  (checkErrorOp pts [op2]) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) = (checkErrorOp pts [op1]) ++  (checkErrorOp pts [op2]) ++ (checkErrorOp pts xs)
-checkErrorOp pts ((ASSIGN id op):xs) = (checkErrorId [id]) ++ (checkErrorOp pts [op]) ++ (checkErrorOp pts xs)
-checkErrorOp pts (x:xs) = checkErrorOp pts xs
+checkErrorOp :: [Expr] -> [Op] -> TypeKoak -> [Expr]
+checkErrorOp _ [] _ = []
+checkErrorOp pts ((XPR e):xs) t   = (checkErrXp pts [e] t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((ADD op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((SUB op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((MUL op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DIV op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.LT op1 op2):xs) t    = (checkErrorOp pts [op1] t) ++  (checkErrorOp pts [op2] t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.GT op1 op2):xs) t    = (checkErrorOp pts [op1] t) ++  (checkErrorOp pts [op2] t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.EQ op1 op2):xs) t    = (checkErrorOp pts [op1] t) ++  (checkErrorOp pts [op2] t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) t = (checkErrorOp pts [op1] t) ++  (checkErrorOp pts [op2] t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((ASSIGN id op):xs) t            = (checkErrorId [id] t) ++ (checkErrorOp pts [op] t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts (x@(VAL v):xs) t
+             | t /= NULL && gTFV v /= t = (Err (show t++" expected but got "++
+                                               (show $ gTFV v)++" ("++show x++")")):
+                                                     (checkErrorOp pts xs t)
+             | otherwise   = checkErrorOp pts xs t
+checkErrorOp pts (x:xs) t = checkErrorOp pts xs t
+
+
 
 getAllProtof :: [Expr] -> [Expr]
 getAllProtof []                         = []
@@ -94,65 +139,6 @@ getAllProtof ((Protof id args _):rest)  = [(Protof id args (Exprs []))] ++ (getA
 getAllProtof (a:rest)                   = getAllProtof rest
 
 findTrickyError :: [Expr] -> [Expr]
-findTrickyError listXps = checkErrXp protos listXps
+findTrickyError listXps = checkErrXp protos listXps NULL
                         where
                         protos = getAllProtof listXps
-
--- compareCall :: Expr -> [Expr] -> Bool
--- compareCall c [] = False
--- compareCall c@(Callf (Typed i _) xprs) (p@(Protof (Typed i2 _) _ _ ):rest)
---     | i == i2       = checkCall c p
---     | _             = compareCall c rest
-
--- -- checkCallArgument :: [Identifier] -> [Expr] -> Bool
--- -- checkCallArgument () () = 
-
--- checkCall :: Expr -> Expr -> Bool
--- checkCall (Call id args) (Protof id2 args2 _)
---     | id /= id2                     = False 
---     | length args /= length args2   = False
--- -- have to check function argument
--- -- | _     = checkCallArgument args args2
-
-
--- -- function to check 
--- checkCallFunction :: [Expr] -> [Expr] -> Maybe ([Expr])
--- checkCallFunction (xpr:xprs) fcts = Just ()
-
-
--- checkOpOperator :: [Expr] -> [Op] -> Bool
--- checkOpOperator xprs [((XPR (Callf _ _)):rest)] = bridge xprs <*> checkOperandOperator
--- checkOpOperator xprs [(XPR (Callf _ _))] = cmpCall xprs
--- checkOpOperator xprs [] = cmpCall xprs
-
--- checkOpCall :: Op -> Bool
--- checkOpCall DIV []          =
--- checkOpCall MUL []          =
--- checkOpCall SUB []          =
--- checkOpCall ADD [a:rest]    = bridge checkOpCall (a)
--- checkOpCall ASSIGN []       =
--- checkOpCall LT _ _          =
--- checkOpCall GT _ _          =
--- checkOpCall NOTEQ _ _       =
--- checkOpCall EQ _ _          =
-
--- bridge :: a -> b -> Bool
--- bridge a b  | a == True = b
---             | otherwise = False
-
--- checkStt :: [Expr] -> True
--- checkStt (Operation op)          = checkOpCall op
--- checkStt (IfThen _ (Exprs xprs)) = checkOpCall op
--- checkOpCall Exprs []        =
--- checkOpCall For _ _ _ _     =
--- checkOpCall IfThen _ _      =
--- checkOpCall IfElse _ _ _    =
-
--- --fct, express list
--- checkCall :: [Expr] -> [Expr] -> Bool
--- checkCall protos ((Protof _ _ (Exprs xprs)):rest)    = 
--- checkCall protos (o@(Operation ()):r)                = True
-
-
--- func :: Expr -> Maybe ([Expr])
--- func () = 

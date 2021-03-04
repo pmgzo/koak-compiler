@@ -56,4 +56,12 @@ input9 = Callf (Typed "sum" INT) [(Unary UMinus (Val (I 5))), (Val (I 5))]
 expectedRes9 = ""
 test9 = TestCase $ assertEqual "compareCall" expectedRes7 (compareCall protof5 input7)
 
-trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8]
+input10 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" DOUBLE] (Exprs [Operation (ADD [XPR (Id (Typed "a" INT)),XPR (Id (Typed "b" DOUBLE))])])]
+expectedRes10 = [Err "INT expected but got Typed \"b\" DOUBLE"]
+test10 = TestCase $ assertEqual "function's type and argument differ" expectedRes10 (findTrickyError input10)
+
+input11 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [XPR (Id (Typed "a" INT)),VAL (D 5.1)])])]
+expectedRes11 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+test11 = TestCase $ assertEqual "operator's type differ" expectedRes11 (findTrickyError input11)
+
+trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11]

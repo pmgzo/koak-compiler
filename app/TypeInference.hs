@@ -27,25 +27,35 @@ getTypeFromValue Void   = VOID
 gTFV :: Value -> TypeKoak
 gTFV val = getTypeFromValue val
 
-getTypeFromOp :: [Op] -> [Expr] -> TypeKoak
-getTypeFromOp ((VAL val):xs) _             = gTFV val
-getTypeFromOp ((XPR e):xs) c               = gTFE [e]
-getTypeFromOp ((ADD op):xs) c              = getTypeFromOp op c
-getTypeFromOp ((SUB op):xs) c              = getTypeFromOp op c
-getTypeFromOp ((MUL op):xs) c              = getTypeFromOp op c
-getTypeFromOp ((DIV op):xs) c              = getTypeFromOp op c
-getTypeFromOp ((DataType2.LT _ _):xs) c    = VOID
-getTypeFromOp ((DataType2.GT _ _):xs) c    = VOID
-getTypeFromOp ((DataType2.EQ _ _):xs) c    = VOID
-getTypeFromOp ((DataType2.NOTEQ _ _):xs) c = VOID
-getTypeFromOp _ _ = VOID
 
-gTFO :: Op -> [Expr] -> TypeKoak
-gTFO (ADD op) c = getTypeFromOp op c
-gTFO (SUB op) c = getTypeFromOp op c
-gTFO (MUL op) c = getTypeFromOp op c
-gTFO (DIV op) c = getTypeFromOp op c
-gTFO op c = getTypeFromOp [op] c
+getTypeFromId :: Identifier -> TypeKoak
+getTypeFromId (Typed _ t) = t
+getTypeFromId _           = VOID -- error
+
+gTFI :: Identifier -> TypeKoak
+gTFI id = getTypeFromId id
+
+
+getTypeFromOp :: [Op] -> TypeKoak
+getTypeFromOp ((VAL val):xs)              = gTFV val
+getTypeFromOp ((ASSIGN id _):xs)          = gTFI id
+getTypeFromOp ((XPR e):xs)                = gTFE [e]
+getTypeFromOp ((ADD op):xs)               = getTypeFromOp op
+getTypeFromOp ((SUB op):xs)               = getTypeFromOp op
+getTypeFromOp ((MUL op):xs)               = getTypeFromOp op
+getTypeFromOp ((DIV op):xs)               = getTypeFromOp op
+getTypeFromOp ((DataType2.LT op _):xs)    = VOID
+getTypeFromOp ((DataType2.GT op _):xs)    = VOID
+getTypeFromOp ((DataType2.EQ op _):xs)    = VOID
+getTypeFromOp ((DataType2.NOTEQ op _):xs) = VOID
+getTypeFromOp _                           = VOID
+
+gTFO :: Op -> TypeKoak
+gTFO (ADD op) = getTypeFromOp op
+gTFO (SUB op) = getTypeFromOp op
+gTFO (MUL op) = getTypeFromOp op
+gTFO (DIV op) = getTypeFromOp op
+gTFO op       = getTypeFromOp [op]
 
 getTypeFromCache :: [Expr] -> Identifier -> TypeKoak
 getTypeFromCache [] _ = VOID -- error
@@ -64,7 +74,11 @@ getTypeFromExpr ((Unary _ e):xs)           = gTFE [e]
 getTypeFromExpr ((Val val):xs)             = gTFV val
 getTypeFromExpr ((Callf (Typed _ t) _):xs) = t
 getTypeFromExpr ((Operation (XPR e)):xs)   = gTFE [e]
-getTypeFromExpr ((Operation op):xs)        = gTFO op []
+getTypeFromExpr ((Operation op):xs)        = gTFO op
+getTypeFromExpr ((Exprs e):xs)             = gTFE e
+getTypeFromExpr ((IfThen _ e):xs)          = gTFE [e]
+getTypeFromExpr ((IfElse _ e _):xs)        = gTFE [e]
+getTypeFromExpr _                          = VOID -- error
 
 gTFE :: [Expr] -> TypeKoak
 gTFE e                        = getTypeFromExpr e
@@ -163,8 +177,8 @@ handleAssign c id@(Wait name) (XPR expr) ast = typedExpr:toBeTypedExpr
                    e             = (inferType [expr] c)!!0
                    typ           = gTFE [e]
 handleAssign c id@(Wait name) op ast = typedExpr:toBeTypedExpr
-             where typedExpr     = (Operation (ASSIGN (Typed name (gTFO newOp c)) newOp))
-                   toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name (gTFO newOp c)))]))
+             where typedExpr     = (Operation (ASSIGN (Typed name (gTFO newOp)) newOp))
+                   toBeTypedExpr = (inferType ast (c ++ [(Id (Typed name (gTFO newOp)))]))
                    newOp         = (handleOp [op] c)!!0
 handleAssign c id op ast = [(Err ("error in handleAssign "++(show c)++"; "++(show id)++"; "++(show op)++"; "++(show ast)))]
 
@@ -227,47 +241,48 @@ inferType _ _  = []
 
 -- Func to call to handle type inference
 inferringType :: [Expr] -> [Expr]
-inferringType [] = []
-inferringType exprs
-              | error == [] = inferredType
-              | otherwise   = error
-              where inferredType = inferType exprs []
-                    error        = checkError inferredType
+inferringType []    = []
+inferringType exprs = inferType exprs []
+-- inferringType exprs
+--               | error == [] = inferredType
+--               | otherwise   = error
+--               where inferredType = inferType exprs []
+                    -- error        = checkError inferredType
 
 
 
 
--- keep only (Err str) in the list
-checkError :: [Expr] -> [Expr]
-checkError [] = []
-checkError (x@(Id (Typed str VOID)):xs) = (Err str):(checkError xs)
-checkError (x@(Err _):xs)               = x:(checkError xs)
-checkError ((Exprs e):xs)               = (checkError e) ++ (checkError xs)
-checkError ((Protof id1 id2 e):xs)      = (checkErrorId [id1]) ++ (checkErrorId id2) ++ (checkError [e]) ++ (checkError xs)
-checkError ((Callf id e):xs)            = (checkErrorId [id]) ++ (checkError e) ++ (checkError xs)
-checkError ((Unary _ e):xs)             = (checkError [e]) ++ (checkError xs)
-checkError ((For (id1, e1) (id2, e2) e3 e4):xs) =  (checkErrorId [id1]) ++ (checkError [e1]) ++  (checkErrorId [id2]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError [e4]) ++ (checkError xs)
-checkError ((While e1 e2):xs)           = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
-checkError ((IfThen e1 e2):xs)          = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
-checkError ((IfElse e1 e2 e3):xs)       = (checkError [e1]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError xs)
-checkError ((Operation op):xs)          = (checkErrorOp [op]) ++ (checkError xs)
-checkError (x:xs) = checkError xs
+-- -- keep only (Err str) in the list
+-- checkError :: [Expr] -> [Expr]
+-- checkError [] = []
+-- checkError (x@(Id (Typed str VOID)):xs) = (Err str):(checkError xs)
+-- checkError (x@(Err _):xs)               = x:(checkError xs)
+-- checkError ((Exprs e):xs)               = (checkError e) ++ (checkError xs)
+-- checkError ((Protof id1 id2 e):xs)      = (checkErrorId [id1]) ++ (checkErrorId id2) ++ (checkError [e]) ++ (checkError xs)
+-- checkError ((Callf id e):xs)            = (checkErrorId [id]) ++ (checkError e) ++ (checkError xs)
+-- checkError ((Unary _ e):xs)             = (checkError [e]) ++ (checkError xs)
+-- checkError ((For (id1, e1) (id2, e2) e3 e4):xs) =  (checkErrorId [id1]) ++ (checkError [e1]) ++  (checkErrorId [id2]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError [e4]) ++ (checkError xs)
+-- checkError ((While e1 e2):xs)           = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
+-- checkError ((IfThen e1 e2):xs)          = (checkError [e1]) ++ (checkError [e2]) ++ (checkError xs)
+-- checkError ((IfElse e1 e2 e3):xs)       = (checkError [e1]) ++ (checkError [e2]) ++ (checkError [e3]) ++ (checkError xs)
+-- checkError ((Operation op):xs)          = (checkErrorOp [op]) ++ (checkError xs)
+-- checkError (x:xs) = checkError xs
 
-checkErrorId :: [Identifier] -> [Expr]
-checkErrorId [] = []
-checkErrorId ((Typed str VOID):xs) = (Err str):(checkErrorId xs)
-checkErrorId (_:xs) = (checkErrorId xs)
+-- checkErrorId :: [Identifier] -> [Expr]
+-- checkErrorId [] = []
+-- checkErrorId ((Typed str VOID):xs) = (Err str):(checkErrorId xs)
+-- checkErrorId (_:xs) = (checkErrorId xs)
 
-checkErrorOp :: [Op] -> [Expr]
-checkErrorOp [] = []
-checkErrorOp ((XPR e):xs)   = (checkError [e]) ++ (checkErrorOp xs)
-checkErrorOp ((ADD op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
-checkErrorOp ((SUB op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
-checkErrorOp ((MUL op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
-checkErrorOp ((DIV op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
-checkErrorOp ((DataType2.LT op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
-checkErrorOp ((DataType2.GT op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
-checkErrorOp ((DataType2.EQ op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
-checkErrorOp ((DataType2.NOTEQ op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
-checkErrorOp ((ASSIGN id op):xs) = (checkErrorId [id]) ++ (checkErrorOp [op]) ++ (checkErrorOp xs)
-checkErrorOp (x:xs) = checkErrorOp xs
+-- checkErrorOp :: [Op] -> [Expr]
+-- checkErrorOp [] = []
+-- checkErrorOp ((XPR e):xs)   = (checkError [e]) ++ (checkErrorOp xs)
+-- checkErrorOp ((ADD op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
+-- checkErrorOp ((SUB op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
+-- checkErrorOp ((MUL op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
+-- checkErrorOp ((DIV op):xs)  = (checkErrorOp op) ++ (checkErrorOp xs)
+-- checkErrorOp ((DataType2.LT op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+-- checkErrorOp ((DataType2.GT op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+-- checkErrorOp ((DataType2.EQ op1 op2):xs)    = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+-- checkErrorOp ((DataType2.NOTEQ op1 op2):xs) = (checkErrorOp [op1]) ++  (checkErrorOp [op2]) ++ (checkErrorOp xs)
+-- checkErrorOp ((ASSIGN id op):xs) = (checkErrorId [id]) ++ (checkErrorOp [op]) ++ (checkErrorOp xs)
+-- checkErrorOp (x:xs) = checkErrorOp xs
