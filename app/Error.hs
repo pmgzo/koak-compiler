@@ -1,5 +1,6 @@
 module Error where
 
+import CheckBool
 import DataType2
 import TypeInference
 -- import TypeInference (gTFE)
@@ -136,14 +137,13 @@ checkErrorOp pts (x@(VAL v):xs) t
              | otherwise   = checkErrorOp pts xs t
 checkErrorOp pts (x:xs) t = checkErrorOp pts xs t
 
-
-
 getAllProtof :: [Expr] -> [Expr]
 getAllProtof []                         = []
 getAllProtof ((Protof id args _):rest)  = [(Protof id args (Exprs []))] ++ (getAllProtof rest)
 getAllProtof (a:rest)                   = getAllProtof rest
 
 findTrickyError :: [Expr] -> [Expr]
-findTrickyError listXps = checkErrXp protos listXps NULL
+findTrickyError listXps = checkErrXp protos listXps NULL 
+                                ++ checkBinOperation listXps
                         where
                         protos = getAllProtof listXps

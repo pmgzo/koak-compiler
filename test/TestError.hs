@@ -68,22 +68,20 @@ input13 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfThen
 expectedRes13 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
 test13 = TestCase $ assertEqual "operator's type differ" expectedRes13 (findTrickyError input13)
 
-
-
 input12 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))])]
-expectedRes12 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+expectedRes12 = [Err "binary operation outside condition"]
 test12 = TestCase $ assertEqual "operator's type differ" expectedRes12 (findTrickyError input12)
 
 input14 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [(DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5))), VAL (I 5)])])]
-expectedRes14 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+expectedRes14 = [Err "binary operation outside condition"]
 test14 = TestCase $ assertEqual "operator's type differ" expectedRes14 (findTrickyError input14)
 
 input15 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfThen (Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))) (Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5))))])]
-expectedRes15 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+expectedRes15 = [Err "binary operation outside condition"]
 test15 = TestCase $ assertEqual "operator's type differ" expectedRes15 (findTrickyError input15)
 
 input16 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ASSIGN (Typed "a" INT) (XPR (Unary Not (Val (I 5)))))])]
-expectedRes16 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+expectedRes16 = [Err "binary operation outside condition"]
 test16 = TestCase $ assertEqual "operator's type differ" expectedRes16 (findTrickyError input16)
 
 trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test13, test12, test14, test15, test16]
