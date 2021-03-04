@@ -34,4 +34,26 @@ input4 = [
 expectedRes4 = [Err "call: Typed \"sum\" INTlen arg differ"]
 test4 = TestCase $ assertEqual "call fct not same number of arg tricky" expectedRes4 (findTrickyError input4)
 
-trickyErrorTests = TestList [test1, test2, test3, test4]
+protof5 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [])]
+
+input5 = Callf (Typed "sum" INT) [(Operation (ADD [(VAL (I 1)), (VAL (I 2))])), (Operation (DIV [(VAL (I 5)), (VAL (I 5))]))]
+expectedRes5 = ""
+test5 = TestCase $ assertEqual "compareCall" expectedRes5 (compareCall protof5 input5)
+
+input6 = Callf (Typed "sum" INT) [(Operation (ADD [(VAL (D 5.0)), (VAL (I 2))])), (Operation (DIV [(VAL (I 5)), (VAL (I 5))]))]
+expectedRes6 = "wrong type args in call Typed \"sum\" INT"
+test6 = TestCase $ assertEqual "compareCall" expectedRes6 (compareCall protof5 input6)
+
+input7 = Callf (Typed "sum" INT) [(Unary Not (Val (I 5))), (Val (I 5))]
+expectedRes7 = "wrong type args in call Typed \"sum\" INT"
+test7 = TestCase $ assertEqual "compareCall" expectedRes7 (compareCall protof5 input7)
+
+input8 = Callf (Typed "sum" INT) [(Unary UMinus (Val (I 5))), (Val (I 5))]
+expectedRes8 = ""
+test8 = TestCase $ assertEqual "compareCall" expectedRes7 (compareCall protof5 input7)
+
+input9 = Callf (Typed "sum" INT) [(Unary UMinus (Val (I 5))), (Val (I 5))]
+expectedRes9 = ""
+test9 = TestCase $ assertEqual "compareCall" expectedRes7 (compareCall protof5 input7)
+
+trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8]

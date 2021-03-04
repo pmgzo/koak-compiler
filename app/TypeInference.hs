@@ -34,10 +34,10 @@ getTypeFromOp ((ADD op):xs) c              = getTypeFromOp op c
 getTypeFromOp ((SUB op):xs) c              = getTypeFromOp op c
 getTypeFromOp ((MUL op):xs) c              = getTypeFromOp op c
 getTypeFromOp ((DIV op):xs) c              = getTypeFromOp op c
-getTypeFromOp ((DataType2.LT _ _):xs) c    = INT
-getTypeFromOp ((DataType2.GT _ _):xs) c    = INT
-getTypeFromOp ((DataType2.EQ _ _):xs) c    = INT
-getTypeFromOp ((DataType2.NOTEQ _ _):xs) c = INT
+getTypeFromOp ((DataType2.LT _ _):xs) c    = VOID
+getTypeFromOp ((DataType2.GT _ _):xs) c    = VOID
+getTypeFromOp ((DataType2.EQ _ _):xs) c    = VOID
+getTypeFromOp ((DataType2.NOTEQ _ _):xs) c = VOID
 getTypeFromOp _ _ = VOID
 
 gTFO :: Op -> [Expr] -> TypeKoak
@@ -59,13 +59,15 @@ gTFC e i = getTypeFromCache e i
 getTypeFromExpr :: [Expr] -> TypeKoak
 getTypeFromExpr []                         = VOID -- error
 getTypeFromExpr ((Id (Typed _ t)):xs)      = t
-getTypeFromExpr ((Unary u e):xs)           = gTFE [e]
+getTypeFromExpr ((Unary Not e):xs)         = VOID
+getTypeFromExpr ((Unary _ e):xs)           = gTFE [e]
 getTypeFromExpr ((Val val):xs)             = gTFV val
 getTypeFromExpr ((Callf (Typed _ t) _):xs) = t
-getTypeFromExpr ((Operation (XPR e)):xs)  = gTFE [e]
+getTypeFromExpr ((Operation (XPR e)):xs)   = gTFE [e]
+getTypeFromExpr ((Operation op):xs)        = gTFO op []
 
 gTFE :: [Expr] -> TypeKoak
-gTFE e = getTypeFromExpr e
+gTFE e                        = getTypeFromExpr e
 
 getIdFromCache :: [Expr] -> Identifier -> Identifier
 getIdFromCache [] id = (Typed ("getIdFromCache error"++(show id)) VOID)

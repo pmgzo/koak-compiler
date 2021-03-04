@@ -2,6 +2,8 @@ module Error where
 
 import DataType2
 
+import TypeInference (gTFE)
+
 -- a :: [Expr] 
 -- a = [
 --     Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [XPR (Id (Typed "a" INT)),XPR (Id (Typed "b" INT))])]),
@@ -17,11 +19,26 @@ import DataType2
 --     Operation (ASSIGN (Typed "testId" INT) (VAL (I 7)))]
 -- ]
 
+-- gTFO
+compareArg :: Expr -> Identifier -> Bool
+compareArg g (Typed _ t)    = (t == t2)
+                            where t2 = gTFE [g] -- getTypeOfExpr
+
+compareCallArgs :: [Expr] -> [Identifier] -> Bool
+compareCallArgs [] []   = True
+compareCallArgs (arg:rest) (id:rest2)   | res == False  = False
+                                        | otherwise     = compareCallArgs rest rest2
+                                        where
+                                        res = compareArg arg id
+
 checkCall :: Expr -> Expr -> String
 checkCall (Callf id args) (Protof id2 args2 _)
-    | id /= id2                     = "" 
     | length args /= length args2   = "call: " ++ show id ++ "len arg differ"
+    | typeArgsAreOkay == False      = "wrong type args in call " ++ show id
     | otherwise                     = ""
+    where
+    typeArgsAreOkay = compareCallArgs args args2
+
 -- have to check function argument
 -- | _     = checkCallArgument args args2
 
