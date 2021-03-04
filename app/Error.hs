@@ -101,6 +101,11 @@ checkErrXp pts ((While e1 e2):xs) t           = (checkErrXp pts [e1] t) ++ (chec
 checkErrXp pts ((IfThen e1 e2):xs) t          = (checkErrXp pts [e1] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts xs t)
 checkErrXp pts ((IfElse e1 e2 e3):xs) t       = (checkErrXp pts [e1] t) ++ (checkErrXp pts [e2] t) ++ (checkErrXp pts [e3] t) ++ (checkErrXp pts xs t)
 checkErrXp pts ((Operation op):xs) t          = (checkErrorOp pts [op] (gTFOE op)) ++ (checkErrXp pts xs t)
+checkErrXp pts (x@(Val v):xs) t
+             | t /= NULL && gTFV v /= t = (Err (show t++" expected but got "++
+                                               (show $ gTFV v)++" ("++show x++")")):
+                                                     (checkErrXp pts xs t)
+             | otherwise   = checkErrXp pts xs t
 checkErrXp pts (x:xs) t = checkErrXp pts xs t
 
 checkErrorId :: [Identifier] -> TypeKoak -> [Expr]
@@ -119,10 +124,10 @@ checkErrorOp pts ((ADD op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts
 checkErrorOp pts ((SUB op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
 checkErrorOp pts ((MUL op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
 checkErrorOp pts ((DIV op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.LT op1 op2):xs) t    = (checkErrorOp pts [op1] t) ++  (checkErrorOp pts [op2] t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.GT op1 op2):xs) t    = (checkErrorOp pts [op1] t) ++  (checkErrorOp pts [op2] t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.EQ op1 op2):xs) t    = (checkErrorOp pts [op1] t) ++  (checkErrorOp pts [op2] t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) t = (checkErrorOp pts [op1] t) ++  (checkErrorOp pts [op2] t) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.LT op1 op2):xs) t    = (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.GT op1 op2):xs) t    = (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.EQ op1 op2):xs) t    = (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) t = (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
 checkErrorOp pts ((ASSIGN id op):xs) t            = (checkErrorId [id] t) ++ (checkErrorOp pts [op] t) ++ (checkErrorOp pts xs t)
 checkErrorOp pts (x@(VAL v):xs) t
              | t /= NULL && gTFV v /= t = (Err (show t++" expected but got "++
