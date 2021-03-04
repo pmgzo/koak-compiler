@@ -34,4 +34,12 @@ input4 = [
 expectedRes4 = [Err "call: Typed \"sum\" INTlen arg differ"]
 test4 = TestCase $ assertEqual "call fct not same number of arg tricky" expectedRes4 (findTrickyError input4)
 
-trickyErrorTests = TestList [test1, test2, test3, test4]
+input5 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" DOUBLE] (Exprs [Operation (ADD [XPR (Id (Typed "a" INT)),XPR (Id (Typed "b" DOUBLE))])])]
+expectedRes5 = [Err "INT expected but got Typed \"b\" DOUBLE"]
+test5 = TestCase $ assertEqual "function's type and argument differ" expectedRes5 (findTrickyError input5)
+
+input6 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [XPR (Id (Typed "a" INT)),VAL (D 5.1)])])]
+expectedRes6 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+test6 = TestCase $ assertEqual "operator's type differ" expectedRes6 (findTrickyError input6)
+
+trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6]

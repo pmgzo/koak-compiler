@@ -1,6 +1,6 @@
 module DataType2 where
 
-data TypeKoak = INT | DOUBLE | VOID deriving (Show, Eq)
+data TypeKoak = INT | DOUBLE | VOID | NULL deriving (Show, Eq)
 
 data Identifier = Wait String | Typed String TypeKoak deriving (Show, Eq)
 
