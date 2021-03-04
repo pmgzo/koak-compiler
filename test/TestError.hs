@@ -64,4 +64,18 @@ input11 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operat
 expectedRes11 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
 test11 = TestCase $ assertEqual "operator's type differ" expectedRes11 (findTrickyError input11)
 
-trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11]
+input13 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfThen (Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (D 5.1)))) (Val (I 5))])]
+expectedRes13 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+test13 = TestCase $ assertEqual "operator's type differ" expectedRes13 (findTrickyError input13)
+
+
+
+input12 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))])]
+expectedRes12 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+test12 = TestCase $ assertEqual "operator's type differ" expectedRes12 (findTrickyError input12)
+
+input14 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [(DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5))), VAL (I 5)])])]
+expectedRes14 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
+test14 = TestCase $ assertEqual "operator's type differ" expectedRes14 (findTrickyError input14)
+
+trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test13, test12, test14]
