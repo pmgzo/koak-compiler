@@ -20,6 +20,7 @@ checkWithinNot ((DataType2.EQ o1 o2):xs)    = (checkWithinNot [o1,o2]) ++ checkW
 checkWithinNot ((DataType2.NOTEQ o1 o2):xs) = (checkWithinNot [o1,o2]) ++ checkWithinNot xs
 checkWithinNot ((DataType2.LT o1 o2):xs)    = (checkWithinNot [o1,o2]) ++ checkWithinNot xs
 checkWithinNot ((DataType2.GT o1 o2):xs)    = (checkWithinNot [o1,o2]) ++ checkWithinNot xs
+checkWithinNot ((ASSIGN _ o):xs)     = (checkWithinNot [o]) ++ (checkWithinNot xs)
 checkWithinNot (x:xs)           = checkWithinNot xs
 
 checkExpNot :: [Expr] -> [Expr]
