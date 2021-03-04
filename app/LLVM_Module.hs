@@ -17,7 +17,8 @@ genModule name exprs =  AST.defaultModule {
                         }
 
 nameObjFile :: String -> String
-nameObjFile ('.':_) = ".o"
+nameObjFile [] = "test.o"
+nameObjFile ('.':'k':'k':[]) = ".o"
 nameObjFile (f:r)   = [f] ++ (nameObjFile r)
 
 genObjFromExpr :: String -> [Expr] -> IO ()

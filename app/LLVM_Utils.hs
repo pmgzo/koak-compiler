@@ -43,3 +43,6 @@ genCondFFlag (DataType2.EQ _ _)     = FP.OEQ
 genCondFFlag (DataType2.NOTEQ _ _)  = FP.ONE
 genCondFFlag (DataType2.LT _ _)     = FP.OLT
 genCondFFlag (DataType2.GT _ _)     = FP.OGT
+
+compareBool :: Operand -> Instruction
+compareBool op = ICmp IP.EQ op (ConstantOperand (Int 1 0) ) []

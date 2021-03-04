@@ -116,10 +116,10 @@ getLastExitBlock = do
                 return (getCB lastElem)
 
 handleIf :: Bool -> Expr -> StateT Objects Maybe ()
-handleIf bool (IfThen (Operation op) (Exprs xprs)) =
+handleIf bool (IfThen op (Exprs xprs)) =
     do
     nameCond <- genNewBlockName 1
-    cond <- genInstructionOperand op
+    cond <- genInstructions op
     exitB <- getLastExitBlock
     let term = condbr cond nameCond exitB
 
@@ -127,9 +127,9 @@ handleIf bool (IfThen (Operation op) (Exprs xprs)) =
     genCodeBlock xprs
 
 handleIfElse :: Bool -> Expr -> StateT Objects Maybe ()
-handleIfElse bool (IfElse (Operation op) (Exprs b1) (Exprs b2))  =
+handleIfElse bool (IfElse op (Exprs b1) (Exprs b2))  =
     do
-    cond <- genInstructionOperand op
+    cond <- genInstructions op
     ifBlock <- genNewBlockName 1
     elseBlock <- getNextBlockIfElseHelper (getCallbackBlock b1)
 
@@ -145,7 +145,7 @@ genLoopBlock (Exprs exprs) cb = do
     genCodeBlock exprs
 
 handleWhile :: Bool -> Expr -> StateT Objects Maybe ()
-handleWhile bool (While (Operation op) (expr)) =  -- here exprs
+handleWhile bool (While condLoop (expr)) =  -- here exprs
     do
 
     nameCond <- genNewBlockName 1
@@ -154,7 +154,7 @@ handleWhile bool (While (Operation op) (expr)) =  -- here exprs
     addBlock (br nameCond)
 
     -- cond block
-    cond <- genInstructionOperand op
+    cond <- genInstructions condLoop
 
     exitB <- getLastExitBlock
 

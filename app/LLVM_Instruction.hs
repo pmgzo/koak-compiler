@@ -186,12 +186,14 @@ genUnary (Unary Not xpr)     =   do
 
                                 let t = getOperandType op
 
-                                let op2 = genRawValue t 0
+                                -- let op2 = genRawValue t 0
 
                                 -- (Eq (XPR) (Val (Value )))
                                 -- <- gencondition according to type
-                                let cond = (DataType2.EQ (XPR xpr) (VAL (I 0)) )
-                                let inst = genCondInstruction cond op op2 -- instruction
+                                -- let cond = (DataType2.EQ (XPR xpr) (VAL (I 0)) )
+                                -- let inst = genCondInstruction cond op op2 -- instruction
+
+                                let inst = compareBool op
 
                                 instname <- genNewName
 
