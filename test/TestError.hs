@@ -88,6 +88,25 @@ input17 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfThen
 expectedRes17 = [Err "not operator can only be placed ahead binary comparison"]
 test17 = TestCase $ assertEqual "not in assign in cond" expectedRes17 (findTrickyError input17)
 
+input18 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.GT (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 1))) (VAL (I 7)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+expectedRes18 = [Err ""]
+test18 = TestCase $ assertEqual "(a == 1) > 7" expectedRes18 (findTrickyError input18)
 
+input19 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.GT (VAL (D 1.1)) (DataType2.EQ (VAL (I 1)) (VAL (I 1))))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+expectedRes19 = [Err ""]
+test19 = TestCase $ assertEqual "1.1 > (1 == 1)" expectedRes19 (findTrickyError input19)
 
-trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test13, test12, test14, test15, test16, test17]
+input20 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.GT (ADD [VAL (I 1),VAL (I 1)]) (DataType2.EQ (VAL (I 1)) (VAL (I 1))))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+expectedRes20 = [Err ""]
+test20 = TestCase $ assertEqual "1+1 > (1 == 1)" expectedRes20 (findTrickyError input20)
+
+-- input21 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (GT (VAL (D 1.1)) (EQ (VAL (I 1)) (VAL (I 1))))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+input21 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.GT (DataType2.EQ (VAL (I 1)) (VAL (I 1))) (VAL (I 1)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+expectedRes21 = [Err ""]
+test21 = TestCase $ assertEqual "(1 == 1) > 1" expectedRes21 (findTrickyError input21)
+
+input22 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.EQ (DataType2.EQ (VAL (I 1)) (VAL (I 1))) (VAL (I 1)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+expectedRes22 = [Err ""]
+test22 = TestCase $ assertEqual "(1 == 1) == 1" expectedRes22 (findTrickyError input22)
+
+trickyErrorTests = TestList [test1, test2, test3, test4, test5, test6, test7, test8, test9, test10, test11, test13, test12, test14, test15, test16, test17, test18, test19, test20, test21, test22]
