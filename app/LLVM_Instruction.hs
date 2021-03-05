@@ -32,10 +32,11 @@ genCondInstruction :: Op -> Operand -> Operand -> Instruction
 -- here if we want: if 1 then ...
 genCondInstruction cond op1 op2 | t == (FloatingPointType DoubleFP) = FCmp flagf op1 op2 []
                                 | t == (IntegerType 64)             = ICmp flagi op1 op2 []
+                                | t == (IntegerType 1)              = ICmp flagi op1 op2 []
                                 where
                                 t       = getOperandType op1
-                                flagi    = genCondIFlag cond
-                                flagf    = genCondFFlag cond
+                                flagi   = genCondIFlag cond
+                                flagf   = genCondFFlag cond
 
 genCond :: Op -> Op -> Op -> StateT Objects Maybe Operand
 genCond cond l r          = do
@@ -48,7 +49,7 @@ genCond cond l r          = do
 
                             addInst (name := inst)
 
-                            return (LocalReference i64 name) -- cond in i64 for now
+                            return (LocalReference i1 name)
 
 genInstruction :: Op -> Operand -> Operand -> Instruction
 genInstruction (ADD []) op1 op2 | typeop == (IntegerType 64)             = Add False False op1 op2 []
@@ -64,78 +65,43 @@ genInstruction (DIV []) op1 op2 | typeop == (IntegerType 64)             = SDiv 
                                 | typeop == (FloatingPointType DoubleFP) = FDiv noFastMathFlags op1 op2 []
                                 where typeop = getOperandType op1
 
-operatorInARow :: Op -> StateT Objects Maybe Operand
-operatorInARow (ADD [fst])          = genInstructionOperand fst
-operatorInARow (MUL [fst])          = genInstructionOperand fst
-operatorInARow (DIV [fst])          = genInstructionOperand fst
-operatorInARow (SUB [fst])          = genInstructionOperand fst
-operatorInARow (ADD (fst:snd))      = do
-                                    firstop <- genInstructionOperand fst-- get first operand
-                                    secondop <- operatorInARow (ADD snd) -- get second operand
-                                    let inst = genInstruction (ADD []) firstop secondop
+wrapp :: Op -> [Op] -> Op
+wrapp (ADD _) = ADD
+wrapp (SUB _) = SUB
+wrapp (DIV _) = DIV
+wrapp (MUL _) = MUL
 
-                                    name <- genNewName --operand name
+getOpArgs :: Op -> [Op]
+getOpArgs (ADD args) = args
+getOpArgs (SUB args) = args
+getOpArgs (DIV args) = args
+getOpArgs (MUL args) = args
 
-                                    addInst (name := inst)
+operatorInARow :: Op -> [Op] -> StateT Objects Maybe Operand
+operatorInARow _ [fst]            = genInstructionOperand fst
+operatorInARow tag (fst:snd)      = do
+                                    firstop <- genInstructionOperand fst
+                                    secondop <- operatorInARow tag snd
+                                    let inst = genInstruction (wrapp tag []) firstop secondop
 
-                                    -- have to get operand type
-                                    let t = getOperandType firstop
-
-                                    return (LocalReference t name)
-operatorInARow (MUL (fst:snd))      = do
-                                    firstop <- genInstructionOperand fst-- get first operand
-                                    secondop <- operatorInARow (MUL snd) -- get second operand
-                                    let inst = genInstruction (MUL []) firstop secondop
-
-                                    name <- genNewName --operand name
+                                    name <- genNewName
 
                                     addInst (name := inst)
 
-                                    -- have to get operand type
                                     let t = getOperandType firstop
 
                                     return (LocalReference t name)
-operatorInARow (SUB (fst:snd))      = do
-                                    firstop <- genInstructionOperand fst-- get first operand
-                                    secondop <- operatorInARow (SUB snd) -- get second operand
-                                    let inst = genInstruction (SUB []) firstop secondop
-
-                                    name <- genNewName --operand name
-
-                                    addInst (name := inst)
-
-                                    -- have to get operand type
-                                    let t = getOperandType firstop
-
-                                    return (LocalReference t name)
-operatorInARow (DIV (fst:snd))      = do
-                                    firstop <- genInstructionOperand fst-- get first operand
-                                    secondop <- operatorInARow (DIV snd) -- get second operand
-                                    let inst = genInstruction (DIV []) firstop secondop
-
-                                    name <- genNewName --operand name
-
-                                    addInst (name := inst)
-
-                                    -- have to get operand type
-                                    let t = getOperandType firstop
-
-                                    return (LocalReference t name)
-
 
 genInstructionOperand :: Op -> StateT Objects Maybe Operand
-genInstructionOperand (VAL v)           = return $ getConstVal v -- Constant
+genInstructionOperand (VAL v)           = return $ getConstVal v
 genInstructionOperand (XPR xpr)         = genInstructions xpr
--- Function call
---Lt, Gt ...
 genInstructionOperand c@(DataType2.LT i1 i2)        = genCond c i1 i2
 genInstructionOperand c@(DataType2.GT i1 i2)        = genCond c i1 i2
 genInstructionOperand c@(DataType2.EQ i1 i2)        = genCond c i1 i2
 genInstructionOperand c@(DataType2.NOTEQ i1 i2)     = genCond c i1 i2
 genInstructionOperand (ASSIGN id op)                = assign id op
--- Operator Add, Sub, Mul, Div
-genInstructionOperand classicOp                     = operatorInARow classicOp
-
+genInstructionOperand classicOp                     = operatorInARow classicOp ops
+                                                    where ops = getOpArgs classicOp
 
 -- Callf id args
 buildCallfParameter :: [Expr] -> StateT Objects Maybe ([(Operand, [ParameterAttribute])], [Type])
@@ -186,19 +152,12 @@ genUnary (Unary Not xpr)     =   do
 
                                 let t = getOperandType op
 
-                                -- let op2 = genRawValue t 0
-
-                                -- (Eq (XPR) (Val (Value )))
-                                -- <- gencondition according to type
-                                -- let cond = (DataType2.EQ (XPR xpr) (VAL (I 0)) )
-                                -- let inst = genCondInstruction cond op op2 -- instruction
-
                                 let inst = compareBool op
 
                                 instname <- genNewName
 
                                 addInst (instname := inst)
-                                return (LocalReference t instname)
+                                return (LocalReference i1 instname)
 
 genInstructions :: Expr -> StateT Objects Maybe Operand -- Operand
 genInstructions (Val v)             = return $ getConstVal v
