@@ -40,10 +40,10 @@ getTypeFromOpError ((ADD op):xs)               = getTypeFromOpError op
 getTypeFromOpError ((SUB op):xs)               = getTypeFromOpError op
 getTypeFromOpError ((MUL op):xs)               = getTypeFromOpError op
 getTypeFromOpError ((DIV op):xs)               = getTypeFromOpError op
-getTypeFromOpError ((DataType2.LT op _):xs)    = getTypeFromOpError [op]
-getTypeFromOpError ((DataType2.GT op _):xs)    = getTypeFromOpError [op]
-getTypeFromOpError ((DataType2.EQ op _):xs)    = getTypeFromOpError [op]
-getTypeFromOpError ((DataType2.NOTEQ op _):xs) = getTypeFromOpError [op]
+getTypeFromOpError ((DataType2.LT _ _):xs)    = BOOL
+getTypeFromOpError ((DataType2.GT _ _):xs)    = BOOL
+getTypeFromOpError ((DataType2.EQ _ _):xs)    = BOOL
+getTypeFromOpError ((DataType2.NOTEQ op _):xs) = BOOL
 getTypeFromOpError _                           = VOID
 
 gTFOE :: Op -> TypeKoak
@@ -125,10 +125,10 @@ checkErrorOp pts ((ADD op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts
 checkErrorOp pts ((SUB op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
 checkErrorOp pts ((MUL op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
 checkErrorOp pts ((DIV op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.LT op1 op2):xs) t    = (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.GT op1 op2):xs) t    = (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.EQ op1 op2):xs) t    = (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) t = (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.LT op1 op2):xs) t    = (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++ (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.GT op1 op2):xs) t    = (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++ (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.EQ op1 op2):xs) t    = (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++ (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) t = (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++ (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
 checkErrorOp pts ((ASSIGN id op):xs) t            = (checkErrorId [id] t) ++ (checkErrorOp pts [op] t) ++ (checkErrorOp pts xs t)
 checkErrorOp pts (x@(VAL v):xs) t
              | t /= NULL && gTFV v /= t = (Err (show t++" expected but got "++
@@ -136,6 +136,13 @@ checkErrorOp pts (x@(VAL v):xs) t
                                                      (checkErrorOp pts xs t)
              | otherwise   = checkErrorOp pts xs t
 checkErrorOp pts (x:xs) t = checkErrorOp pts xs t
+
+
+
+checkErrorOpCond :: TypeKoak -> TypeKoak -> [Expr]
+checkErrorOpCond t1 t2
+             | t1 /= t2     = [Err (show t1++" expected but got "++(show t2))]
+             | otherwise   = []
 
 getAllProtof :: [Expr] -> [Expr]
 getAllProtof []                         = []
