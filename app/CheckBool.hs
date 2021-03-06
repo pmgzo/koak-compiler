@@ -8,6 +8,8 @@ e1 = [(Err "binary operation outside condition")]
 e2 :: [Expr]
 e2 = [(Err "not operator can only be placed ahead binary comparison")]
 
+e3 :: [Expr]
+e3 = [(Err "no binary operation found in condition")]
 
 checkWithinNot :: [Op] -> [Expr]
 checkWithinNot [] = []
@@ -33,7 +35,7 @@ checkNot (Unary Not (Operation (DataType2.EQ o1 o2)))   = checkWithinNot [o1] ++
 checkNot (Unary Not (Operation (DataType2.NOTEQ o1 o2)))= checkWithinNot [o1] ++ checkWithinNot [o2]
 checkNot (Unary Not (Operation (DataType2.LT o1 o2)))   = checkWithinNot [o1] ++ checkWithinNot [o2]
 checkNot (Unary Not (Operation (DataType2.GT o1 o2)))   = checkWithinNot [o1] ++ checkWithinNot [o2]
-checkNot (Unary Not (Unary not xp))                     = checkCond xp
+checkNot (Unary Not a@(Unary Not xp))                   = checkCond a
 checkNot (Unary Not _ )                                 = e2
 
 checkCond :: Expr -> [Expr]
@@ -42,7 +44,13 @@ checkCond (Operation (DataType2.EQ o1 o2) )     = checkWithinNot [o1] ++ checkWi
 checkCond (Operation (DataType2.NOTEQ o1 o2))   = checkWithinNot [o1] ++ checkWithinNot [o2]
 checkCond (Operation (DataType2.LT o1 o2) )     = checkWithinNot [o1] ++ checkWithinNot [o2]
 checkCond (Operation (DataType2.GT o1 o2) )     = checkWithinNot [o1] ++ checkWithinNot [o2]
-checkCond _ = [(Err "no binary operation found in condition")]
+checkCond _ = e3
+
+-- binaryComparison
+-- EQ Bin Int
+-- EQ Bin Double
+-- EQ Int Bin
+-- EQ Int Bin
 
 checkOp :: [Op] -> [Expr]
 checkOp []                          = []
@@ -68,8 +76,10 @@ checkFor (For (_, xp1) (_, xp2) xp3 xp4) = er1 ++ er2 ++ er3 ++ er4
 
 checkExpr :: Expr -> [Expr]
 checkExpr (Unary Not _)     = e1
+checkExpr (Unary _ xpr)     = checkExpr xpr
 checkExpr (Operation op)    = checkOp [op]
 checkExpr (Exprs xprs)      = checkBody xprs
+checkExpr (Callf _ xprs)    = checkBody xprs
 checkExpr f@(For _ _ _ _)   = checkFor f
 checkExpr _                 = []
 
