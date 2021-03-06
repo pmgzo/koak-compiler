@@ -11,7 +11,7 @@ import LLVM.AST.Operand
 import LLVM.AST
 import LLVM.AST.Type
 import LLVM.AST.Name
-import LLVM.AST.Instruction -- Add ...
+import LLVM.AST.Instruction
 import Data.Maybe
 
 import LLVM.AST.Constant ( Constant(GlobalReference, Int, Float) )
@@ -49,11 +49,6 @@ getExistingLocalPtr (Typed name t) = do
                                     (n, t) <- getLocalVar name
                                     return (LocalReference (ptr t) n)
 
--- getVar :: Identifier -> StateT Objects Maybe Operand
--- getVar (Typed str _) = do
---                     let b1 = member str globalVars
---                     let b2 = member str localVars
-
 getVar :: String -> Map String (Name, Type)
                 -> Map String (Name, Type) -> (Name, Type)
 getVar name globalVars localVars    | isInGlobalVar == True = fromJust $Data.Map.lookup name globalVars
@@ -90,7 +85,6 @@ var (Typed name t) = do
 
 localVar :: Identifier -> StateT Objects Maybe Operand
 localVar (Typed str _) = do
-                -- handle just local var
                 nameInst <- genNewName
                 (name, t) <- getLocalVar str
 
@@ -151,27 +145,3 @@ addFunctionParameter ((Typed str tk):rest)  = do
                                                 let name = mkName str
                                                 addInst (Do $ Store False op (LocalReference t name) Nothing 0 [])
                                                 addFunctionParameter rest
-
--- genGlobalVarListHelper :: String -> Type -> (Name, Type)
-
-
-
--- genGlobalVariableList :: [(String, Type)] -> Map String (Name, Type)
--- genGlobalVariableList list = mapWithKey lbd (fromList list)
---                             where lbd = (\name -> \t -> ((mkName name), t))
-
--- mapWithKey :: (k -> a -> b) -> Map k a -> Map k b
--- fromList :: Ord k => [(k, a)] -> Map k a
-
---
--- GlobalDefinition globalVariableDefaults {
---     name =
---     isConstant = False,
---     type' = i64,
---     initializer = (Just ())
--- }
--- where
--- name =
--- value =
-
--- handleGlobalVariable ::  -> StateT Objects Maybe ()

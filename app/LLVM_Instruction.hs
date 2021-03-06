@@ -25,11 +25,8 @@ assign  id@(Typed str t) op = do
                                 op1 <- getPtr id
                                 addInst (Do $ Store False op1 op2 Nothing 0 [])
                                 var id
-                                -- (n, tp) <- getLocalVar str --in case the return is a = 1
-                                -- return (LocalReference tp n)
 
 genCondInstruction :: Op -> Operand -> Operand -> Instruction
--- here if we want: if 1 then ...
 genCondInstruction cond op1 op2 | t == (FloatingPointType DoubleFP) = FCmp flagf op1 op2 []
                                 | t == (IntegerType 64)             = ICmp flagi op1 op2 []
                                 | t == (IntegerType 1)              = ICmp flagi op1 op2 []
@@ -45,7 +42,7 @@ genCond cond l r          = do
 
                             let inst = genCondInstruction cond op1 op2
 
-                            name <- genNewName --operand name
+                            name <- genNewName
 
                             addInst (name := inst)
 
@@ -159,7 +156,7 @@ genUnary (Unary Not xpr)     =   do
                                 addInst (instname := inst)
                                 return (LocalReference i1 instname)
 
-genInstructions :: Expr -> StateT Objects Maybe Operand -- Operand
+genInstructions :: Expr -> StateT Objects Maybe Operand
 genInstructions (Val v)             = return $ getConstVal v
 genInstructions (Id id)             = var id
 genInstructions (Operation op)      = genInstructionOperand op

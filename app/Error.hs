@@ -7,7 +7,7 @@ import TypeInference
 
 compareArg :: Expr -> Identifier -> Bool
 compareArg g (Typed _ t)    = (t == t2)
-                            where t2 = gTFE [g] -- getTypeOfExpr
+                            where t2 = gTFE [g]
 
 compareCallArgs :: [Expr] -> [Identifier] -> Bool
 compareCallArgs [] []   = True

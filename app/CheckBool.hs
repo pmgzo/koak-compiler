@@ -46,12 +46,6 @@ checkCond (Operation (DataType2.LT o1 o2) )     = checkWithinNot [o1] ++ checkWi
 checkCond (Operation (DataType2.GT o1 o2) )     = checkWithinNot [o1] ++ checkWithinNot [o2]
 checkCond _ = e3
 
--- binaryComparison
--- EQ Bin Int
--- EQ Bin Double
--- EQ Int Bin
--- EQ Int Bin
-
 checkOp :: [Op] -> [Expr]
 checkOp []                          = []
 checkOp ((XPR xpr):xs)             = checkExpr xpr ++ checkOp xs

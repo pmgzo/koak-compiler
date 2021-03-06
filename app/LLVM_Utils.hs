@@ -15,9 +15,9 @@ import DataType2
 import LLVM
 
 typeConversion :: TypeKoak -> Type
-typeConversion VOID     = VoidType-- not suposed to be a functipn parameter
-typeConversion INT      = IntegerType 64 -- not suposed to be a parameter
-typeConversion DOUBLE   = FloatingPointType DoubleFP  -- not suposed to be a parameter
+typeConversion VOID     = VoidType
+typeConversion INT      = IntegerType 64
+typeConversion DOUBLE   = FloatingPointType DoubleFP
 
 getOperandType :: Operand -> Type
 getOperandType (LocalReference t n)         = t

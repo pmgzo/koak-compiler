@@ -65,7 +65,6 @@ getNextBlockIfElseHelper 0 = do
                 return (UnName $fromInteger (currentBlock + 1 + 1))
 getNextBlockIfElseHelper a = do
                 currentBlock <- gets blockCount
-                -- return (UnName $fromInteger (currentBlock + 1 + a))
                 return (UnName $fromInteger (currentBlock + 1 + a + 1))
 
 pop :: [a] -> [a]
@@ -95,7 +94,7 @@ pushReturn a = do
                 stack <- gets retStack
                 modify (\s -> s { retStack = stack ++ [a] } )
 
-dupRetStack :: StateT Objects Maybe () -- for if else
+dupRetStack :: StateT Objects Maybe ()
 dupRetStack = do
                 stack <- gets retStack
                 let infoRet = last stack
@@ -145,7 +144,7 @@ genLoopBlock (Exprs exprs) cb = do
     genCodeBlock exprs
 
 handleWhile :: Bool -> Expr -> StateT Objects Maybe ()
-handleWhile bool (While condLoop (expr)) =  -- here exprs
+handleWhile bool (While condLoop (expr)) =
     do
 
     nameCond <- genNewBlockName 1
@@ -153,7 +152,6 @@ handleWhile bool (While condLoop (expr)) =  -- here exprs
 
     addBlock (br nameCond)
 
-    -- cond block
     cond <- genInstructions condLoop
 
     exitB <- getLastExitBlock
@@ -196,7 +194,6 @@ handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs
 genSpecialBlock :: Bool -> Expr ->StateT Objects Maybe ()
 genSpecialBlock cb stt@(IfThen _ _)     = handleIf cb stt
 genSpecialBlock cb stt@(IfElse _ _ _)   = handleIfElse cb stt
--- loop here
 genSpecialBlock cb stt@(While _ _)      = handleWhile cb stt
 genSpecialBlock cb stt@(For _ _ _ _)    = handleFor cb stt
 
@@ -205,7 +202,6 @@ genSpecialBlock cb stt@(For _ _ _ _)    = handleFor cb stt
 genTerminator :: Type -> Named Terminator
 genTerminator (IntegerType _)       = ret (Just (ConstantOperand (Int 64 0)) )
 genTerminator (FloatingPointType _) = ret (Just (ConstantOperand (Float (Double 0.0)) ) )
--- void ?
 
 handleTerm :: Bool -> Maybe Operand -> BlockId -> StateT Objects Maybe ()
 handleTerm _ _ (LOOP name)      = do
@@ -226,7 +222,7 @@ handleTerm True Nothing _       = do
 handleBlock :: Bool -> Expr -> StateT Objects Maybe ()
 handleBlock bool xpr =  do
                     nextBlock <- getNextBlock xpr
-                    currentVars <- gets localVars -- save localvar then erase
+                    currentVars <- gets localVars
 
                     modify (\s -> s { lastOperand = Nothing } )
 
@@ -250,7 +246,6 @@ addEscapeBranch (a:_) = do
 handleSpecialBlock :: [Expr] -> StateT Objects Maybe ()
 handleSpecialBlock [block]      = do
                                 handleBlock True block
-                                -- create block that terminate
                                 stack <- gets retStack
                                 addEscapeBranch stack
 handleSpecialBlock (block:rest) = do
@@ -269,4 +264,3 @@ genCodeBlock [e]                    = do
                                     let resp = canReturn stack
                                     handleTerm resp (Just op) blockId
 genCodeBlock (e:rest)               = genInstructions e >> genCodeBlock rest
--- [True br 2, True br 2]

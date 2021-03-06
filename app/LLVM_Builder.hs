@@ -3,11 +3,10 @@ module LLVM_Builder where
 
 
 import Control.Monad.State
--- import Control.Monad.State.Lazy
 
-import LLVM.AST.Instruction -- Add ...
+import LLVM.AST.Instruction
 import LLVM.AST
-import LLVM.AST.Type -- i64, double
+import LLVM.AST.Type
 
 import LLVM.AST.Constant ( Constant(GlobalReference, Int, Float) )
 
@@ -16,7 +15,7 @@ import LLVM.AST.Name
 import LLVM.AST.Global
 
 import LLVM.AST.AddrSpace
-import LLVM.AST.CallingConvention -- call function
+import LLVM.AST.CallingConvention
 import LLVM.AST.ParameterAttribute
 
 import LLVM_Utils
@@ -29,12 +28,7 @@ import BuilderState
 
 import Control.Monad.State
 
-
--- import qualified LLVM.AST.IntegerPredicate as IP
--- import qualified LLVM.AST.FloatingPointPredicate as FP
-
 import Data.Map
--- import Data.String
 import Data.Maybe
 
 genDefHelper :: Objects -> [BasicBlock]
