@@ -31,7 +31,7 @@ tmp1 = Protof (Typed "tmp1" DOUBLE) [Typed "break" DOUBLE] (Exprs [IfElse (Opera
 
 main = do
     
-    genObjFromExpr "mod2" $inferringType [imod1,
+    genObjFromExpr True "mod2" $inferringType [imod1,
                         iadd, icallFTest, icallFTest2, icallCondition, iaddf, ifor2, iwhile1, ifor3, tmp1]-- 
                         -- icallCondition2, iunaryNot, iunaryMinus, iifFunction, 
                         -- iifElseFunction, iwhile1, iifElseCallBack, iifElse2, iifElse3, ifactorial,

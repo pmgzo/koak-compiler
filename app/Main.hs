@@ -55,8 +55,9 @@ parseFiles (file:xs) = mergeMaybe (parseFile file) (parseFiles xs)
 
 
 getContent :: [String] -> IO (Maybe [String])
-getContent [] = return (Just [])
-getContent (file:r) = do
+getContent []           = return (Just [])
+getContent ("-ir":r)    = getContent r
+getContent (file:r)     = do
     b <- doesFileExist file
     case b of
         False -> return Nothing
@@ -77,16 +78,22 @@ getErr ((Err str):xs) = str ++ (getErr xs)
 getErr _ = ""
 -- genErr _ = "" ++ (getErr xs)
 
-genFile :: [(String, [Expr])] -> IO ()
-genFile [] = return ()
-genFile ((filename,expr):xs)
+genFile :: Bool -> [(String, [Expr])] -> IO ()
+genFile ir [] = return ()
+genFile ir (("-ir",expr):xs) = genFile ir xs
+genFile ir ((filename,expr):xs)
         | res == []  = print $ show expr -- print "empty array" >> exitWith (ExitFailure 84)
         | err /= ""  = print err >> exitWith (ExitFailure 84)
         | err2 /= "" = print err2 >> exitWith (ExitFailure 84)
-        | otherwise  = genObjFromExpr filename res >> genFile xs
+        | otherwise  = genObjFromExpr ir filename res >> genFile ir xs
         where res = inferringType expr
               err = getErr res
               err2 = getErr $findTrickyError res
+
+findOption :: [String] -> Bool
+findOption [] = False
+findOption ("-ir":xs) = True
+findOption (x:xs) = findOption xs
 
 main :: IO()
 main = do
@@ -95,11 +102,11 @@ main = do
         [] -> hPutStrLn stderr "The REPL is not implemented" >>
             exitWith (ExitFailure 84)
         _ -> do
-            print (show args)
+            let ir = findOption args
             contents <- getContent args
             -- print (len contents)
             case contents of
                 Nothing -> hPutStrLn stderr "file not found" >> exitWith (ExitFailure 84)
                 Just cont -> case parseFiles cont of
                     [] -> hPutStrLn stderr "The files are invalid" >> exitWith (ExitFailure 84)
-                    expr -> genFile (zip args expr)
+                    expr -> genFile ir (zip args expr)

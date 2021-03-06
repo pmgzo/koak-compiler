@@ -21,8 +21,16 @@ nameObjFile [] = "test.o"
 nameObjFile ('.':'k':'k':[]) = ".o"
 nameObjFile (f:r)   = [f] ++ (nameObjFile r)
 
-genObjFromExpr :: String -> [Expr] -> IO ()
-genObjFromExpr name exprs = withContext $ \ctx -> do
+genObjFromExpr :: Bool -> String -> [Expr] -> IO ()
+genObjFromExpr True name exprs = withContext $ \ctx -> do
+                            let file  = (File (objname))
+                            let mod = genModule name exprs
+                            displayIR mod
+                            withHostTargetMachineDefault (\machine -> (withModuleFromAST ctx mod (writeObjectToFile machine file)))
+                            Prelude.putStrLn ("object file '" ++ objname ++ "' generated")
+                            where
+                            objname = (nameObjFile name)
+genObjFromExpr _ name exprs = withContext $ \ctx -> do
                             let file  = (File (objname))
                             let mod = genModule name exprs
                             withHostTargetMachineDefault (\machine -> (withModuleFromAST ctx mod (writeObjectToFile machine file)))
