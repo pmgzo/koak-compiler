@@ -61,7 +61,12 @@ getContent (file:r) = do
     case b of
         False -> return Nothing
         True -> do
-            f <- readFile file
+            -- f <- readFile file
+            handle <- openFile file ReadMode
+        
+            hSetEncoding handle latin1
+            f <- hGetContents handle
+
             rest <- getContent r
             case rest of
                 Just list -> return $ Just (f:list)
@@ -72,12 +77,13 @@ getErr ((Err str):xs) = str ++ (getErr xs)
 getErr _ = ""
 -- genErr _ = "" ++ (getErr xs)
 
-genFile :: (String, [Expr]) -> IO ()
-genFile (filename,expr)
+genFile :: [(String, [Expr])] -> IO ()
+genFile [] = return ()
+genFile ((filename,expr):xs)
         | res == []  = print $ show expr -- print "empty array" >> exitWith (ExitFailure 84)
         | err /= ""  = print err >> exitWith (ExitFailure 84)
         | err2 /= "" = print err2 >> exitWith (ExitFailure 84)
-        | otherwise  = print "parse By the parser" >> print expr >> genObjFromExpr filename res
+        | otherwise  = genObjFromExpr filename res >> genFile xs
         where res = inferringType expr
               err = getErr res
               err2 = getErr $findTrickyError res
@@ -89,21 +95,11 @@ main = do
         [] -> hPutStrLn stderr "The REPL is not implemented" >>
             exitWith (ExitFailure 84)
         _ -> do
+            print (show args)
             contents <- getContent args
+            -- print (len contents)
             case contents of
                 Nothing -> hPutStrLn stderr "file not found" >> exitWith (ExitFailure 84)
                 Just cont -> case parseFiles cont of
                     [] -> hPutStrLn stderr "The files are invalid" >> exitWith (ExitFailure 84)
-                    expr -> (map genFile (zip args expr) )!!0 -- in print "done"
-                    --     [(Err str)] -> print(str) >> exitWith (ExitFailure 84)
-                    --     [] -> print "empty array" >> exitWith (ExitFailure 84)
-                    --     expr1 -> genObjFromExpr "obj" expr1
-
-
--- main :: IO ()
--- main = do
---   let exprs = inferringType []--functionPaul
---   case exprs of
---     [(Err str)] -> exitWith (ExitFailure 84)
---     []  -> print("empty array") >> exitWith (ExitFailure 84)
---     exprs2 -> genObjFromExpr "obj" exprs2
+                    expr -> genFile (zip args expr)
