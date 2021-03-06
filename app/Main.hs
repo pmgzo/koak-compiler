@@ -23,15 +23,14 @@ mergeLine (Just e) Nothing        = Nothing
 mergeLine _ _                     = Nothing
 
 getStatement :: String -> String -> Maybe ([Expr])
--- getStatement [] statement       = mergeLine (Just [(Err statement)]) (runParser parse statement)
-getStatement [] statement       = mergeLine (Just []) (runParser parse statement)
-getStatement (';':xs) statement = mergeLine (getStatement xs "") (runParser parse (statement ++ ";"))
+getStatement [] statement      = mergeLine (Just []) (runParser parse statement)
+getStatement (';':xs) statement = mergeLine (getStatement xs "")
+    (runParser parse (statement ++ ";"))
 getStatement (x:xs) statement   = getStatement xs (statement ++ [x])
 
 
 parseFile :: String -> Maybe [Expr]
 parseFile [] = Just []
--- parseFile str = Just [(Err str)]
 parseFile content
           | res == Nothing = Nothing
           | otherwise      = res
@@ -64,7 +63,7 @@ getContent (file:r)     = do
         True -> do
             -- f <- readFile file
             handle <- openFile file ReadMode
-        
+
             hSetEncoding handle latin1
             f <- hGetContents handle
 
@@ -74,15 +73,14 @@ getContent (file:r)     = do
                 Nothing -> return Nothing
 
 getErr :: [Expr] -> String
-getErr ((Err str):xs) = str ++ (getErr xs)
+getErr ((Err str):xs) = str ++ "\n" ++ (getErr xs)
 getErr _ = ""
--- genErr _ = "" ++ (getErr xs)
 
 genFile :: Bool -> [(String, [Expr])] -> IO ()
 genFile ir [] = return ()
 genFile ir (("-ir",expr):xs) = genFile ir xs
 genFile ir ((filename,expr):xs)
-        | res == []  = print $ show expr -- print "empty array" >> exitWith (ExitFailure 84)
+        | res == []  = (print $ show expr) >> exitWith (ExitFailure 84)
         | err /= ""  = print err >> exitWith (ExitFailure 84)
         | err2 /= "" = print err2 >> exitWith (ExitFailure 84)
         | otherwise  = genObjFromExpr ir filename res >> genFile ir xs
@@ -106,7 +104,8 @@ main = do
             contents <- getContent args
             -- print (len contents)
             case contents of
-                Nothing -> hPutStrLn stderr "file not found" >> exitWith (ExitFailure 84)
+                Nothing -> hPutStrLn stderr "file not found" >>
+                    exitWith (ExitFailure 84)
                 Just cont -> case parseFiles cont of
                     [] -> hPutStrLn stderr "The files are invalid" >> exitWith (ExitFailure 84)
                     expr -> genFile ir (zip args expr)
