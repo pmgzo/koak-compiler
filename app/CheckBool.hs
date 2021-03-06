@@ -49,7 +49,7 @@ checkCond _ = e3
 checkOp :: [Op] -> [Expr]
 checkOp []                          = []
 checkOp ((XPR xpr):xs)             = checkExpr xpr ++ checkOp xs
-checkOp ((DataType2.EQ _ _ ):xs)    = e1 ++ (checkOp xs) 
+checkOp ((DataType2.EQ _ _ ):xs)    = e1 ++ (checkOp xs)
 checkOp ((DataType2.NOTEQ _ _ ):xs) = e1 ++ (checkOp xs)
 checkOp ((DataType2.LT _ _ ):xs)    = e1 ++ (checkOp xs)
 checkOp ((DataType2.GT _ _ ):xs)    = e1 ++ (checkOp xs)
