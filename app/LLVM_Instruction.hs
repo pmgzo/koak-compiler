@@ -27,40 +27,44 @@ assign  id@(Typed str t) op = do
                                 var id
 
 genCondInstruction :: Op -> Operand -> Operand -> Instruction
-genCondInstruction cond op1 op2 | t == (FloatingPointType DoubleFP) = FCmp flagf op1 op2 []
-                                | t == (IntegerType 64)             = ICmp flagi op1 op2 []
-                                | t == (IntegerType 1)              = ICmp flagi op1 op2 []
-                                where
-                                t       = getOperandType op1
-                                flagi   = genCondIFlag cond
-                                flagf   = genCondFFlag cond
+genCondInstruction cond op1 op2
+                   | t == (FloatingPointType DoubleFP) = FCmp flagf op1 op2 []
+                   | t == (IntegerType 64)             = ICmp flagi op1 op2 []
+                   | t == (IntegerType 1)              = ICmp flagi op1 op2 []
+                   where t       = getOperandType op1
+                         flagi   = genCondIFlag cond
+                         flagf   = genCondFFlag cond
 
 genCond :: Op -> Op -> Op -> StateT Objects Maybe Operand
-genCond cond l r          = do
-                            op1 <- genInstructionOperand l
-                            op2 <- genInstructionOperand r
+genCond cond l r = do
+                     op1 <- genInstructionOperand l
+                     op2 <- genInstructionOperand r
 
-                            let inst = genCondInstruction cond op1 op2
+                     let inst = genCondInstruction cond op1 op2
 
-                            name <- genNewName
+                     name <- genNewName
 
-                            addInst (name := inst)
+                     addInst (name := inst)
 
-                            return (LocalReference i1 name)
+                     return (LocalReference i1 name)
 
 genInstruction :: Op -> Operand -> Operand -> Instruction
-genInstruction (ADD []) op1 op2 | typeop == (IntegerType 64)             = Add False False op1 op2 []
-                                | typeop == (FloatingPointType DoubleFP) = FAdd noFastMathFlags op1 op2 []
-                                where typeop = getOperandType op1
-genInstruction (MUL []) op1 op2 | typeop == (IntegerType 64)             = Mul False False op1 op2 []
-                                | typeop == (FloatingPointType DoubleFP) = FMul noFastMathFlags op1 op2 []
-                                where typeop = getOperandType op1
-genInstruction (SUB []) op1 op2 | typeop == (IntegerType 64)             = Sub False False op1 op2 []
-                                | typeop == (FloatingPointType DoubleFP) = FSub noFastMathFlags op1 op2 []
-                                where typeop = getOperandType op1
-genInstruction (DIV []) op1 op2 | typeop == (IntegerType 64)             = SDiv False op1 op2 []
-                                | typeop == (FloatingPointType DoubleFP) = FDiv noFastMathFlags op1 op2 []
-                                where typeop = getOperandType op1
+genInstruction (ADD []) op1 op2
+    | typeop == (IntegerType 64)             = Add False False op1 op2 []
+    | typeop == (FloatingPointType DoubleFP) = FAdd noFastMathFlags op1 op2 []
+    where typeop = getOperandType op1
+genInstruction (MUL []) op1 op2
+    | typeop == (IntegerType 64)             = Mul False False op1 op2 []
+    | typeop == (FloatingPointType DoubleFP) = FMul noFastMathFlags op1 op2 []
+    where typeop = getOperandType op1
+genInstruction (SUB []) op1 op2
+    | typeop == (IntegerType 64)             = Sub False False op1 op2 []
+    | typeop == (FloatingPointType DoubleFP) = FSub noFastMathFlags op1 op2 []
+    where typeop = getOperandType op1
+genInstruction (DIV []) op1 op2
+    | typeop == (IntegerType 64)             = SDiv False op1 op2 []
+    | typeop == (FloatingPointType DoubleFP) = FDiv noFastMathFlags op1 op2 []
+    where typeop = getOperandType op1
 
 wrapp :: Op -> [Op] -> Op
 wrapp (ADD _) = ADD
@@ -97,10 +101,9 @@ genInstructionOperand c@(DataType2.GT i1 i2)        = genCond c i1 i2
 genInstructionOperand c@(DataType2.EQ i1 i2)        = genCond c i1 i2
 genInstructionOperand c@(DataType2.NOTEQ i1 i2)     = genCond c i1 i2
 genInstructionOperand (ASSIGN id op)                = assign id op
-genInstructionOperand classicOp                     = operatorInARow classicOp ops
-                                                    where ops = getOpArgs classicOp
+genInstructionOperand calcOp                        = operatorInARow calcOp ops
+                                                    where ops = getOpArgs calcOp
 
--- Callf id args
 buildCallfParameter :: [Expr] -> StateT Objects Maybe ([(Operand, [ParameterAttribute])], [Type])
 buildCallfParameter []          = return ([],[])
 buildCallfParameter [xpr]       =   do

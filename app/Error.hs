@@ -127,21 +127,34 @@ checkErrorId (_:xs) t = (checkErrorId xs t)
 
 checkErrorOp :: [Expr] -> [Op] -> TypeKoak -> [Expr]
 checkErrorOp _ [] _ = []
-checkErrorOp pts ((XPR e):xs) t   = (checkErrXp pts [e] t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((ADD op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((SUB op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((MUL op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DIV op):xs) t  = (checkErrorOp pts op t) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.LT op1 op2):xs) t    = (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
-    (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.GT op1 op2):xs) t    = (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
-    (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.EQ op1 op2):xs) t    = (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
-    (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) t = (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
-    (checkErrorOp pts [op1] (gTFOE op1)) ++  (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((ASSIGN id op):xs) t            = (checkErrorId [id] t) ++ (checkErrorOp pts [op] t) ++
+checkErrorOp pts ((XPR e):xs) t   = (checkErrXp pts [e] t) ++
     (checkErrorOp pts xs t)
+checkErrorOp pts ((ADD op):xs) t  = (checkErrorOp pts op t) ++
+    (checkErrorOp pts xs t)
+checkErrorOp pts ((SUB op):xs) t  = (checkErrorOp pts op t) ++
+    (checkErrorOp pts xs t)
+checkErrorOp pts ((MUL op):xs) t  = (checkErrorOp pts op t) ++
+    (checkErrorOp pts xs t)
+checkErrorOp pts ((DIV op):xs) t  = (checkErrorOp pts op t) ++
+    (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.LT op1 op2):xs) t    =
+    (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
+    (checkErrorOp pts [op1] (gTFOE op1)) ++
+    (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.GT op1 op2):xs) t    =
+    (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
+    (checkErrorOp pts [op1] (gTFOE op1)) ++
+    (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.EQ op1 op2):xs) t    =
+    (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
+    (checkErrorOp pts [op1] (gTFOE op1)) ++
+    (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) t =
+    (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
+    (checkErrorOp pts [op1] (gTFOE op1)) ++
+    (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
+checkErrorOp pts ((ASSIGN id op):xs) t            = (checkErrorId [id] t) ++
+    (checkErrorOp pts [op] t) ++ (checkErrorOp pts xs t)
 checkErrorOp pts (x@(VAL v):xs) t
              | t /= NULL && gTFV v /= t = (Err (show t++" expected but got "++
     (show $ gTFV v)++" ("++show x++")")):(checkErrorOp pts xs t)
@@ -162,6 +175,6 @@ getAllProtof ((Protof id args _):rest)  = [(Protof id args (Exprs []))] ++
 getAllProtof (a:rest)                   = getAllProtof rest
 
 findTrickyError :: [Expr] -> [Expr]
-findTrickyError listXps = checkErrXp protos listXps NULL
-                                ++ checkBinOperation listXps
-                        where protos = getAllProtof listXps
+findTrickyError listXps = checkErrXp protos listXps NULL ++
+    checkBinOperation listXps
+    where protos = getAllProtof listXps

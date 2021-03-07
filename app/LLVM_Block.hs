@@ -3,7 +3,7 @@ module LLVM_Block where
 import Data.Maybe
 import Control.Monad.State
 import LLVM.AST.Operand
-import LLVM.AST.Instruction -- Add ...
+import LLVM.AST.Instruction
 import LLVM.AST.Name
 
 import LLVM.AST.Type
@@ -35,8 +35,8 @@ scoreBlock b@(While _ (Exprs exprs))    = threshold + getCallbackBlock exprs
                                         where threshold     = refScore b
 scoreBlock b@(IfThen _ (Exprs exprs))   = threshold + getCallbackBlock exprs
                                         where threshold = refScore b
-scoreBlock b@(IfElse _ (Exprs exprs)
-                        (Exprs exprs2)) = threshold + getCallbackBlock exprs + getCallbackBlock exprs2
+scoreBlock b@(IfElse _ (Exprs exprs) (Exprs exprs2)) =
+    threshold + getCallbackBlock exprs + getCallbackBlock exprs2
                                     where threshold = refScore b
 scoreBlock _                            = 0
 

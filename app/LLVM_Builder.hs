@@ -88,15 +88,16 @@ initState (fctState:rest)   = do
 
 genDefinition :: Expr -> [(String, Type)] -> (Definition, [(String, Type)])
 genDefinition p@(Protof _ _ _) globVarList = genFunction p globVarList
-genDefinition (Operation a@(ASSIGN _ _)) globVarList = concat (handleGlobalVariable a) globVarList
-                                            where concat = (\(def, a) list -> (def, list ++ [a]))
+genDefinition (Operation a@(ASSIGN _ _)) globVarList =
+    concat (handleGlobalVariable a) globVarList
+    where concat = (\(def, a) list -> (def, list ++ [a]))
 
 genDefinitions :: [Expr] -> [(String, Type)] -> [Definition]
 genDefinitions [xpr] globVarList     = [def]
                                     where
                                     res = genDefinition xpr globVarList
                                     def = fst res
-genDefinitions (xpr:rest) globVarList = [def] ++ (genDefinitions rest newVarList)
+genDefinitions (xpr:rest) globVarList = [def]++(genDefinitions rest newVarList)
                                     where
                                     res = genDefinition xpr globVarList
                                     def = fst res

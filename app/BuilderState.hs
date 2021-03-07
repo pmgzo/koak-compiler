@@ -1,12 +1,11 @@
 module BuilderState where
 
--- import Control.Monad.State.Lazy
 import Control.Monad.State
 
 import Data.Map
 
 import LLVM.AST.Name
-import LLVM.AST.Instruction -- Add ...
+import LLVM.AST.Instruction
 import LLVM.AST
 import LLVM.AST.Type
 import DataType2
@@ -17,13 +16,13 @@ data InfoRet = InfoRet Name Bool BlockId deriving (Show)
 
 data Objects = Objects {
                 blockCount :: Integer,
-                nameCount :: Integer, -- for named instructions
+                nameCount :: Integer,
                 insts :: [Named Instruction],
                 blocks :: [BasicBlock],
                 globalVars :: Map String (Name, Type),
                 localVars :: Map String (Name, Type),
                 retType :: Type,
-                retStack :: [InfoRet],-- callbackLoop, isTheLastBlock, blockId
+                retStack :: [InfoRet],
                 lastOperand :: Maybe Operand
 
                 } deriving (Show)
@@ -34,7 +33,6 @@ getCB (InfoRet a _ _) = a
 getLastBlock ::InfoRet -> Bool
 getLastBlock (InfoRet _ b _ ) = b
 
--- parcoursToutEst à True
 canReturn :: [InfoRet] -> Bool
 canReturn []                            = True
 canReturn ((InfoRet _ False _):r)       = False
@@ -125,8 +123,3 @@ addBlock term = do
                 resetInsts
                 increaseBlockCount
                 return ()
-
--- setLastOperand :: Operand -> StateT Objects Maybe ()
--- setLastOperand op = do
---                 -- s <- get
---                 modify (\s -> s {lastOperand = Just op } )

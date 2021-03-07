@@ -246,4 +246,5 @@ inferType _ _  = []
 
 inferringType :: [Expr] -> [Expr]
 inferringType []    = []
-inferringType exprs = inferType exprs []
+inferringType exprs = inferType exprs
+    [(Id (Typed "printInt" INT)), (Id (Typed "printDouble" DOUBLE))]
