@@ -157,7 +157,7 @@ defPrintDouble = GlobalDefinition
                                  (PointerType
                                   { pointerReferent =
                                       FunctionType
-                                      { resultType = IntegerType {typeBits = 32}
+                                      { resultType = IntegerType {typeBits = 64}
                                       , argumentTypes =
                                           [ PointerType
                                             { pointerReferent =
