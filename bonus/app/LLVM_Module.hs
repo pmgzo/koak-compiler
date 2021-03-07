@@ -16,7 +16,7 @@ genModule :: String -> [Expr] -> AST.Module
 genModule name exprs =  AST.defaultModule {
                             AST.moduleName = fromString name,
                             AST.moduleDefinitions = (genDefinitions exprs []) ++ 
-                                                            [defStrInt, defStrDouble, defPrintInt, defPrintDouble]
+                                                            [defPrint, defStrInt, defStrDouble, defPrintInt, defPrintDouble]
                         }
 
 nameObjFile :: String -> String

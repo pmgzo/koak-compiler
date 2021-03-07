@@ -68,7 +68,7 @@ defStrDouble = GlobalDefinition
 defPrintInt :: Definition
 defPrintInt = GlobalDefinition
           (functionDefaults
-           { returnType = VoidType
+           { returnType = i64
            , linkage = Private
            , name = Name "printInt"
            , parameters = ([( Parameter i64 (Name "d") []  )], False)
@@ -87,7 +87,7 @@ defPrintInt = GlobalDefinition
                                  (PointerType
                                   { pointerReferent =
                                       FunctionType
-                                      { resultType = IntegerType {typeBits = 32}
+                                      { resultType = IntegerType {typeBits = 64}
                                       , argumentTypes =
                                           [ PointerType
                                             { pointerReferent =
@@ -131,14 +131,14 @@ defPrintInt = GlobalDefinition
                      , AST.metadata = []
                      }
                    ]
-                   (Do (Ret {returnOperand = Nothing, metadata' = []}))
+                  (Do $ Ret (Just (LocalReference i64 (Name "d")) ) [])
                ]
            })
 
 defPrintDouble :: Definition
 defPrintDouble = GlobalDefinition
           (functionDefaults
-           { returnType = VoidType
+           { returnType = double
            , linkage = Private
            , name = Name "printDouble"
            , parameters = ([( Parameter double (Name "d") []  )], False)
@@ -200,7 +200,23 @@ defPrintDouble = GlobalDefinition
                      , AST.metadata = []
                      }
                    ]
-                   (Do (Ret {returnOperand = Nothing, metadata' = []}))
+                  (Do $ Ret (Just (LocalReference double (Name "d")) ) [])
                ]
            })
 
+defPrint :: Definition
+defPrint = GlobalDefinition
+          (functionDefaults
+           { returnType = IntegerType {typeBits = 64}
+           , name = Name "printf"
+           , parameters =
+               ( [ Parameter
+                     (PointerType
+                      { pointerReferent = IntegerType {typeBits = 8}
+                      , pointerAddrSpace = AddrSpace 0
+                      })
+                     (UnName 0)
+                     []
+                 ]
+               , True)
+           })
