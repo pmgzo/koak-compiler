@@ -102,11 +102,11 @@ dupRetStack = do
 
 setLoopTerminator :: Name -> StateT Objects Maybe ()
 setLoopTerminator name = do
-                        stack <- gets retStack
-                        let lastElem = last stack
-                        let modifiedElem = (InfoRet (getCB lastElem) (getLastBlock lastElem) (LOOP name) )
+    stack <- gets retStack
+    let lastElem = last stack
+    let modifiedElem = (InfoRet (getCB lastElem) (getLastBlock lastElem) (LOOP name))
 
-                        modify (\s -> s {retStack = (init stack) ++ [modifiedElem]} )
+    modify (\s -> s {retStack = (init stack) ++ [modifiedElem]} )
 
 getLastExitBlock :: StateT Objects Maybe Name
 getLastExitBlock = do
@@ -163,10 +163,10 @@ handleWhile bool (While condLoop (expr)) =
     genLoopBlock expr nameCond
 
 incrementFor :: Identifier -> Expr -> Expr
-incrementFor id xpr@(Val v)                 = (Operation (ASSIGN id add))
-                                            where
-                                            add = (ADD [(XPR (Id id)), (XPR xpr)])
-incrementFor _ xpr                          = xpr
+incrementFor id xpr@(Val v) = (Operation (ASSIGN id add))
+                            where
+                            add = (ADD [(XPR (Id id)), (XPR xpr)])
+incrementFor _ xpr          = xpr
 
 handleFor :: Bool -> Expr -> StateT Objects Maybe ()
 handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs)) =
