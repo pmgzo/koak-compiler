@@ -210,20 +210,11 @@ getWordDif a [] = a
 getWordDif a@(_:xs) b@(_:ys) | compWords b a == False = a
                              | otherwise = getWordDif xs ys
 
--- parseWord :: String -> Parser String
--- parseWord word = Parser (
---     \ str -> case runParser parseLetters str of
---         Just(res, r) -> case (compWords word res) of
---             True -> Just(word, getWordDif res word)
---             False -> Nothing
---         _ -> Nothing
---     )
-
 parseWord :: String -> Parser String
-parseWord word = Parser (--table
+parseWord word = Parser (
     \ str -> case runParser parseLetters str of
-        Just(res, r) -> case (compWords word res) of--tabletop
-            True -> Just(word, (getWordDif res word) ++ r)--table tabletop -> top
+        Just(res, r) -> case (compWords word res) of
+            True -> Just(word, (getWordDif res word) ++ r)
             False -> Nothing
         _ -> Nothing
     )

@@ -23,20 +23,20 @@ nameObjFile (f:r)   = [f] ++ (nameObjFile r)
 
 genObjFromExpr :: Bool -> String -> [Expr] -> IO ()
 genObjFromExpr True name exprs = withContext $ \ctx -> do
-                            let file  = (File (objname))
-                            let mod = genModule name exprs
-                            displayIR mod
-                            withHostTargetMachineDefault (\machine -> (withModuleFromAST ctx mod (writeObjectToFile machine file)))
-                            Prelude.putStrLn ("object file '" ++ objname ++ "' generated")
-                            where
-                            objname = (nameObjFile name)
+    let file  = (File (objname))
+    let mod = genModule name exprs
+    displayIR mod
+    withHostTargetMachineDefault (\machine ->
+        (withModuleFromAST ctx mod (writeObjectToFile machine file)))
+    Prelude.putStrLn ("object file '" ++ objname ++ "' generated")
+    where objname = (nameObjFile name)
 genObjFromExpr _ name exprs = withContext $ \ctx -> do
-                            let file  = (File (objname))
-                            let mod = genModule name exprs
-                            withHostTargetMachineDefault (\machine -> (withModuleFromAST ctx mod (writeObjectToFile machine file)))
-                            Prelude.putStrLn ("object file '" ++ objname ++ "' generated")
-                            where
-                            objname = (nameObjFile name)
+    let file  = (File (objname))
+    let mod = genModule name exprs
+    withHostTargetMachineDefault (\machine ->
+        (withModuleFromAST ctx mod (writeObjectToFile machine file)))
+    Prelude.putStrLn ("object file '" ++ objname ++ "' generated")
+    where objname = (nameObjFile name)
 
 displayIR :: AST.Module -> IO ()
 displayIR mod = withContext $ \ctx -> do

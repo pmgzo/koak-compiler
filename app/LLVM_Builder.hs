@@ -56,8 +56,8 @@ fillRetType t = do
 
 genGlobalVariableList :: [(String, Type)] -> StateT Objects Maybe ()
 genGlobalVariableList list = do
-                            (modify (\s -> s { globalVars = mapWithKey lbd (fromList list) } ))
-                            where lbd = (\name -> \t -> ((mkName name), t))
+    (modify (\s -> s { globalVars = mapWithKey lbd (fromList list) } ))
+    where lbd = (\name -> \t -> ((mkName name), t))
 
 genFunction :: Expr -> [(String, Type)] -> (Definition, [(String, Type)])
 genFunction (Protof id params (Exprs xprs)) globVarList = (def, globVarList)
@@ -69,8 +69,8 @@ genFunction (Protof id params (Exprs xprs)) globVarList = (def, globVarList)
                                             returnType = retType,
                                             basicBlocks = genDefHelper
                                                         $fromJust $execStateT
-                                                                (initState callList)
-                                                                            emptyObjects
+                                                            (initState callList)
+                                                                   emptyObjects
                                         }
                                 parameters = genProtoParameter params
                                 name    = getNameFromIdentifier id

@@ -107,5 +107,6 @@ main = do
                 Nothing -> hPutStrLn stderr "file not found" >>
                     exitWith (ExitFailure 84)
                 Just cont -> case parseFiles cont of
-                    [] -> hPutStrLn stderr "The files are invalid" >> exitWith (ExitFailure 84)
+                    [] -> hPutStrLn stderr "The files are invalid" >>
+                            exitWith (ExitFailure 84)
                     expr -> genFile ir (zip args expr)
