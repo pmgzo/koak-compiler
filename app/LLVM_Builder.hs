@@ -23,7 +23,7 @@ import LLVM_Var
 import LLVM_Instruction
 import LLVM_Global
 import LLVM_Block
-import DataType2
+import DataType
 import BuilderState
 
 import Control.Monad.State

@@ -1,7 +1,7 @@
 module TestError where
 import Test.HUnit
 
-import DataType2
+import DataType
 
 import Error
 
@@ -64,19 +64,19 @@ input11 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operat
 expectedRes11 = [Err "INT expected but got DOUBLE (VAL (D 5.1))"]
 test11 = TestCase $ assertEqual "operator's type differ" expectedRes11 (findTrickyError input11)
 
-input13 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfThen (Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (D 5.1)))) (Val (I 5))])]
+input13 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfThen (Operation (DataType.EQ (XPR (Id (Typed "a" INT))) (VAL (D 5.1)))) (Val (I 5))])]
 expectedRes13 = [Err "INT expected but got DOUBLE", Err "INT expected but got DOUBLE (VAL (D 5.1))"]
 test13 = TestCase $ assertEqual "operator's type differ3" expectedRes13 (findTrickyError input13)
 
-input12 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))])]
+input12 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (DataType.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))])]
 expectedRes12 = [Err "Typed \"sum\" INT expected but got BOOL (Operation (EQ (XPR (Id (Typed \"a\" INT))) (VAL (I 5))))",Err "binary operation outside condition"]
 test12 = TestCase $ assertEqual "bin comp in fct body" expectedRes12 (findTrickyError input12)
 
-input14 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [VAL (I 5), (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))])])]
+input14 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operation (ADD [VAL (I 5), (DataType.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))])])]
 expectedRes14 = [Err "binary operation outside condition"]
 test14 = TestCase $ assertEqual "bin comp in fct in addition function body" expectedRes14 (findTrickyError input14)
 
-input15 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfElse (Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))) (Val (I 5)) (Operation (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5))))])]
+input15 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfElse (Operation (DataType.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5)))) (Val (I 5)) (Operation (DataType.EQ (XPR (Id (Typed "a" INT))) (VAL (I 5))))])]
 expectedRes15 = [Err "binary operation outside condition"]
 test15 = TestCase $ assertEqual "bin comp in function body2" expectedRes15 (findTrickyError input15)
 
@@ -84,28 +84,28 @@ input16 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [Operat
 expectedRes16 = [Err "binary operation outside condition"]
 test16 = TestCase $ assertEqual "operator's type differ" expectedRes16 (findTrickyError input16)
 
-input17 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfThen (Operation (DataType2.EQ (VAL (I 5)) (ASSIGN (Typed "a" INT) (XPR (Unary Not (Val (I 5))))) ) ) (Exprs [(Val (I 5))])])]
+input17 = [Protof (Typed "sum" INT) [Typed "a" INT,Typed "b" INT] (Exprs [IfThen (Operation (DataType.EQ (VAL (I 5)) (ASSIGN (Typed "a" INT) (XPR (Unary Not (Val (I 5))))) ) ) (Exprs [(Val (I 5))])])]
 expectedRes17 = [Err "not operator can only be placed ahead binary comparison"]
 test17 = TestCase $ assertEqual "not in assign in cond" expectedRes17 (findTrickyError input17)
 
-input18 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.GT (DataType2.EQ (XPR (Id (Typed "a" INT))) (VAL (I 1))) (VAL (I 7)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+input18 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType.GT (DataType.EQ (XPR (Id (Typed "a" INT))) (VAL (I 1))) (VAL (I 7)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
 expectedRes18 = [Err "BOOL expected but got INT", Err "BOOL expected but got INT (VAL (I 7))"]
 test18 = TestCase $ assertEqual "(a == 1) > 7" expectedRes18 (findTrickyError input18)
 
-input19 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.GT (VAL (D 1.1)) (DataType2.EQ (VAL (I 1)) (VAL (I 1))))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+input19 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType.GT (VAL (D 1.1)) (DataType.EQ (VAL (I 1)) (VAL (I 1))))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
 expectedRes19 = [Err "DOUBLE expected but got BOOL"]
 test19 = TestCase $ assertEqual "1.1 > (1 == 1)" expectedRes19 (findTrickyError input19)
 
-input20 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.GT (ADD [VAL (I 1),VAL (I 1)]) (DataType2.EQ (VAL (I 1)) (VAL (I 1))))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+input20 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType.GT (ADD [VAL (I 1),VAL (I 1)]) (DataType.EQ (VAL (I 1)) (VAL (I 1))))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
 expectedRes20 = [Err "INT expected but got BOOL"]
 test20 = TestCase $ assertEqual "1+1 > (1 == 1)" expectedRes20 (findTrickyError input20)
 
 -- input21 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (GT (VAL (D 1.1)) (EQ (VAL (I 1)) (VAL (I 1))))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
-input21 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.GT (DataType2.EQ (VAL (I 1)) (VAL (I 1))) (VAL (I 1)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+input21 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType.GT (DataType.EQ (VAL (I 1)) (VAL (I 1))) (VAL (I 1)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
 expectedRes21 = [Err "BOOL expected but got INT", Err "BOOL expected but got INT (VAL (I 1))"]
 test21 = TestCase $ assertEqual "(1 == 1) > 1" expectedRes21 (findTrickyError input21)
 
-input22 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType2.EQ (DataType2.EQ (VAL (I 1)) (VAL (I 1))) (VAL (I 1)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
+input22 = [Protof (Typed "fct4" INT) [Typed "a" INT] (Exprs [IfElse (Operation (DataType.EQ (DataType.EQ (VAL (I 1)) (VAL (I 1))) (VAL (I 1)))) (Exprs [Val (I 1)]) (Exprs [Val (I 1)])])]
 expectedRes22 = [Err "BOOL expected but got INT", Err "BOOL expected but got INT (VAL (I 1))"]
 test22 = TestCase $ assertEqual "(1 == 1) == 1" expectedRes22 (findTrickyError input22)
 

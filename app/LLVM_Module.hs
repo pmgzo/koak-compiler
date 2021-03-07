@@ -1,6 +1,6 @@
 module LLVM_Module where
 
-import DataType2
+import DataType
 import LLVM_Builder
 
 import qualified LLVM.AST as AST

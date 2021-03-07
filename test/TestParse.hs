@@ -3,7 +3,7 @@ import Test.HUnit
 
 import Parse
 import MyParser
-import DataType2
+import DataType
 
 
 -- input1 = callArg (Just [])

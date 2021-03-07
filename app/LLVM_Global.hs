@@ -3,7 +3,7 @@ module LLVM_Global where
 import LLVM.AST.Global
 import qualified LLVM.AST as AST
 import LLVM.AST.Type
-import DataType2
+import DataType
 import LLVM_Utils
 import LLVM.AST.Name
 

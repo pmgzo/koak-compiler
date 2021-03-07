@@ -2,7 +2,7 @@ import System.Exit (exitSuccess, exitWith)
 import System.Exit
 import LLVM_Module
 import TypeInference
-import DataType2
+import DataType
 import Parse
 import MyParser
 import System.Directory

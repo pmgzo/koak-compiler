@@ -9,7 +9,7 @@ module TestParsing where
 import Test.HUnit
 import MyParser
 import Parse
-import DataType2
+import DataType
 
 -----------------------------
 --      char and word      --
@@ -45,10 +45,10 @@ test5 = TestCase $ assertEqual "char t abletop" expectedRes5 (runParser (char 't
 expectedRes12 = Just (IfThen (Val (I 1)) (Exprs [Val (I 5)]), "")
 test12 = TestCase $ assertEqual "if 1 then 5" expectedRes12 (runParser parseIf "if 1 then 5")
 
-expectedRes13 = Just (IfThen (Operation (DataType2.LT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]), "")
+expectedRes13 = Just (IfThen (Operation (DataType.LT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]), "")
 test13 = TestCase $ assertEqual "if 5 < 6 then 5" expectedRes13 (runParser parseIf "(if 5 < 6 then 5)")
 
-expectedRes14 = Just (IfElse (Operation (DataType2.LT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]) (Exprs [Val (I 6)]), "")
+expectedRes14 = Just (IfElse (Operation (DataType.LT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]) (Exprs [Val (I 6)]), "")
 test14 = TestCase $ assertEqual "if 5 < 6 then 5 else 6" expectedRes14 (runParser parseIf "(if 5 < 6 then 5 else 6)")
 
 expectedRes15 = Just (IfElse (Callf (Wait "toto") [Val (I 5)]) (Exprs [Val (I 5)]) (Exprs [Val (I 6)]), "")
@@ -57,10 +57,10 @@ test15 = TestCase $ assertEqual "if toto(5) then 5 else 6" expectedRes15 (runPar
 expectedRes16 = Just (While (Val (I 1)) (Exprs [Val (I 5)]), "")
 test16 = TestCase $ assertEqual "while 1 do 5" expectedRes16 (runParser parseWhile "(while 1 do 5)")
 
-expectedRes17 = Just (While (Operation (DataType2.LT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]), "")
+expectedRes17 = Just (While (Operation (DataType.LT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]), "")
 test17 = TestCase $ assertEqual "while 5 < 6 do 5" expectedRes17 (runParser parseWhile "(while 5 < 6 do 5)")
 
-expectedRes18 = Just (While (Operation (DataType2.GT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]), "")
+expectedRes18 = Just (While (Operation (DataType.GT (VAL (I 5)) (VAL (I 6)))) (Exprs [Val (I 5)]), "")
 test18 = TestCase $ assertEqual "while 5 > 6 do 5" expectedRes18 (runParser parseWhile "(while 5 > 6 do 5)")
 
 expectedRes19 = Just (While (Callf (Wait "toto") [Val (I 5)]) (Exprs [Val (I 5)]), "")
@@ -90,7 +90,7 @@ test26 = TestCase $ assertEqual "a = 1 + 25" expectedRes26 (runParser parseOp "a
 expectedRes27 = Just (Operation (ADD [VAL (I 1),SUB [MUL [VAL (I 25),VAL (I 3)],MUL [VAL (I 2), SUB [VAL (I 6),VAL (I 3)]]]]), "")
 test27 = TestCase $ assertEqual "1 + 25 * 3 - 2 * (6 - 3)" expectedRes27 (runParser parseOp "1 + 25 * 3 - 2 * (6 - 3)")
 
-expectedRes28 = Just (Operation (DataType2.EQ (XPR (Unary UMinus (Val (I 5)))) (XPR (Unary Not (Unary UMinus (Val (I 2)))))), "")
+expectedRes28 = Just (Operation (DataType.EQ (XPR (Unary UMinus (Val (I 5)))) (XPR (Unary Not (Unary UMinus (Val (I 2)))))), "")
 test28 = TestCase $ assertEqual "-5 == !-2" expectedRes28 (runParser parseOp "-5 == !-2")
 
 expectedRes29 = Just (Protof (Typed "toto1" INT) [] (Exprs [Val (I 5)]), "")

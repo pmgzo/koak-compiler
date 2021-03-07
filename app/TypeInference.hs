@@ -1,5 +1,5 @@
 module TypeInference where
-import DataType2
+import DataType
 
 
 -- utils
@@ -44,10 +44,10 @@ getTypeFromOp ((ADD op):xs)               = getTypeFromOp op
 getTypeFromOp ((SUB op):xs)               = getTypeFromOp op
 getTypeFromOp ((MUL op):xs)               = getTypeFromOp op
 getTypeFromOp ((DIV op):xs)               = getTypeFromOp op
-getTypeFromOp ((DataType2.LT op _):xs)    = VOID
-getTypeFromOp ((DataType2.GT op _):xs)    = VOID
-getTypeFromOp ((DataType2.EQ op _):xs)    = VOID
-getTypeFromOp ((DataType2.NOTEQ op _):xs) = VOID
+getTypeFromOp ((DataType.LT op _):xs)    = VOID
+getTypeFromOp ((DataType.GT op _):xs)    = VOID
+getTypeFromOp ((DataType.EQ op _):xs)    = VOID
+getTypeFromOp ((DataType.NOTEQ op _):xs) = VOID
 getTypeFromOp _                           = VOID
 
 gTFO :: Op -> TypeKoak
@@ -128,17 +128,17 @@ handleOp ((ADD ops):xs) c = (ADD (handleOp ops c)):(handleOp xs c)
 handleOp ((SUB ops):xs) c = (SUB (handleOp ops c)):(handleOp xs c)
 handleOp ((MUL ops):xs) c = (MUL (handleOp ops c)):(handleOp xs c)
 handleOp ((DIV ops):xs) c = (DIV (handleOp ops c)):(handleOp xs c)
-handleOp ((DataType2.LT op1 op2):xs) c =
-    (DataType2.LT ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):
+handleOp ((DataType.LT op1 op2):xs) c =
+    (DataType.LT ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):
     (handleOp xs c)
-handleOp ((DataType2.GT op1 op2):xs) c =
-    (DataType2.GT ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):
+handleOp ((DataType.GT op1 op2):xs) c =
+    (DataType.GT ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):
     (handleOp xs c)
-handleOp ((DataType2.EQ op1 op2):xs) c =
-    (DataType2.EQ ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):
+handleOp ((DataType.EQ op1 op2):xs) c =
+    (DataType.EQ ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):
     (handleOp xs c)
-handleOp ((DataType2.NOTEQ op1 op2):xs) c =
-    (DataType2.NOTEQ ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):
+handleOp ((DataType.NOTEQ op1 op2):xs) c =
+    (DataType.NOTEQ ((handleOp [op1] c)!!0) ((handleOp [op2] c)!!0)):
     (handleOp xs c)
 handleOp (v@(VAL _):xs) c = v:(handleOp xs c)
 handleOp (v@(XPR e):xs) c = (XPR ((inferType [e] c)!!0)):(handleOp xs c)
@@ -168,12 +168,12 @@ handleFor c i val i2 cond inc (Exprs args) =
     where init = (checkAssign [(Operation (ASSIGN i (XPR val)))] c)!!0
           nC   = (assignToCache init):c
           cT   = ((inferType [(Operation op)] nC)!!0)
-          op   = DataType2.LT (XPR (Id i2)) (XPR cond)
+          op   = DataType.LT (XPR (Id i2)) (XPR cond)
 handleFor _ _ _ _ _ _ _ = (Err "error in handleFor")
 
 exprToFor :: Expr -> Expr -> Expr -> Expr -> Expr
 exprToFor (Operation (ASSIGN i (XPR val)))
-    (Operation (DataType2.LT (XPR (Id i2)) (XPR cond))) inc args =
+    (Operation (DataType.LT (XPR (Id i2)) (XPR cond))) inc args =
     (For (i, val) (i2, cond) inc args)
 
 assignToCache :: Expr -> Expr

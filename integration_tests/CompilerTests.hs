@@ -2,7 +2,7 @@ module CompilerTests where
 
 import LLVM_Module
 import LLVM_Builder
-import DataType2
+import DataType
 import BuilderState
 import StatementHelper
 import LLVM_Block
@@ -16,74 +16,74 @@ import Control.Monad.State
 -- import LLVM.AST.Name
 
 mod1:: Expr -- ok
-mod1 = (Protof (Typed "fct1" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+mod1 = (Protof (Typed "fct1" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)) ) ), (Id (Typed "y" INT) )] ))
 
 addf:: Expr -- ok
-addf = (Protof (Typed "iaddf" DOUBLE) 
-            [(Typed "a" DOUBLE), (Typed "b" DOUBLE)] 
+addf = (Protof (Typed "iaddf" DOUBLE)
+            [(Typed "a" DOUBLE), (Typed "b" DOUBLE)]
             (Exprs [(Operation (ASSIGN (Typed "y" DOUBLE) (ADD [(XPR (Id (Typed "a" DOUBLE))), (XPR (Id (Typed "b" DOUBLE) ))]) ) ), (Id (Typed "y" DOUBLE) )]) )
 
 mod2:: Expr -- ok
-mod2 = (Protof (Typed "fct2" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+mod2 = (Protof (Typed "fct2" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Val (I 6))] ))
 
 mod3:: Expr -- ok
-mod3 = (Protof (Typed "fct3" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+mod3 = (Protof (Typed "fct3" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Id (Typed "a" INT) )]))
 
 mod4 :: Expr -- ok
-mod4 = (Protof (Typed "fct4" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+mod4 = (Protof (Typed "fct4" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Operation (ASSIGN (Typed "y" INT) (ADD [(XPR (Id (Typed "a" INT))), (VAL (I 5))]) ) ), (Id (Typed "y" INT) )] ))
 
 mod5:: Expr -- ok
-mod5 = (Protof (Typed "fct5" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+mod5 = (Protof (Typed "fct5" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Operation (ASSIGN (Typed "a" INT) (ADD [(XPR (Id (Typed "a" INT))), (VAL (I 5))]) ) ), (Id (Typed "a" INT) )] ))
 
 add:: Expr -- ok
-add = (Protof (Typed "callee" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+add = (Protof (Typed "callee" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Operation (ADD [(XPR (Id (Typed "a" INT))), (XPR (Id (Typed "b" INT)))]) )] )
             )
 
 callFTest :: Expr -- ok
-callFTest = (Protof (Typed "caller" INT) 
+callFTest = (Protof (Typed "caller" INT)
             []
             (Exprs [(Callf (Typed "callee" INT) [(Val (I 8)), (Val (I 5))] )] )
             )
 
 callFTest2 :: Expr -- ok
-callFTest2 = (Protof (Typed "testf" DOUBLE) 
+callFTest2 = (Protof (Typed "testf" DOUBLE)
             [(Typed "a" DOUBLE)]
             (Exprs [(Operation (ADD [(XPR (Id (Typed "a" DOUBLE))), (VAL (D 4.0))]) )] )
             )
 
 callCondition :: Expr
-callCondition = (Protof (Typed "cond1" INT) [] (Exprs [(Operation (DataType2.EQ (VAL (I 0)) (VAL (I 0)) ))] ) )
+callCondition = (Protof (Typed "cond1" INT) [] (Exprs [(Operation (DataType.EQ (VAL (I 0)) (VAL (I 0)) ))] ) )
 
 callCondition2 :: Expr
-callCondition2 = (Protof (Typed "cond2" DOUBLE) [] (Exprs [(Operation (DataType2.EQ (VAL (D 9.0)) (VAL (D 0.0)) ))] ) )
+callCondition2 = (Protof (Typed "cond2" DOUBLE) [] (Exprs [(Operation (DataType.EQ (VAL (D 9.0)) (VAL (D 0.0)) ))] ) )
 
 unaryNot :: Expr
 unaryNot = (Protof (Typed "not1" INT) [] (Exprs [(Unary Not (Val (I 0)) )] ) )
 
-unaryMinus :: Expr 
+unaryMinus :: Expr
 unaryMinus = (Protof (Typed "minus1" DOUBLE) [] (Exprs [(Unary UMinus (Operation (ADD [(VAL (D 5.0)), (VAL (D 12.0))])) )] ) )
 
-ifFunction :: Expr 
-ifFunction = (Protof (Typed "condIf" INT) [(Typed "a" INT)] (Exprs [(IfThen (Operation (DataType2.GT (XPR (Id (Typed "a" INT))) (VAL (I 5)) )) (Exprs [(Id (Typed "a" INT))]) )] ) )
+ifFunction :: Expr
+ifFunction = (Protof (Typed "condIf" INT) [(Typed "a" INT)] (Exprs [(IfThen (Operation (DataType.GT (XPR (Id (Typed "a" INT))) (VAL (I 5)) )) (Exprs [(Id (Typed "a" INT))]) )] ) )
 
 ifElseFunction :: Expr  -- no
 ifElseFunction = (Protof (Typed "condIfElse" INT) [(Typed "a" INT)] (Exprs [ifElseElem, assignElem] ) )
 
 -- if a < 5 a = 6 else a = 5
 ifElseCallBack :: Expr
-ifElseCallBack = (Protof (Typed "condIECB" INT) [(Typed "a" INT)] (Exprs [(IfElse (Operation (DataType2.LT (XPR (Id (Typed "a" INT))) (VAL (I 5)) )) (Exprs [(assignA 6)]) (Exprs [(assignA 5)]) )]) )
+ifElseCallBack = (Protof (Typed "condIECB" INT) [(Typed "a" INT)] (Exprs [(IfElse (Operation (DataType.LT (XPR (Id (Typed "a" INT))) (VAL (I 5)) )) (Exprs [(assignA 6)]) (Exprs [(assignA 5)]) )]) )
 
 while1 :: Expr --ok
 while1 = (Protof (Typed "while1" INT) [(Typed "a" INT)] (Exprs [(whileElem [addA1]), (Id (Typed "a" INT))] ) )
@@ -115,7 +115,7 @@ inputImbr3 = genericIfElse [(genericIfThen [(genericIfElse [assignA 6] [assignA 
 inputImbr4 :: Expr
 inputImbr4 = (genericIfElse [(genericIfThen [(genericIfElse [assignA 9] [assignA 9])])] [assignA 10]) -- , (Val (I 5))
 
--- if 
+-- if
 --    if
 --      if
 --      else
@@ -126,7 +126,7 @@ testImbr2 = fctWrapper "testImbr3" [inputImbr4]  -- break and return att the end
 --simple for
 for1 = fctWrapper "for1" [(genericFor [addA1]), (Id (Typed "a" INT))]
 
--- while 
+-- while
 --   while
 
 while13 = fctWrapper "whileImbr" [(genericWhile (condLT "a" 25) [((Operation (ASSIGN (Typed "b" INT) (VAL (I 0))))), (genericWhile (condLT "b" 5) [addB1, addA1])]), (Id (Typed "a" INT))]

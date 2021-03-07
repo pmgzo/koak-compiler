@@ -1,77 +1,77 @@
 module InferingTypeCompilationTests where
 
-import DataType2
+import DataType
 
 imod1:: Expr -- ok
-imod1 = (Protof (Typed "fct1" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+imod1 = (Protof (Typed "fct1" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Operation (ASSIGN (Wait "y") (VAL (I 5)) ) ), (Id (Wait "y") )] ))
 
 imod2:: Expr -- ok
-imod2 = (Protof (Typed "fct2" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+imod2 = (Protof (Typed "fct2" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Val (I 6))] ))
 
 imod3:: Expr -- ok
-imod3 = (Protof (Typed "fct3" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+imod3 = (Protof (Typed "fct3" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Id (Wait "a") )]))
 
 imod4 :: Expr -- ok
-imod4 = (Protof (Typed "fct4" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+imod4 = (Protof (Typed "fct4" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Operation (ASSIGN (Wait "y") (ADD [(XPR (Id (Wait "a"))), (VAL (I 5))]) ) ), (Id (Wait "y"))] ))
 
 imod5:: Expr -- ok
-imod5 = (Protof (Typed "fct5" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+imod5 = (Protof (Typed "fct5" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Operation (ASSIGN (Wait "a") (ADD [(XPR (Id (Wait "a"))), (VAL (I 5))]) ) ), (Id (Wait "a"))]))
 
 iadd:: Expr -- ok
-iadd = (Protof (Typed "iadd" INT) 
-            [(Typed "a" INT), (Typed "b" INT)] 
+iadd = (Protof (Typed "iadd" INT)
+            [(Typed "a" INT), (Typed "b" INT)]
             (Exprs [(Operation (ADD [(XPR (Id (Wait "a"))), (XPR (Id (Wait "b")))]) )] )
             )
 
 iaddf:: Expr -- ok
-iaddf = (Protof (Typed "iaddf" DOUBLE) 
-            [(Typed "a" DOUBLE), (Typed "b" DOUBLE)] 
+iaddf = (Protof (Typed "iaddf" DOUBLE)
+            [(Typed "a" DOUBLE), (Typed "b" DOUBLE)]
             (Exprs [(Operation (ASSIGN (Wait "y") (ADD [(XPR (Id (Wait "a"))), (XPR (Id (Wait "b")))]) ) ), (Id (Wait "y") )]) )
 
 
 icallFTest :: Expr -- ok
-icallFTest = (Protof (Typed "icaller" INT) 
+icallFTest = (Protof (Typed "icaller" INT)
             []
             (Exprs [(Callf (Wait "iadd") [(Val (I 8)), (Val (I 5))] )] )
             )
 
 icallFTest2 :: Expr -- ok
-icallFTest2 = (Protof (Typed "itestf" DOUBLE) 
+icallFTest2 = (Protof (Typed "itestf" DOUBLE)
             [(Typed "a" DOUBLE)]
             (Exprs [(Operation (ADD [(XPR (Id (Wait "a"))), (VAL (D 4.0))]) )] )
             )
 
 icallCondition :: Expr
-icallCondition = (Protof (Typed "icond1" INT) [] (Exprs [(Operation (DataType2.EQ (VAL (I 0)) (VAL (I 0)) ))] ) )
+icallCondition = (Protof (Typed "icond1" INT) [] (Exprs [(Operation (DataType.EQ (VAL (I 0)) (VAL (I 0)) ))] ) )
 
 icallCondition2 :: Expr
-icallCondition2 = (Protof (Typed "cond2" DOUBLE) [] (Exprs [(Operation (DataType2.EQ (VAL (D 9.0)) (VAL (D 0.0)) ))] ) )
+icallCondition2 = (Protof (Typed "cond2" DOUBLE) [] (Exprs [(Operation (DataType.EQ (VAL (D 9.0)) (VAL (D 0.0)) ))] ) )
 
 iunaryNot :: Expr
 iunaryNot = (Protof (Typed "not1" INT) [] (Exprs [(Unary Not (Val (I 0)) )] ) )
 
-iunaryMinus :: Expr 
+iunaryMinus :: Expr
 iunaryMinus = (Protof (Typed "minus1" DOUBLE) [] (Exprs [(Unary UMinus (Operation (ADD [(VAL (D 5.0)), (VAL (D 12.0))])) )] ) )
 
-iifFunction :: Expr 
-iifFunction = (Protof (Typed "condIf" INT) [(Typed "a" INT)] (Exprs [(IfThen (Operation (DataType2.GT (XPR (Id (Wait "a"))) (VAL (I 5)) )) (Exprs [(Id (Wait "a"))]) )] ) )
+iifFunction :: Expr
+iifFunction = (Protof (Typed "condIf" INT) [(Typed "a" INT)] (Exprs [(IfThen (Operation (DataType.GT (XPR (Id (Wait "a"))) (VAL (I 5)) )) (Exprs [(Id (Wait "a"))]) )] ) )
 
 -- iifElseFunction :: Expr  -- no
 -- iifElseFunction = (Protof (Typed "condIfElse" INT) [(Typed "a" INT)] (Exprs [ifElseElem, assignElem] ) )
 
 -- if a < 5 a = 6 else a = 5
 -- iifElseCallBack :: Expr
--- iifElseCallBack = (Protof (Typed "condIECB" INT) [(Typed "a" INT)] (Exprs [(IfElse (Operation (DataType2.LT (XPR (Id (Wait "a"))) (VAL (I 5)) )) (Exprs [(assignA 6)]) (Exprs [(assignA 5)]) )]) )
+-- iifElseCallBack = (Protof (Typed "condIECB" INT) [(Typed "a" INT)] (Exprs [(IfElse (Operation (DataType.LT (XPR (Id (Wait "a"))) (VAL (I 5)) )) (Exprs [(assignA 6)]) (Exprs [(assignA 5)]) )]) )
 
 -- iwhile1 :: Expr --ok
 -- iwhile1 = (Protof (Typed "while1" INT) [(Typed "a" INT)] (Exprs [(whileElem [addA1]), (Id (Wait "a"))] ) )
@@ -103,7 +103,7 @@ iifFunction = (Protof (Typed "condIf" INT) [(Typed "a" INT)] (Exprs [(IfThen (Op
 -- iinputImbr4 :: Expr
 -- iinputImbr4 = (genericIfElse [(genericIfThen [(genericIfElse [assignA 9] [assignA 9])])] [assignA 10]) -- , (Val (I 5))
 
--- if 
+-- if
 --    if
 --      if
 --      else
@@ -114,7 +114,7 @@ iifFunction = (Protof (Typed "condIf" INT) [(Typed "a" INT)] (Exprs [(IfThen (Op
 --simple for
 -- ifor1 = fctWrapper "for1" [(genericFor [addA1]), (Id (Wait "a"))]
 
--- while 
+-- while
 --   while
 
 -- iwhile13 = fctWrapper "whileImbr" [(genericWhile (condLT "a" 25) [((Operation (ASSIGN (Wait "b") (VAL (I 0))))), (genericWhile (condLT "b" 5) [addB1, addA1])]), (Id (Wait "a"))]
@@ -137,7 +137,7 @@ specialFor2 :: [Expr] -> Expr
 specialFor2 xprs = (For ((Wait "b"), (Val (I 0))) ((Wait "b"), (Val (I 10))) (Val (I 1)) (Exprs xprs))
 
 cond1 :: Expr
-cond1 = (Operation (DataType2.LT (XPR (Id (Wait "a"))) (VAL (I 5)) ))
+cond1 = (Operation (DataType.LT (XPR (Id (Wait "a"))) (VAL (I 5)) ))
 
 genWhile :: Expr -> [Expr] -> Expr
 genWhile cond xprs = (While cond (Exprs xprs))

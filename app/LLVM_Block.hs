@@ -11,7 +11,7 @@ import LLVM.AST.Constant ( Constant(GlobalReference, Int, Float) )
 import LLVM.AST.Float
 
 
-import DataType2
+import DataType
 import BuilderState
 import LLVM_Instruction
 
@@ -183,7 +183,7 @@ handleFor bool (For assign@(idass, initVal) cond@(idcond, value) inc (Exprs xprs
 
     addBlock (br condBlock)
 
-    condinst <- genInstructions (Operation (DataType2.LT (XPR (Id idcond)) (XPR value)) )
+    condinst <- genInstructions (Operation (DataType.LT (XPR (Id idcond)) (XPR value)) )
 
     addBlock (condbr condinst loop previousScope)
 

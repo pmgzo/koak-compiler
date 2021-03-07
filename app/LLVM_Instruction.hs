@@ -1,6 +1,6 @@
 module LLVM_Instruction where
 
-import DataType2
+import DataType
 import LLVM_Var
 import BuilderState
 import LLVM_Utils
@@ -97,10 +97,10 @@ operatorInARow tag (fst:snd)      = do
 genInstructionOperand :: Op -> StateT Objects Maybe Operand
 genInstructionOperand (VAL v)           = return $ getConstVal v
 genInstructionOperand (XPR xpr)         = genInstructions xpr
-genInstructionOperand c@(DataType2.LT i1 i2)        = genCond c i1 i2
-genInstructionOperand c@(DataType2.GT i1 i2)        = genCond c i1 i2
-genInstructionOperand c@(DataType2.EQ i1 i2)        = genCond c i1 i2
-genInstructionOperand c@(DataType2.NOTEQ i1 i2)     = genCond c i1 i2
+genInstructionOperand c@(DataType.LT i1 i2)        = genCond c i1 i2
+genInstructionOperand c@(DataType.GT i1 i2)        = genCond c i1 i2
+genInstructionOperand c@(DataType.EQ i1 i2)        = genCond c i1 i2
+genInstructionOperand c@(DataType.NOTEQ i1 i2)     = genCond c i1 i2
 genInstructionOperand (ASSIGN id op)                = assign id op
 genInstructionOperand classicOp                     = operatorInARow classicOp ops
                                                     where ops = getOpArgs classicOp

@@ -5,7 +5,7 @@ import LLVM_Builder
 import LLVM_Block
 import LLVM_Instruction
 import BuilderState
-import DataType2
+import DataType
 
 -- import Control.Monad.Trans.State.Lazy
 import Control.Monad.Trans.State
@@ -72,12 +72,12 @@ input3 = (Protof (Typed "fct1" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(
 -- input4 = (Protof (Typed "fct2" INT) [(Typed "a" INT), (Typed "b" INT)] (Exprs [(Operation (ASSIGN (Typed "a" INT) (VAL (I 5)) ) ), (Id (Typed "a" INT) )] ))
 -- input4 = (Protof (Typed "cond1" INT) [] (Exprs [(Operation (LT (VAL (I 5)) (VAL (I 5)) ))] ) )
 
-input5 = (Operation (DataType2.EQ (VAL (D 0.0)) (VAL (D 0.0)) ))
+input5 = (Operation (DataType.EQ (VAL (D 0.0)) (VAL (D 0.0)) ))
 expectedRes5 = [UnName 1 := FCmp FP.OEQ (ConstantOperand (Float (Double 0.0 ) )) (ConstantOperand (Float (Double 0.0 ) )) [] ]
 test5 = testHelperInstruction "test5" input5 expectedRes5
 
 varA61 = (Typed "a" INT)
-if62 = (IfThen (Operation (DataType2.GT (XPR (Id varA61)) (VAL (I 10)) ) ) (Exprs [(Operation (ASSIGN varA61 (VAL (I 11)) ))] ) )
+if62 = (IfThen (Operation (DataType.GT (XPR (Id varA61)) (VAL (I 10)) ) ) (Exprs [(Operation (ASSIGN varA61 (VAL (I 11)) ))] ) )
 exp1 = (Val (I 90))
 exp2 = (Val (I 90))
 input6 = (For (varA61, (Val (I 5) )) (varA61, (Val (I 10) )) (Operation (ASSIGN varA61 (ADD [(XPR (Id varA61)), (VAL (I 2)) ]))) (Exprs [if62, exp1, exp2]))
@@ -88,7 +88,7 @@ test6 = TestCase (assertEqual "test6" (scoreBlock input6) (6) )
 
 input71 = (Operation (ADD [(VAL (I 7)), (VAL (I 90))]))
 input7 = (IfElse (Operation
-                (DataType2.GT (XPR (Id (Typed "a" INT))) (VAL (I 5)) ))
+                (DataType.GT (XPR (Id (Typed "a" INT))) (VAL (I 5)) ))
                     (Exprs [input71, input71])
                         (Exprs [input71]))
 test7 = TestCase (assertEqual "test7" (getCallbackBlock [input7]) 3)

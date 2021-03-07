@@ -18,6 +18,6 @@ module Test where
 -- -- while y < 10 do y = y * 2;
 
 
--- (While (Operation (DataType2.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))
+-- (While (Operation (DataType.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))
 
--- (While (Operation (DataType2.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))
+-- (While (Operation (DataType.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))

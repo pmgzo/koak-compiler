@@ -1,7 +1,7 @@
 module TypeInferenceTest where
 import Test.HUnit
 import TypeInference
-import DataType2
+import DataType
 
 input1 = checkAssign [(Operation (ASSIGN (Wait "y") (VAL (I 5))))] []
 expectedRes1 = [Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))]
@@ -28,18 +28,18 @@ expectedRes6 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (Operation (AS
 
 test6 = TestCase $ assertEqual "y = 5: y = y * 2" expectedRes6 input6
 
-input7 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (While (Operation (DataType2.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
-expectedRes7 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (While (Operation (DataType2.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
+input7 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (While (Operation (DataType.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
+expectedRes7 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (While (Operation (DataType.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
 
 test7 = TestCase $ assertEqual "y = 2; while y < 10 do y = y * 2" expectedRes7 input7
 
-input8 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (IfThen (Operation (DataType2.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
-expectedRes8 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (IfThen (Operation (DataType2.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
+input8 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (IfThen (Operation (DataType.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
+expectedRes8 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (IfThen (Operation (DataType.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
 
 test8 = TestCase $ assertEqual "y = 2; if y < 10 then y = y * 2" expectedRes8 input8
 
-input9 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (IfElse (Operation (DataType2.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
-expectedRes9 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (IfElse (Operation (DataType2.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
+input9 = inferringType [(Operation (ASSIGN (Wait "y") (VAL (I 5)))), (IfElse (Operation (DataType.LT (XPR (Id (Wait "y"))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]) (Exprs [(Operation (ASSIGN (Wait "y") (MUL [(XPR (Id (Wait "y"))), (VAL (I 2))])))]))]
+expectedRes9 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (IfElse (Operation (DataType.LT (XPR (Id (Typed "y" INT))) (VAL (I 10)))) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]) (Exprs [(Operation (ASSIGN (Typed "y" INT) (MUL [(XPR (Id (Typed "y" INT))), (VAL (I 2))])))]))]
 
 test9 = TestCase $ assertEqual "y = 2; if y < 10 then y = y * 2 else y = y * 2" expectedRes9 input9
 
@@ -49,8 +49,8 @@ expectedRes10 = [(Operation (ASSIGN (Typed "y" INT) (VAL (I 5)))), (For ((Typed 
 test10 = TestCase $ assertEqual "y = 2; for i = 5: i < 10: 1 do y = y * 2" expectedRes10 input10
 
 
-input11 = inferringType [(Protof (Typed "icond1" INT) [] (Exprs [(Operation (DataType2.EQ (VAL (I 0)) (VAL (I 0))))]))]
-expectedRes11 = [(Protof (Typed "icond1" INT) [] (Exprs [(Operation (DataType2.EQ (VAL (I 0)) (VAL (I 0))))]))]
+input11 = inferringType [(Protof (Typed "icond1" INT) [] (Exprs [(Operation (DataType.EQ (VAL (I 0)) (VAL (I 0))))]))]
+expectedRes11 = [(Protof (Typed "icond1" INT) [] (Exprs [(Operation (DataType.EQ (VAL (I 0)) (VAL (I 0))))]))]
 
 test11 = TestCase $ assertEqual "0 == 0" expectedRes11 input11
 

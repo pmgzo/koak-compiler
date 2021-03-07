@@ -8,7 +8,7 @@
 module Parse where
 
 import MyParser
-import DataType2
+import DataType
 import Control.Applicative
 import Parse2
 
@@ -187,9 +187,9 @@ parseOpSign = Parser (\str -> runParser opPiece str)
     valu = ((VAL <$> D <$> parseDouble2) <|> (VAL <$> I <$> parseInte))
 
 assignComp :: Op -> String -> Op -> Op
-assignComp op1 "<" op2 = DataType2.LT op1 op2
-assignComp op1 ">" op2 = DataType2.GT op1 op2
-assignComp op1 "==" op2 = DataType2.EQ op1 op2
+assignComp op1 "<" op2 = DataType.LT op1 op2
+assignComp op1 ">" op2 = DataType.GT op1 op2
+assignComp op1 "==" op2 = DataType.EQ op1 op2
 assignComp op1 "!=" op2 = NOTEQ op1 op2
 
 parseComp :: Parser Op
@@ -214,9 +214,9 @@ removeParArr [] =  []
 removeParArr (x:xs) = (removePar x):removeParArr xs
 
 removePar2 :: Op -> Op
-removePar2 (DataType2.LT a b) = DataType2.LT (removePar a) (removePar b)
-removePar2 (DataType2.GT a b) = DataType2.GT (removePar a) (removePar b)
-removePar2 (DataType2.EQ a b) = DataType2.EQ (removePar a) (removePar b)
+removePar2 (DataType.LT a b) = DataType.LT (removePar a) (removePar b)
+removePar2 (DataType.GT a b) = DataType.GT (removePar a) (removePar b)
+removePar2 (DataType.EQ a b) = DataType.EQ (removePar a) (removePar b)
 removePar2 (NOTEQ a b) = NOTEQ (removePar a) (removePar b)
 removePar2 (ASSIGN var op) = (ASSIGN var (removePar op))
 removePar2 op = op

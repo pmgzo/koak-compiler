@@ -1,7 +1,7 @@
 module Error where
 
 import CheckBool
-import DataType2
+import DataType
 import TypeInference
 
 compareArg :: Expr -> Identifier -> Bool
@@ -37,10 +37,10 @@ getTypeFromOpError ((ADD op):xs)               = getTypeFromOpError op
 getTypeFromOpError ((SUB op):xs)               = getTypeFromOpError op
 getTypeFromOpError ((MUL op):xs)               = getTypeFromOpError op
 getTypeFromOpError ((DIV op):xs)               = getTypeFromOpError op
-getTypeFromOpError ((DataType2.LT _ _):xs)     = BOOL
-getTypeFromOpError ((DataType2.GT _ _):xs)     = BOOL
-getTypeFromOpError ((DataType2.EQ _ _):xs)     = BOOL
-getTypeFromOpError ((DataType2.NOTEQ op _):xs) = BOOL
+getTypeFromOpError ((DataType.LT _ _):xs)     = BOOL
+getTypeFromOpError ((DataType.GT _ _):xs)     = BOOL
+getTypeFromOpError ((DataType.EQ _ _):xs)     = BOOL
+getTypeFromOpError ((DataType.NOTEQ op _):xs) = BOOL
 getTypeFromOpError _                           = VOID
 
 gTFOE :: Op -> TypeKoak
@@ -137,19 +137,19 @@ checkErrorOp pts ((MUL op):xs) t  = (checkErrorOp pts op t) ++
     (checkErrorOp pts xs t)
 checkErrorOp pts ((DIV op):xs) t  = (checkErrorOp pts op t) ++
     (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.LT op1 op2):xs) t    =
+checkErrorOp pts ((DataType.LT op1 op2):xs) t    =
     (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
     (checkErrorOp pts [op1] (gTFOE op1)) ++
     (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.GT op1 op2):xs) t    =
+checkErrorOp pts ((DataType.GT op1 op2):xs) t    =
     (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
     (checkErrorOp pts [op1] (gTFOE op1)) ++
     (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.EQ op1 op2):xs) t    =
+checkErrorOp pts ((DataType.EQ op1 op2):xs) t    =
     (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
     (checkErrorOp pts [op1] (gTFOE op1)) ++
     (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)
-checkErrorOp pts ((DataType2.NOTEQ op1 op2):xs) t =
+checkErrorOp pts ((DataType.NOTEQ op1 op2):xs) t =
     (checkErrorOpCond (gTFOE op1) (gTFOE op2)) ++
     (checkErrorOp pts [op1] (gTFOE op1)) ++
     (checkErrorOp pts [op2] (gTFOE op1)) ++ (checkErrorOp pts xs t)

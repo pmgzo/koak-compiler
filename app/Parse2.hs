@@ -1,6 +1,6 @@
 module Parse2 where
 
-import DataType2
+import DataType
 import MyParser
 import Control.Applicative
 

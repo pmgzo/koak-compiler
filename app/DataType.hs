@@ -1,4 +1,4 @@
-module DataType2 where
+module DataType where
 
 data TypeKoak = INT | DOUBLE | VOID | BOOL | NULL deriving (Show, Eq)
 

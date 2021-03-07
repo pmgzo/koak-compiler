@@ -8,7 +8,7 @@ import LLVM.AST.Name
 import LLVM.AST.Instruction
 import LLVM.AST
 import LLVM.AST.Type
-import DataType2
+import DataType
 
 data BlockId = LOOP Name | NONE deriving (Show)
 

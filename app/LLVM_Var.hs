@@ -4,7 +4,7 @@ import Data.Map
 
 import LLVM_Utils
 import BuilderState
-import DataType2
+import DataType
 
 import Control.Monad.State
 import LLVM.AST.Operand

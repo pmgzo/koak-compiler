@@ -1,6 +1,6 @@
 module CheckBool where
 
-import DataType2
+import DataType
 
 e1 :: [Expr]
 e1 = [(Err "binary operation outside condition")]
@@ -18,13 +18,13 @@ checkWithinNot ((ADD o):xs)     = checkWithinNot o ++ checkWithinNot xs
 checkWithinNot ((SUB o):xs)     = checkWithinNot o ++ checkWithinNot xs
 checkWithinNot ((DIV o):xs)     = checkWithinNot o ++ checkWithinNot xs
 checkWithinNot ((MUL o):xs)     = checkWithinNot o ++ checkWithinNot xs
-checkWithinNot ((DataType2.EQ o1 o2):xs)    = (checkWithinNot [o1,o2]) ++
+checkWithinNot ((DataType.EQ o1 o2):xs)    = (checkWithinNot [o1,o2]) ++
     checkWithinNot xs
-checkWithinNot ((DataType2.NOTEQ o1 o2):xs) = (checkWithinNot [o1,o2]) ++
+checkWithinNot ((DataType.NOTEQ o1 o2):xs) = (checkWithinNot [o1,o2]) ++
     checkWithinNot xs
-checkWithinNot ((DataType2.LT o1 o2):xs)    = (checkWithinNot [o1,o2]) ++
+checkWithinNot ((DataType.LT o1 o2):xs)    = (checkWithinNot [o1,o2]) ++
     checkWithinNot xs
-checkWithinNot ((DataType2.GT o1 o2):xs)    = (checkWithinNot [o1,o2]) ++
+checkWithinNot ((DataType.GT o1 o2):xs)    = (checkWithinNot [o1,o2]) ++
     checkWithinNot xs
 checkWithinNot ((ASSIGN _ o):xs)     = (checkWithinNot [o]) ++
     (checkWithinNot xs)
@@ -36,36 +36,36 @@ checkExpNot (a@(Unary Not xp):xs) = checkNot a ++ checkExpNot xs
 checkExpNot (a:xs) = checkExpNot xs
 
 checkNot :: Expr -> [Expr]
-checkNot (Unary Not (Operation (DataType2.EQ o1 o2)))   = checkWithinNot [o1] ++
+checkNot (Unary Not (Operation (DataType.EQ o1 o2)))   = checkWithinNot [o1] ++
     checkWithinNot [o2]
-checkNot (Unary Not (Operation (DataType2.NOTEQ o1 o2)))= checkWithinNot [o1] ++
+checkNot (Unary Not (Operation (DataType.NOTEQ o1 o2)))= checkWithinNot [o1] ++
     checkWithinNot [o2]
-checkNot (Unary Not (Operation (DataType2.LT o1 o2)))   = checkWithinNot [o1] ++
+checkNot (Unary Not (Operation (DataType.LT o1 o2)))   = checkWithinNot [o1] ++
     checkWithinNot [o2]
-checkNot (Unary Not (Operation (DataType2.GT o1 o2)))   = checkWithinNot [o1] ++
+checkNot (Unary Not (Operation (DataType.GT o1 o2)))   = checkWithinNot [o1] ++
     checkWithinNot [o2]
 checkNot (Unary Not a@(Unary Not xp))                   = checkCond a
 checkNot (Unary Not _ )                                 = e2
 
 checkCond :: Expr -> [Expr]
 checkCond u@(Unary Not o1)                      = checkNot u
-checkCond (Operation (DataType2.EQ o1 o2) )     = checkWithinNot [o1] ++
+checkCond (Operation (DataType.EQ o1 o2) )     = checkWithinNot [o1] ++
     checkWithinNot [o2]
-checkCond (Operation (DataType2.NOTEQ o1 o2))   = checkWithinNot [o1] ++
+checkCond (Operation (DataType.NOTEQ o1 o2))   = checkWithinNot [o1] ++
     checkWithinNot [o2]
-checkCond (Operation (DataType2.LT o1 o2) )     = checkWithinNot [o1] ++
+checkCond (Operation (DataType.LT o1 o2) )     = checkWithinNot [o1] ++
     checkWithinNot [o2]
-checkCond (Operation (DataType2.GT o1 o2) )     = checkWithinNot [o1] ++
+checkCond (Operation (DataType.GT o1 o2) )     = checkWithinNot [o1] ++
     checkWithinNot [o2]
 checkCond _ = e3
 
 checkOp :: [Op] -> [Expr]
 checkOp []                          = []
 checkOp ((XPR xpr):xs)              = checkExpr xpr ++ checkOp xs
-checkOp ((DataType2.EQ _ _ ):xs)    = e1 ++ (checkOp xs)
-checkOp ((DataType2.NOTEQ _ _ ):xs) = e1 ++ (checkOp xs)
-checkOp ((DataType2.LT _ _ ):xs)    = e1 ++ (checkOp xs)
-checkOp ((DataType2.GT _ _ ):xs)    = e1 ++ (checkOp xs)
+checkOp ((DataType.EQ _ _ ):xs)    = e1 ++ (checkOp xs)
+checkOp ((DataType.NOTEQ _ _ ):xs) = e1 ++ (checkOp xs)
+checkOp ((DataType.LT _ _ ):xs)    = e1 ++ (checkOp xs)
+checkOp ((DataType.GT _ _ ):xs)    = e1 ++ (checkOp xs)
 checkOp ((ADD x):xs)                = checkOp x ++ checkOp xs
 checkOp ((SUB x):xs)                = checkOp x ++ checkOp xs
 checkOp ((MUL x):xs)                = checkOp x ++ checkOp xs
